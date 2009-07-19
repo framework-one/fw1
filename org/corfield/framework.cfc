@@ -86,11 +86,20 @@
 			setupApplicationWrapper();
 		}
 		
-		request.base = replace( getDirectoryFromPath(targetPath), chr(92), '/', 'all' );
-		if ( len(request.base) eq 1 ) {
-			request.cfcbase = '';
+		if ( structKeyExists(variables.framework, 'base') ) {
+			request.base = variables.framework.base;
 		} else {
-			request.cfcbase = replace( mid(request.base, 2, len(request.base)-2 ), '/', '.', 'all' );
+			request.base = getDirectoryFromPath(targetPath);
+		}
+		request.base = replace( request.base, chr(92), '/', 'all' );
+		if ( structKeyExists(variables.framework, 'cfcbase') ) {
+			request.cfcbase = variables.framework.cfcbase;
+		} else {
+			if ( len(request.base) eq 1 ) {
+				request.cfcbase = '';
+			} else {
+				request.cfcbase = replace( mid(request.base, 2, len(request.base)-2 ), '/', '.', 'all' );
+			}
 		}
 
 		if ( !structKeyExists(request, 'context') ) {
@@ -207,7 +216,7 @@
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		
+
 	}
 
 	/*
