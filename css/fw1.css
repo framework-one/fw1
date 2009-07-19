@@ -1,0 +1,17 @@
+body {
+	margin: 0;
+}
+.wrap {
+	border: blue 1px solid;
+	margin: 5;
+	padding: 5;
+	font-family: verdana, helvetica;
+}
+.page {
+	padding: 5;
+	background-color: lightgray;
+}
+.footer {
+	text-align: center;
+	font-size: small;
+}
