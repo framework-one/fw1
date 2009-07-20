@@ -168,7 +168,7 @@
 			request.event = event;
 			setupRequestWrapper();
 			onRequest('');
-		} catch (any) {
+		} catch (any e) {
 			fail(exception,event);
 		}
 
