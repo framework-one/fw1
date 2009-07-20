@@ -365,6 +365,7 @@
 		
 		<cfset var rc = request.context />
 		<cfset var response = '' />
+		<cfset var local = { } />
 		
 		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#arguments.path#.cfm"/></cfsavecontent>
 		
@@ -378,6 +379,7 @@
 		
 		<cfset var rc = request.context />
 		<cfset var response = '' />
+		<cfset var local = { } />
 		
 		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#arguments.path#.cfm"/></cfsavecontent>
 		
