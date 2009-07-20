@@ -1,0 +1,1 @@
+<cfoutput><p>Hello #rc.name#!</p></cfoutput>
