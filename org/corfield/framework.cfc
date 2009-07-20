@@ -88,6 +88,9 @@
 		
 		if ( structKeyExists(variables.framework, 'base') ) {
 			request.base = variables.framework.base;
+			if ( right(request.base,1) is not '/' ) {
+				request.base &= '/';
+			}
 		} else {
 			request.base = getDirectoryFromPath(targetPath);
 		}

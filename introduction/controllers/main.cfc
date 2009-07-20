@@ -5,7 +5,7 @@
 		
 		<cfset var files = 0 />
 		
-		<cfdirectory action="list" directory="#expandPath(request.base)#examples/" name="files" />
+		<cfdirectory action="list" directory="#expandPath(request.base)#../examples/" name="files" />
 		
 		<cfset rc.files = files />
 		
