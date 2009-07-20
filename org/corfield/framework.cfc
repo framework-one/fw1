@@ -406,6 +406,26 @@
 		
 	</cffunction>
 	
+	<cffunction name="populate" access="public" output="false" 
+			hint="Used to populate beans from the request context.">
+		<cfargument name="cfc" />
+		
+		<cfset var key = 0 />
+		<cfset var property = 0 />
+		<cfset var args = 0 />
+		
+		<cfloop item="key" collection="#arguments.cfc#">
+			<cfif len(key) gt 3 and left(key,3) is "set">
+				<cfset property = right(key, len(key)-3) />
+				<cfif structKeyExists(request.context,property)>
+					<cfset args = [ request.context[property] ] />
+					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+				</cfif>
+			</cfif>
+		</cfloop>
+		
+	</cffunction>
+	
 	<cffunction name="doController" access="private" output="false" hint="Executes a controller in context.">
 		<cfargument name="cfc" />
 		<cfargument name="method" />
