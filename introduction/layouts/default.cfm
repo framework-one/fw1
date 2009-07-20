@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>FW/1 - Framework One</title>
-		<link rel="stylesheet" type="text/css" href="/css/fw1.css" />
+		<link rel="stylesheet" type="text/css" href="css/fw1.css" />
 	</head>
 	<body>
 		<div class="wrap">
