@@ -329,7 +329,11 @@
 		}
 		
 		if ( fileExists( expandPath( request.base & types & '/' & section & '.cfc' ) ) ) {
-			cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
+			if ( request.cfcbase is '' ) {
+				cfc = createObject( 'component', types & '.' & section );
+			} else {
+				cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
+			}
 			if ( structKeyExists( cfc, 'init' ) ) {
 				cfc.init( this );
 			}
