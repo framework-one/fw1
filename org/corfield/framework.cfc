@@ -133,6 +133,9 @@
 	 */
 	function onRequest(targetPath) {
 		
+		var out = 0;
+		var i = 0;
+		
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'before' );
 			doController( request.controller, 'start' & request.item );
@@ -145,8 +148,7 @@
 			doController( request.controller, 'end' & request.item );
 			doController( request.controller, 'after' );
 		}
-		var out = view( request.view );
-		var i = 0;
+		out = view( request.view );
 		for (i = 1; i lte arrayLen(request.layouts); ++i) {
 			out = layout( request.layouts[i], out );
 			if ( structKeyExists(request, 'layout') and !request.layout ) {
@@ -310,6 +312,7 @@
 		
 		var cache = application[variables.framework.applicationKey].cache;
 		var types = type & 's';
+		var cfc = 0;
 		
 		if ( structKeyExists(cache[types], section) ) {
 			return cache[types][section];
@@ -322,7 +325,7 @@
 		}
 		
 		if ( fileExists( expandPath( request.base & types & '/' & section & '.cfc' ) ) ) {
-			var cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
+			cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
 			if ( structKeyExists( cfc, 'init' ) ) {
 				cfc.init( this );
 			}
