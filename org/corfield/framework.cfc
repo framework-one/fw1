@@ -272,8 +272,7 @@
 		request.layouts = [ ];
 		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section & '/' & request.item);
-		}
-		if ( request.item is not 'default' and
+		} else if ( request.item is not 'default' and
 				fileExists( expandPath( request.base & 'layouts/' & request.section & '/default.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section & '/default');
 		}
