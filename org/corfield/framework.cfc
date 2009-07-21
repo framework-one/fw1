@@ -277,10 +277,6 @@
 		// look for section-specific layout:
 		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section);
-		// else look for section/default layout, if no item-specific layout:
-		} else if ( arrayLen(request.layouts) eq 0 and
-				fileExists( expandPath( request.base & 'layouts/' & request.section & '/default.cfm' ) ) ) {
-			arrayAppend(request.layouts, request.section & '/default');
 		}
 		// look for site-side layout:
 		if ( request.section is not 'default' and
