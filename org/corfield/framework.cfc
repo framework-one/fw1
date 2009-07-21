@@ -335,7 +335,11 @@
 				cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
 			}
 			if ( structKeyExists( cfc, 'init' ) ) {
-				cfc.init( this );
+				if ( type is 'controller' ) {
+					cfc.init( this );
+				} else {
+					cfc.init();
+				}
 			}
 			if ( hasBeanFactory() ) {
 				autowire( cfc );
