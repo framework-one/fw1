@@ -393,7 +393,9 @@
 			<cfif len(key) gt 3 and left(key,3) is "set">
 				<cfset property = right(key, len(key)-3) />
 				<cfif getBeanFactory().containsBean(property)>
-					<cfset args = [ getBeanFactory().getBean(property) ] />
+					<!--- args = [ getBeanFactory().getBean(property) ] does not seem to be portable --->
+					<cfset args = { } />
+					<cfset args[property] = getBeanFactory().getBean(property) />
 					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 				</cfif>
 			</cfif>
