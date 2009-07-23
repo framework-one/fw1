@@ -308,6 +308,9 @@
 		}
 	}
 	
+	/*
+	 * do not call/override
+	 */
 	function fail(exception,event) { // "private"
 	
 		if ( structKeyExists(exception, 'rootCause') ) {
@@ -332,7 +335,7 @@
 		<cfset var response = '' />
 		<cfset var local = { } />
 		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#arguments.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#lCase(arguments.path)#.cfm"/></cfsavecontent>
 		
 		<cfreturn response />
 
@@ -349,7 +352,7 @@
 		<cfset var response = '' />
 		<cfset var local = { } />
 		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#arguments.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#lCase(arguments.path)#.cfm"/></cfsavecontent>
 		
 		<cfreturn response />
 	</cffunction>
@@ -374,6 +377,18 @@
 				</cfif>
 			</cfif>
 		</cfloop>
+		
+	</cffunction>
+	
+	<!---
+		redirect() may be invoked inside controllers
+	--->
+	<cffunction name="redirect" access="public" output="false" 
+			hint="Redirect to the specified action, optionally append specified request context items - or use session.">
+		<cfargument name="action" type="string" />
+		
+		<!--- TODO: append RC items or flash everything into session scope? --->
+		<cflocation url="#CGI.SCRIPT_NAME#?#variables.framework.action#=#arguments.action#" addtoken="false" />
 		
 	</cffunction>
 	
