@@ -372,7 +372,8 @@
 			<cfif len(key) gt 3 and left(key,3) is "set">
 				<cfset property = right(key, len(key)-3) />
 				<cfif structKeyExists(request.context,property)>
-					<cfset args = [ request.context[property] ] />
+					<cfset args = { } />
+					<cfset args[property] = request.context[property] />
 					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 				</cfif>
 			</cfif>
