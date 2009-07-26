@@ -373,12 +373,32 @@
 			hint="Redirect to the specified action, optionally append specified request context items - or use session.">
 		<cfargument name="action" type="string" />
 		<cfargument name="preserve" type="string" default="none" />
+		<cfargument name="append" type="string" default="none" />
+		
+		<cfset var queryString = "" />
+		<cfset var key = "" />
 		
 		<cfif arguments.preserve is not "none">
 			<cfset saveFlashContext(arguments.preserve) />
 		</cfif>
+		
+		<cfif arguments.append is not "none">
+			<cfif arguments.append is "all">
+				<cfloop item="key" collection="#request.context#">
+					<cfif isSimpleValue( request.context[key] )>
+						<cfset queryString &= "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+					</cfif>
+				</cfloop>
+			<cfelse>
+				<cfloop index="key" list="#arguments.append#">
+					<cfif structKeyExists( request.context, key ) and isSimpleValue( request.context[key] )>
+						<cfset queryString &= "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+					</cfif>
+				</cfloop>
+			</cfif>
+		</cfif>
 
-		<cflocation url="#CGI.SCRIPT_NAME#?#variables.framework.action#=#arguments.action#" addtoken="false" />
+		<cflocation url="#CGI.SCRIPT_NAME#?#variables.framework.action#=#arguments.action##queryString#" addtoken="false" />
 		
 	</cffunction>
 	
