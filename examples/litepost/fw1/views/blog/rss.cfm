@@ -1,0 +1,1 @@
+<cfoutput>#rc.rss#</cfoutput>
