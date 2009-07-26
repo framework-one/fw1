@@ -1,0 +1,27 @@
+<project name="framework-one CFMX" default="build">
+	<property name="source" value=".." />
+	<property name="builds" value="../download" />
+	<property name="timestamp.path" value="${source}/timestamp.txt" />
+	
+	<target name="build" depends="stamp,zip,clean">
+	</target>
+	
+	<target name="stamp">
+		<tstamp>
+			<format property="buildtime" pattern="yyyy-MM-dd'T'HH:mm:ss" />
+		</tstamp>
+		<echo file="${timestamp.path}" message="build.timestamp=${buildtime}${line.separator}" />
+	</target>
+	
+	<target name="zip">
+		<zip destfile="${builds}/fw1.zip">
+			<zipfileset dir="${source}" prefix="fw1"
+				excludes="**/.svn, download/**, WEB-INF/**" />
+		</zip>
+	</target>
+		
+	<target name="clean">
+		<delete file="${timestamp.path}" />
+	</target>
+		
+</project>
