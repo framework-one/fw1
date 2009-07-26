@@ -322,6 +322,9 @@
 			exception = exception.rootCause;
 		}
 		writeOutput( '<h1>Exception in #event#</h1>' );
+		if ( structKeyExists( request, 'failedAction' ) ) {
+			writeOutput( '<p>The action #request.failedAction# failed.</p>' );
+		}
 		writeOutput( '<h2>#exception.message#</h2>' );
 		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
 		dumpException(exception);
