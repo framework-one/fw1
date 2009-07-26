@@ -182,6 +182,15 @@
 	}
 	
 	/*
+	 * returns the FW/1 action URL parameter
+	 */
+	function getAction() {
+		
+		return variables.framework.action;
+		
+	}
+	
+	/*
 	 * returns whatever the framework has been told is a bean factory
 	 */
 	function getBeanFactory() {
