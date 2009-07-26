@@ -170,6 +170,9 @@
 	function onError(exception,event) {
 
 		try {
+			if ( structKeyExists( request, 'action' ) ) {
+				request.failedAction = request.action;
+			}
 			request.action = variables.framework.error;
 			request.exception = exception;
 			request.event = event;
