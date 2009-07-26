@@ -16,7 +16,7 @@
 	<target name="zip">
 		<zip destfile="${builds}/fw1.zip">
 			<zipfileset dir="${source}" prefix="fw1"
-				excludes="**/.svn, download/**, WEB-INF/**" />
+				excludes="**/.svn, download/**, litepost/**, WEB-INF/**" />
 		</zip>
 	</target>
 		
