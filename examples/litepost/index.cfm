@@ -12,6 +12,7 @@
 <li>Configure a datasource called litepost pointing to your new database.</li>
 <li>Create a /net/litepost mapping pointing to litepost/cfc/net/litepost.</li>
 <li>Copy examples/litepost/fw1 from FW/1 to the litepost folder (so that http://localhost/litepost/fw1/ will work).</li>
+<li>Make sure FW/1 is accessible as org.corfield.framework either by placing the /org folder in your webroot or creating a mapping for /org/corfield pointing to FW/1's org/corfield folder.</li>
 </ol>
 <p>Already done all of that? Want to run the FW/1 LitePost example?</p>
 <p>Yeah, take me to <a href="/litepost/fw1/">FW/1 LitePost</a>!</p>
