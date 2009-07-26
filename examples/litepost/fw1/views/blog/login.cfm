@@ -10,7 +10,7 @@
 		<p style="color:red;font-weight:bold;" align="center">#rc.message#</p>
 	</cfif>
 	
-	<form action="?#getAction()#=blog.doLogin" method="post">
+	<form action="?#framework.action#=blog.doLogin" method="post">
 	  	<label>Username<br />
 	  	<input name="userName" type="text" maxlength="30" />
 		</label>

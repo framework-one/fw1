@@ -13,16 +13,16 @@
 	<script type="text/javascript">
 		function deleteEntry(entryID) {
 			if(confirm("Are you sure you want to delete this entry?")) {
-				location.href = "?#getAction()#=blog.deleteEntry&entryID=" + entryID;
+				location.href = "?#framework.action#=blog.deleteEntry&entryID=" + entryID;
 			}
 		}
 	</script>
 	
 	<div align="right">
-		<a href="?#getAction()#=blog.entry">
+		<a href="?#framework.action#=blog.entry">
 			<img src="../assets/images/add_icon.gif" title="Add Entry" alt="Add Entry" border="0" />
 		</a>
-		<a href="?#getAction()#=blog.entry">
+		<a href="?#framework.action#=blog.entry">
 			Add Entry
 		</a>
 	</div>
@@ -48,16 +48,16 @@
 			<!-- footer at the bottom of every post -->
 			<div class="postfooter">
 				<span>
-					<a href="?#getAction()#=blog.comments&entryID=#local.entry.getEntryID()#">
+					<a href="?#framework.action#=blog.comments&entryID=#local.entry.getEntryID()#">
 						<img src="../assets/images/comment_icon.gif" title="Comments" alt="Comments" border="0" />
 					</a>
-					<a href="?#getAction()#=blog.comments&entryID=#local.entry.getEntryID()#">
+					<a href="?#framework.action#=blog.comments&entryID=#local.entry.getEntryID()#">
 						Comments (#local.entry.getNumComments()#)
 					</a>
 				</span>
 				<span class="right">
 					<cfif local.entry.getCategoryID() neq 0>
-						<a href="?#getAction()#=blog.main&categoryID=#local.entry.getCategoryID()#">
+						<a href="?#framework.action#=blog.main&categoryID=#local.entry.getCategoryID()#">
 							Filed under #local.entry.getCategory()#
 						</a>
 					<cfelse>
@@ -65,7 +65,7 @@
 					</cfif>
 					<cfif rc.isAdmin>
 						<br />
-						<a href="?#getAction()#=blog.entry&entryID=#local.entry.getEntryID()#">
+						<a href="?#framework.action#=blog.entry&entryID=#local.entry.getEntryID()#">
 							<img src="../assets/images/edit_icon.gif" title="Edit Entry" alt="Edit Entry" border="0" />
 						</a>
 						<a href="javascript:void(0);" onClick="javascript:deleteEntry(#local.entry.getEntryID()#)">

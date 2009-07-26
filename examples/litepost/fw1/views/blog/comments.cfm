@@ -17,16 +17,16 @@
 	<!-- footer at the bottom of every post -->
 	<div class="postfooter">
 		<span>
-			<a href="?#getAction()#=blog.comments&entryID=#rc.entry.getEntryID()#">
+			<a href="?#framework.action#=blog.comments&entryID=#rc.entry.getEntryID()#">
 				<img src="../assets/images/comment_icon.gif" title="Comments" alt="Comments" border="0" />
 			</a>
-			<a href="?#getAction()#=blog.comments&entryID=#rc.entry.getEntryID()#">
+			<a href="?#framework.action#=blog.comments&entryID=#rc.entry.getEntryID()#">
 				Comments (#rc.entry.getNumComments()#)
 			</a>
 		</span>
 		<span class="right">
 			<cfif rc.entry.getCategoryID() neq 0>
-				<a href="?#getAction()#=blog.main&categoryID=#rc.entry.getCategoryID()#">
+				<a href="?#framework.action#=blog.main&categoryID=#rc.entry.getCategoryID()#">
 					Filed under #rc.entry.getCategory()#
 				</a>
 			<cfelse>
@@ -76,7 +76,7 @@
 	</cfif>
 	
 	<h2>Add A Comment </h2>
-	<form id="comment" name="comment" action="?#getAction()#=blog.saveComment" method="post">
+	<form id="comment" name="comment" action="?#framework.action#=blog.saveComment" method="post">
 		<input type="hidden" name="entryID" value="#rc.entry.getEntryID()#" />
 		<label>Your Name<br/>
 		<input type="text" name="name" value="#rc.commentBean.getName()#" />

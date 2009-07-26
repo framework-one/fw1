@@ -17,7 +17,7 @@
 		<p><strong>#rc.message#</strong></p>
 	</cfif>
 	
-	<form id="editEntry" name="editEntry" action="?#getAction()#=blog.saveEntry" method="post">
+	<form id="editEntry" name="editEntry" action="?#framework.action#=blog.saveEntry" method="post">
 		<input type="hidden" name="entryID" value="#rc.entryBean.getEntryID()#" />
 		<label>Title<br />
 		<input name="title" type="text" value="#rc.entryBean.getTitle()#" />

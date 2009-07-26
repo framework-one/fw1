@@ -16,7 +16,7 @@
 		<p><strong>#rc.message#</strong></p>
 	</cfif>
 	
-	<form id="editCategory" name="editCategory" method="post" action="?#getAction()#=blog.saveCategory">
+	<form id="editCategory" name="editCategory" method="post" action="?#framework.action#=blog.saveCategory">
 		<input type="hidden" name="categoryID" value="#rc.categoryBean.getCategoryID()#" />
 		<label>Category<br />
 		<input name="category" type="text" value="#rc.categoryBean.getCategory()#" />

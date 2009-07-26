@@ -185,15 +185,6 @@
 	}
 	
 	/*
-	 * returns the FW/1 action URL parameter
-	 */
-	function getAction() {
-		
-		return variables.framework.action;
-		
-	}
-	
-	/*
 	 * returns whatever the framework has been told is a bean factory
 	 */
 	function getBeanFactory() {
@@ -410,7 +401,7 @@
 			</cfif>
 		</cfif>
 
-		<cflocation url="#CGI.SCRIPT_NAME#?#variables.framework.action#=#arguments.action##queryString#" addtoken="false" />
+		<cflocation url="#CGI.SCRIPT_NAME#?#framework.action#=#arguments.action##queryString#" addtoken="false" />
 		
 	</cffunction>
 	

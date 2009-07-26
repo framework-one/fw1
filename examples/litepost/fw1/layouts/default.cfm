@@ -26,13 +26,13 @@
 
 	<!-- login/out button -->
 	<cfif rc.isAdmin>
-		<a href="?#getAction()#=blog.logout" id="loginbutton" class="adminbutton">Log Out</a>
+		<a href="?#framework.action#=blog.logout" id="loginbutton" class="adminbutton">Log Out</a>
 	<cfelse>
-		<a href="?#getAction()#=blog.login" id="loginbutton" class="adminbutton">Log In</a>
+		<a href="?#framework.action#=blog.login" id="loginbutton" class="adminbutton">Log In</a>
 	</cfif>
 	
 	<!-- header block -->
-	<div id="header"><a href="?#getAction()#=blog.main"><img src="../assets/images/litePost_logo.gif" alt="litePost" border="0" /></a></div>
+	<div id="header"><a href="?#framework.action#=blog.main"><img src="../assets/images/litePost_logo.gif" alt="litePost" border="0" /></a></div>
 	
 	<!-- wrapper block to constrain widths -->
 	<div id="wrapper">
