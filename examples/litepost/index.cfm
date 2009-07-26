@@ -3,7 +3,7 @@
 	<title>FW/1 - LitePost - README</title>
 </head>
 <body>
-<p>To run the FW/1 LitePost example, you need:</p>
+<p>To run the FW/1 LitePost example, you need to:</p>
 <ol>
 <li>Download LitePost by checking it out of SVN into your webroot:<br />
 	svn checkout http://litepost.googlecode.com/svn/trunk/ litepost</li>
@@ -15,5 +15,6 @@
 </ol>
 <p>Already done all of that? Want to run the FW/1 LitePost example?</p>
 <p>Yeah, take me to <a href="/litepost/fw1/">FW/1 LitePost</a>!</p>
+<p>To save you the trouble of figuring it out, the blog admin login is: chris / asstro</p>
 </body>
 </html>
