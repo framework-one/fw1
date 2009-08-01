@@ -49,6 +49,20 @@
 	function setupRequest() { }
 
 	/*
+	 * call this from your controller to queue up additional services
+	 */
+	function service( action, key ) {
+		
+		var section = listFirst( action, '.' );
+		var item = listLast( action, '.' );
+		var tuple = { service = getService(section), item = item, key = key };
+		
+		if ( structKeyExists( tuple, "service" ) ) {
+			arrayAppend( request.services, tuple );
+		}
+	}
+	
+	/*
 	 * it is better to set up your application configuration in
 	 * your setupApplication() method since that is called on a
 	 * framework reload
@@ -136,14 +150,21 @@
 		
 		var out = 0;
 		var i = 0;
+		var svc = 0;
 		
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'before' );
 			doController( request.controller, 'start' & request.item );
 			doController( request.controller, request.item );
 		}
-		if ( structKeyExists( request, 'service' ) ) {
-			doService( request.service, request.item );
+		for ( i = 1; i lte arrayLen(request.services); ++i ) {
+			svc = request.services[i];
+			if ( svc.key is '' ) {
+				// throw the result away:
+				doService( svc.service, svc.item );
+			} else {
+				request.context[ svc.key ] = doService( svc.service, svc.item );
+			}
 		}
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'end' & request.item );
@@ -154,7 +175,7 @@
 			viewNotFound();
 		}
 		out = view( request.view );
-		for (i = 1; i lte arrayLen(request.layouts); ++i) {
+		for ( i = 1; i lte arrayLen(request.layouts); ++i ) {
 			out = layout( request.layouts[i], out );
 			if ( structKeyExists(request, 'layout') and !request.layout ) {
 				break;
@@ -268,7 +289,8 @@
 
 		request.controller = getController(request.section);
 		
-		request.service = getService(request.section);
+		request.services = [ ];
+		service( request.action, "data" );
 		
 		if ( fileExists( expandPath( request.base & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			request.view = request.section & '/' & request.item;
@@ -518,9 +540,14 @@
 		<cfargument name="cfc" />
 		<cfargument name="method" />
 		
+		<cfset var result = 0 />
+		
 		<cfif structKeyExists(arguments.cfc,arguments.method)>
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
-				argumentCollection="#request.context#" returnVariable="request.context.data" />
+				argumentCollection="#request.context#" returnVariable="result" />
+			<cfif isDefined("result")>
+				<cfreturn result />
+			</cfif>
 		</cfif>
 
 	</cffunction>
