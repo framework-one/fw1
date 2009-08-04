@@ -530,7 +530,7 @@
 		<cfargument name="cfc" />
 		<cfargument name="method" />
 		
-		<cfif structKeyExists(arguments.cfc,arguments.method)>
+		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#" rc="#request.context#" />
 		</cfif>
 
@@ -542,7 +542,7 @@
 		
 		<cfset var result = 0 />
 		
-		<cfif structKeyExists(arguments.cfc,arguments.method)>
+		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
 				argumentCollection="#request.context#" returnVariable="result" />
 			<cfif isDefined("result")>
