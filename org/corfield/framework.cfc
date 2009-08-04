@@ -245,7 +245,7 @@
 			variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		}
 		if ( !structKeyExists(variables.framework, 'error') ) {
-			variables.framework.error = 'main.error';
+			variables.framework.error = variables.framework.defaultSection & '.error';
 		}
 		if ( !structKeyExists(variables.framework, 'reload') ) {
 			variables.framework.reload = 'reload';
