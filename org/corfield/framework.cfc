@@ -383,21 +383,35 @@
 	<cffunction name="populate" access="public" output="false" 
 			hint="Used to populate beans from the request context.">
 		<cfargument name="cfc" />
+		<cfargument name="keys" default="" />
 		
 		<cfset var key = 0 />
 		<cfset var property = 0 />
 		<cfset var args = 0 />
 		
-		<cfloop item="key" collection="#arguments.cfc#">
-			<cfif len(key) gt 3 and left(key,3) is "set">
-				<cfset property = right(key, len(key)-3) />
-				<cfif structKeyExists(request.context,property)>
-					<cfset args = { } />
-					<cfset args[property] = request.context[property] />
-					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+		<cfif arguments.keys is "">
+			<cfloop item="key" collection="#arguments.cfc#">
+				<cfif len(key) gt 3 and left(key,3) is "set">
+					<cfset property = right(key, len(key)-3) />
+					<cfif structKeyExists(request.context,property)>
+						<cfset args = { } />
+						<cfset args[property] = request.context[property] />
+						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+					</cfif>
 				</cfif>
-			</cfif>
-		</cfloop>
+			</cfloop>
+		<cfelse>
+			<cfloop index="property" list="#arguments.keys#">
+				<cfset key = "set" & property />
+				<cfif structKeyExists( arguments.cfc, key )>
+					<cfif structKeyExists(request.context,property)>
+						<cfset args = { } />
+						<cfset args[property] = request.context[property] />
+						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+					</cfif>
+				</cfif>
+			</cfloop>
+		</cfif>
 		
 	</cffunction>
 	
