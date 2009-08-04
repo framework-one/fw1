@@ -256,7 +256,7 @@
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.4';
+		variables.framework.version = '0.5';
 
 	}
 
