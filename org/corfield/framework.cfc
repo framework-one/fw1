@@ -132,7 +132,7 @@
 		if ( listLen(request.context[variables.framework.action], '.') eq 1 ) {
 			request.context[variables.framework.action] &= '.' & variables.framework.defaultItem;
 		}
-		request.action = request.context[variables.framework.action];
+		request.action = lCase(request.context[variables.framework.action]);
 
 		setupRequestWrapper();
 		
@@ -372,7 +372,7 @@
 		<cfset var response = '' />
 		<cfset var local = { } />
 		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#lCase(arguments.path)#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#arguments.path#.cfm"/></cfsavecontent>
 		
 		<cfreturn response />
 	</cffunction>
@@ -447,7 +447,7 @@
 		<cfset var response = '' />
 		<cfset var local = { } />
 		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#lCase(arguments.path)#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#arguments.path#.cfm"/></cfsavecontent>
 		
 		<cfreturn response />
 
