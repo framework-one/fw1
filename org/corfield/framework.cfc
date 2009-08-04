@@ -130,7 +130,7 @@
 			request.context[variables.framework.action] = variables.framework.home;
 		}
 		if ( listLen(request.context[variables.framework.action], '.') eq 1 ) {
-			request.context[variables.framework.action] &= '.default';
+			request.context[variables.framework.action] &= '.' & variables.framework.defaultItem;
 		}
 		request.action = request.context[variables.framework.action];
 
@@ -235,8 +235,14 @@
 		if ( !structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
+		if ( !structKeyExists(variables.framework, 'defaultSection') ) {
+			variables.framework.defaultSection = 'main';
+		}
+		if ( !structKeyExists(variables.framework, 'defaultItem') ) {
+			variables.framework.defaultItem = 'default';
+		}
 		if ( !structKeyExists(variables.framework, 'home') ) {
-			variables.framework.home = 'main.default';
+			variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		}
 		if ( !structKeyExists(variables.framework, 'error') ) {
 			variables.framework.error = 'main.error';
@@ -305,7 +311,7 @@
 		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section);
 		}
-		// look for site-side layout:
+		// look for site-wide layout:
 		if ( request.section is not 'default' and
 				fileExists( expandPath( request.base & 'layouts/default.cfm' ) ) ) {
 			arrayAppend(request.layouts, 'default');
