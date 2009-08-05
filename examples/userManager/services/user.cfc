@@ -46,6 +46,10 @@
 		user.setDepartment(deptService.get("3"));
 		
 		variables.users[user.getId()] = user;
+		
+		// BEN
+		variables.nextid = 4;
+	
 		</cfscript>
 		
 		<cfreturn this>
@@ -97,7 +101,12 @@
 			<cfset variables.users[arguments.user.getId()] = arguments.user>
 		<cfelse>
 			<!--- otherwise a new user is being saved --->
-			<cfset newId = structCount(variables.users) + 1>
+			<!--- BEN --->
+			<cflock type="exclusive" name="setNextID" timeout="10" throwontimeout="false">
+				<cfset newId = variables.nextid>
+				<cfset variables.nextid = variables.nextid + 1>
+			</cflock>
+			<!--- END BEN --->
 			
 			<cfset arguments.user.setId(newId)>
 			
