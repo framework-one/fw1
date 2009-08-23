@@ -325,8 +325,8 @@
 	 * do not call/override
 	 */
 	function getController(section) { // "private"
-		var controller = getCachedComponent("controller",section);
-		if ( isDefined('controller') ) {
+		var _controller_fw1 = getCachedComponent("controller",section);
+		if ( isDefined('_controller_fw1') ) {
 			return controller;
 		}
 	}
@@ -335,8 +335,8 @@
 	 * do not call/override
 	 */
 	function getService(section) { // "private"
-		var service = getCachedComponent("service",section);
-		if ( isDefined('service') ) {
+		var _service_fw1 = getCachedComponent("service",section);
+		if ( isDefined('_service_fw1') ) {
 			return service;
 		}
 	}
@@ -560,12 +560,12 @@
 		<cfargument name="cfc" />
 		<cfargument name="method" />
 		
-		<cfset var result = 0 />
+		<cfset var _result_fw1 = 0 />
 		
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
 				argumentCollection="#request.context#" returnVariable="result" />
-			<cfif isDefined("result")>
+			<cfif isDefined("_result_fw1")>
 				<cfreturn result />
 			</cfif>
 		</cfif>
