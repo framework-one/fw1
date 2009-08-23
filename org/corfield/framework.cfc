@@ -423,6 +423,7 @@
 		<cfargument name="action" type="string" />
 		<cfargument name="preserve" type="string" default="none" />
 		<cfargument name="append" type="string" default="none" />
+		<cfargument name="path" type="string" default="#CGI.SCRIPT_NAME#" />
 		
 		<cfset var queryString = "" />
 		<cfset var key = "" />
@@ -447,7 +448,7 @@
 			</cfif>
 		</cfif>
 
-		<cflocation url="#CGI.SCRIPT_NAME#?#framework.action#=#arguments.action##queryString#" addtoken="false" />
+		<cflocation url="#arguments.path#?#framework.action#=#arguments.action##queryString#" addtoken="false" />
 		
 	</cffunction>
 	
