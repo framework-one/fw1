@@ -256,7 +256,7 @@
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.1';
+		variables.framework.version = '0.5.2';
 
 	}
 
@@ -327,7 +327,7 @@
 	function getController(section) { // "private"
 		var _controller_fw1 = getCachedComponent("controller",section);
 		if ( isDefined('_controller_fw1') ) {
-			return controller;
+			return _controller_fw1;
 		}
 	}
 	
@@ -337,7 +337,7 @@
 	function getService(section) { // "private"
 		var _service_fw1 = getCachedComponent("service",section);
 		if ( isDefined('_service_fw1') ) {
-			return service;
+			return _service_fw1;
 		}
 	}
 	
@@ -567,7 +567,7 @@
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
 				argumentCollection="#request.context#" returnVariable="result" />
 			<cfif isDefined("_result_fw1")>
-				<cfreturn result />
+				<cfreturn _result_fw1 />
 			</cfif>
 		</cfif>
 
