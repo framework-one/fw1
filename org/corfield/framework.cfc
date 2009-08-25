@@ -256,7 +256,7 @@
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.2';
+		variables.framework.version = '0.5.3';
 
 	}
 
@@ -565,7 +565,7 @@
 		
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
-				argumentCollection="#request.context#" returnVariable="result" />
+				argumentCollection="#request.context#" returnVariable="_result_fw1" />
 			<cfif isDefined("_result_fw1")>
 				<cfreturn _result_fw1 />
 			</cfif>
