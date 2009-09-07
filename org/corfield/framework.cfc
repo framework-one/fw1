@@ -55,7 +55,11 @@
 		
 		var section = listFirst( action, '.' );
 		var item = listLast( action, '.' );
-		var tuple = { service = getService(section), item = item, key = key };
+		var tuple = structNew();
+		
+		tuple.service = getService(section);
+		tuple.item = item;
+		tuple.key = key;
 		
 		if ( structKeyExists( tuple, "service" ) ) {
 			arrayAppend( request.services, tuple );
@@ -103,7 +107,7 @@
 		if ( structKeyExists(variables.framework, 'base') ) {
 			request.base = variables.framework.base;
 			if ( right(request.base,1) is not '/' ) {
-				request.base &= '/';
+				request.base = request.base & '/';
 			}
 		} else {
 			request.base = getDirectoryFromPath(targetPath);
@@ -119,18 +123,18 @@
 			}
 		}
 
-		if ( !structKeyExists(request, 'context') ) {
-			request.context = { };
+		if ( not structKeyExists(request, 'context') ) {
+			request.context = structNew();
 		}
 		restoreFlashContext();
 		structAppend(request.context,URL);
 		structAppend(request.context,form);
 
-		if ( !structKeyExists(request.context, variables.framework.action) ) {
+		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
 		}
 		if ( listLen(request.context[variables.framework.action], '.') eq 1 ) {
-			request.context[variables.framework.action] &= '.' & variables.framework.defaultItem;
+			request.context[variables.framework.action] = request.context[variables.framework.action] & '.' & variables.framework.defaultItem;
 		}
 		request.action = lCase(request.context[variables.framework.action]);
 
@@ -157,7 +161,7 @@
 			doController( request.controller, 'start' & request.item );
 			doController( request.controller, request.item );
 		}
-		for ( i = 1; i lte arrayLen(request.services); ++i ) {
+		for ( i = 1; i lte arrayLen(request.services); i = i + 1 ) {
 			svc = request.services[i];
 			if ( svc.key is '' ) {
 				// throw the result away:
@@ -170,14 +174,14 @@
 			doController( request.controller, 'end' & request.item );
 			doController( request.controller, 'after' );
 		}
-		if ( !structKeyExists(request, 'view') ) {
+		if ( not structKeyExists(request, 'view') ) {
 			// unable to find a matching view - fail with a nice exception
 			viewNotFound();
 		}
 		out = view( request.view );
-		for ( i = 1; i lte arrayLen(request.layouts); ++i ) {
+		for ( i = 1; i lte arrayLen(request.layouts); i = i + 1 ) {
 			out = layout( request.layouts[i], out );
-			if ( structKeyExists(request, 'layout') and !request.layout ) {
+			if ( structKeyExists(request, 'layout') and not request.layout ) {
 				break;
 			}
 		}
@@ -187,6 +191,9 @@
 	/*
 	 * can be overridden, calling super.onError(exception,event) is optional
 	 * depending on what error handling behavior you want
+	 * note: you need to rename / disable onError() on OpenBD since it does
+	 * not seem to be passed exception or event correctly when something fails
+	 * in the code...
 	 */
 	function onError(exception,event) {
 
@@ -200,7 +207,7 @@
 			setupRequestWrapper();
 			onRequest('');
 		} catch (any e) {
-			fail(exception,event);
+			failure(exception,event);
 		}
 
 	}
@@ -229,34 +236,34 @@
 	function setupFrameworkDefaults() { // "private"
 
 		// default values for Application::variables.framework structure:
-		if ( !structKeyExists(variables, 'framework') ) {
-			variables.framework = { };
+		if ( not structKeyExists(variables, 'framework') ) {
+			variables.framework = structNew();
 		}
-		if ( !structKeyExists(variables.framework, 'action') ) {
+		if ( not structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
-		if ( !structKeyExists(variables.framework, 'defaultSection') ) {
+		if ( not structKeyExists(variables.framework, 'defaultSection') ) {
 			variables.framework.defaultSection = 'main';
 		}
-		if ( !structKeyExists(variables.framework, 'defaultItem') ) {
+		if ( not structKeyExists(variables.framework, 'defaultItem') ) {
 			variables.framework.defaultItem = 'default';
 		}
-		if ( !structKeyExists(variables.framework, 'home') ) {
+		if ( not structKeyExists(variables.framework, 'home') ) {
 			variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		}
-		if ( !structKeyExists(variables.framework, 'error') ) {
+		if ( not structKeyExists(variables.framework, 'error') ) {
 			variables.framework.error = variables.framework.defaultSection & '.error';
 		}
-		if ( !structKeyExists(variables.framework, 'reload') ) {
+		if ( not structKeyExists(variables.framework, 'reload') ) {
 			variables.framework.reload = 'reload';
 		}
-		if ( !structKeyExists(variables.framework, 'password') ) {
+		if ( not structKeyExists(variables.framework, 'password') ) {
 			variables.framework.password = 'true';
 		}
-		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
+		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.3';
+		variables.framework.version = '0.5.4';
 
 	}
 
@@ -265,13 +272,14 @@
 	 */
 	function setupApplicationWrapper() { // "private"
 
-		var framework = {
-				cache = {
-					lastReload = now(),
-					controllers = { },
-					services = { }
-				}
-			};
+		var framework = structNew();
+		
+		framework.cache = structNew();
+
+		framework.cache.lastReload = now();
+		framework.cache.controllers = structNew();
+		framework.cache.services = structNew();
+
 		application[variables.framework.applicationKey] = framework;
 		setupApplication();
 
@@ -295,14 +303,14 @@
 
 		request.controller = getController(request.section);
 		
-		request.services = [ ];
+		request.services = arrayNew(1);
 		service( request.action, "data" );
 		
 		if ( fileExists( expandPath( request.base & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			request.view = request.section & '/' & request.item;
 		}
 		
-		request.layouts = [ ];
+		request.layouts = arrayNew(1);
 		// look for item-specific layout:
 		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section & '/' & request.item);
@@ -344,7 +352,7 @@
 	/*
 	 * do not call/override
 	 */
-	function fail(exception,event) { // "private"
+	function failure(exception,event) { // "private"
 	
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
@@ -370,7 +378,7 @@
 		
 		<cfset var rc = request.context />
 		<cfset var response = '' />
-		<cfset var local = { } />
+		<cfset var local = structNew() />
 		
 		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#arguments.path#.cfm"/></cfsavecontent>
 		
@@ -394,7 +402,7 @@
 				<cfif len(key) gt 3 and left(key,3) is "set">
 					<cfset property = right(key, len(key)-3) />
 					<cfif structKeyExists(request.context,property)>
-						<cfset args = { } />
+						<cfset args = structNew() />
 						<cfset args[property] = request.context[property] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					</cfif>
@@ -405,7 +413,7 @@
 				<cfset key = "set" & property />
 				<cfif structKeyExists( arguments.cfc, key )>
 					<cfif structKeyExists(request.context,property)>
-						<cfset args = { } />
+						<cfset args = structNew() />
 						<cfset args[property] = request.context[property] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					</cfif>
@@ -436,13 +444,13 @@
 			<cfif arguments.append is "all">
 				<cfloop item="key" collection="#request.context#">
 					<cfif isSimpleValue( request.context[key] )>
-						<cfset queryString &= "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
 					</cfif>
 				</cfloop>
 			<cfelse>
 				<cfloop index="key" list="#arguments.append#">
 					<cfif structKeyExists( request.context, key ) and isSimpleValue( request.context[key] )>
-						<cfset queryString &= "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
 					</cfif>
 				</cfloop>
 			</cfif>
@@ -460,7 +468,7 @@
 		
 		<cfset var rc = request.context />
 		<cfset var response = '' />
-		<cfset var local = { } />
+		<cfset var local = structNew() />
 		
 		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#arguments.path#.cfm"/></cfsavecontent>
 		
@@ -485,7 +493,7 @@
 				<cfset property = right(key, len(key)-3) />
 				<cfif getBeanFactory().containsBean(property)>
 					<!--- args = [ getBeanFactory().getBean(property) ] does not seem to be portable --->
-					<cfset args = { } />
+					<cfset args = structNew() />
 					<cfset args[property] = getBeanFactory().getBean(property) />
 					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 				</cfif>
@@ -502,11 +510,11 @@
 		<cfset var types = type & 's' />
 		<cfset var cfc = 0 />
 		
-		<cfif !structKeyExists(cache[types], section)>
+		<cfif not structKeyExists(cache[types], section)>
 			<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#section#" type="exclusive" timeout="30">
 				<cfscript>
 					
-					if ( !structKeyExists(cache[types], section)) {
+					if ( not structKeyExists(cache[types], section)) {
 						
 						if ( hasBeanFactory() and getBeanFactory().containsBean( section & type ) ) {
 

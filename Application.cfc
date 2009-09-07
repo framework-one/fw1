@@ -3,8 +3,13 @@
 	
 	this.name = 'fw1-root';
 	// FW/1 - configuration:
-	variables.framework = {
-		// controllers/layouts/services/views are in this folder:
-		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction'
-	};
+	variables.framework = structNew();
+	// controllers/layouts/services/views are in this folder:
+	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction';
+	
+	// The above code is for OpenBD 1.1. On CF8 and Railo 3.1 you could just do:
+	// variables.framework = {
+	// 		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction';
+	// }
+
 </cfscript></cfcomponent>
