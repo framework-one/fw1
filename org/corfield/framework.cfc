@@ -99,7 +99,8 @@
 		
 		setupFrameworkDefaults();
 		
-		if ( structKeyExists(URL, variables.framework.reload) and 
+		if ( isDefined('URL') and 
+				structKeyExists(URL, variables.framework.reload) and 
 				URL[variables.framework.reload] is variables.framework.password ) {
 			setupApplicationWrapper();
 		}
@@ -127,8 +128,9 @@
 			request.context = structNew();
 		}
 		restoreFlashContext();
-		structAppend(request.context,URL);
-		structAppend(request.context,form);
+		// certain remote calls do not have URL or form scope:
+		if ( isDefined('URL') ) structAppend(request.context,URL);
+		if ( isDefined('form') ) structAppend(request.context,form);
 
 		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
@@ -141,7 +143,7 @@
 		setupRequestWrapper();
 		
 		// allow CFC requests through directly:
-		if ( right(targetPath,4) is '.cfc' ) {
+		if ( right(targetPath,4) is '.cfc' or targetPath is '/flex2gateway' ) {
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
@@ -274,7 +276,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.6';
+		variables.framework.version = '0.6.0';
 
 	}
 
