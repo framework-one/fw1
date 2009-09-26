@@ -155,6 +155,7 @@
 		var out = 0;
 		var i = 0;
 		var svc = 0;
+		var _data_fw1 = 0;
 		
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'before' );
@@ -167,7 +168,10 @@
 				// throw the result away:
 				doService( svc.service, svc.item );
 			} else {
-				request.context[ svc.key ] = doService( svc.service, svc.item );
+				_data_fw1 = doService( svc.service, svc.item );
+				if ( isDefined('_data_fw1') ) {
+					request.context[ svc.key ] = _data_fw1;
+				}
 			}
 		}
 		if ( structKeyExists( request, 'controller' ) ) {
@@ -270,7 +274,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.5';
+		variables.framework.version = '0.5.6';
 
 	}
 
