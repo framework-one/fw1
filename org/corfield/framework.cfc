@@ -229,6 +229,13 @@
 	}
 	
 	/*
+	 * return the action URL variable name - allows applications to build URLs
+	 */
+	function getAction() {
+		return variables.framework.action;
+	}
+	
+	/*
 	 * do not call/override - set your framework configuration
 	 * using variables.framework = { key/value pairs} in the pseudo-constructor
 	 * of your Application.cfc
@@ -263,7 +270,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.5.4';
+		variables.framework.version = '0.5.5';
 
 	}
 
