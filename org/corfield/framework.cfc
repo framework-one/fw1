@@ -528,12 +528,12 @@
 				<cfscript>
 					
 					if ( not structKeyExists(cache[types], section)) {
-						
+
 						if ( hasBeanFactory() and getBeanFactory().containsBean( section & type ) ) {
 
 							cfc = getBeanFactory().getBean( section & type );
 
-						} else if ( fileExists( expandPath( request.base & types & '/' & section & '.cfc' ) ) ) {
+						} else if ( fileExists( expandPath( cfcFilePath( request.cfcbase ) & types & '/' & section & '.cfc' ) ) ) {
 
 							if ( request.cfcbase is '' ) {
 								cfc = createObject( 'component', types & '.' & section );
@@ -566,6 +566,13 @@
 			<cfreturn cache[types][section] />
 		</cfif>
 		<!--- else "return null" effectively --->
+	</cffunction>
+	
+	<cffunction name="cfcFilePath" access="private" output="false" hint="Changes a dotted path to a filesystem path">
+		<cfargument name="dottedPath" />
+		
+		<cfreturn '/' & replace( arguments.dottedPath, '.', '/', 'all' ) & '/' />
+		
 	</cffunction>
 	
 	<cffunction name="doController" access="private" output="false" hint="Executes a controller in context.">
