@@ -53,8 +53,8 @@
 	 */
 	function service( action, key ) {
 		
-		var section = listFirst( action, '.' );
-		var item = listLast( action, '.' );
+		var section = getSection( action );
+		var item = getItem( action );
 		var tuple = structNew();
 		
 		tuple.service = getService(section);
@@ -135,6 +135,7 @@
 		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
 		}
+		// TODO: consider listLen() gt 2:
 		if ( listLen(request.context[variables.framework.action], '.') eq 1 ) {
 			request.context[variables.framework.action] = request.context[variables.framework.action] & '.' & variables.framework.defaultItem;
 		}
@@ -242,6 +243,22 @@
 	}
 	
 	/*
+	 * return the item part of the action
+	 */
+	function getItem( action ) {
+		// TODO: consider listLen() gt 2:
+		return listLast( action, '.' );
+	}
+	
+	/*
+	 * return the section part of the action
+	 */
+	function getSection( action ) {
+		// TODO: consider listLen() gt 2:
+		return listFirst( action, '.' );
+	}
+	
+	/*
 	 * do not call/override - set your framework configuration
 	 * using variables.framework = { key/value pairs} in the pseudo-constructor
 	 * of your Application.cfc
@@ -276,7 +293,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.1';
+		variables.framework.version = '0.6.2';
 
 	}
 
@@ -310,9 +327,8 @@
 	 */
 	function setupRequestWrapper() { // "private"
 	
-		// TODO: consider listLen(request.action,'.') gt 2
-		request.section = listFirst(request.action, '.');
-		request.item = listLast(request.action, '.');
+		request.section = getSection(request.action);
+		request.item = getItem(request.action);
 
 		request.controller = getController(request.section);
 		
