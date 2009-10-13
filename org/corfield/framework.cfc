@@ -259,6 +259,16 @@
 	}
 	
 	/*
+	 * return the default service result key
+	 * override this if you want the default service result to be
+	 * stored under a different request context key, based on the
+	 * requested action, e.g., return getSection( action );
+	 */
+	function getServiceKey( action ) {
+		return "data";
+	}
+	
+	/*
 	 * do not call/override - set your framework configuration
 	 * using variables.framework = { key/value pairs} in the pseudo-constructor
 	 * of your Application.cfc
@@ -293,7 +303,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.2';
+		variables.framework.version = '0.6.3';
 
 	}
 
@@ -333,7 +343,7 @@
 		request.controller = getController(request.section);
 		
 		request.services = arrayNew(1);
-		service( request.action, "data" );
+		service( request.action, getServiceKey( request.action ) );
 		
 		if ( fileExists( expandPath( request.base & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			request.view = request.section & '/' & request.item;
