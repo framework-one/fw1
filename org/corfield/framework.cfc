@@ -97,6 +97,9 @@
 	 */
 	function onRequestStart(targetPath) {
 		
+		var pathInfo = CGI.PATH_INFO;
+		var sesIx = 0;
+		
 		setupFrameworkDefaults();
 		
 		if ( isDefined('URL') and 
@@ -128,6 +131,23 @@
 			request.context = structNew();
 		}
 		restoreFlashContext();
+		// SES URLs by popular request :)
+		if ( len(pathInfo) gt len(CGI.SCRIPT_NAME) and left(pathInfo,len(CGI.SCRIPT_NAME)) is CGI.SCRIPT_NAME ) {
+			// canonicalize for IIS:
+			pathInfo = right( pathInfo, len(pathInfo) - len(CGI.SCRIPT_NAME) );
+		}
+		pathInfo = listToArray( pathInfo, '/' );
+		for ( sesIx = 1; sesIx lte arrayLen( pathInfo ); sesIx = sesIx + 1 ) {
+			if ( sesIx eq 1 ) {
+				request.context[variables.framework.action] = pathInfo[sesIx];
+			} else if ( sesIx eq 2 ) {
+				request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+			} else if ( sesIx mod 2 eq 1 ) {
+				request.context[ pathInfo[sesIx] ] = '';
+			} else {
+				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
+			}
+		}
 		// certain remote calls do not have URL or form scope:
 		if ( isDefined('URL') ) structAppend(request.context,URL);
 		if ( isDefined('form') ) structAppend(request.context,form);
@@ -303,7 +323,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.3';
+		variables.framework.version = '0.6.4';
 
 	}
 
