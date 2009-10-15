@@ -132,9 +132,13 @@
 		}
 		restoreFlashContext();
 		// SES URLs by popular request :)
-		if ( len(pathInfo) gt len(CGI.SCRIPT_NAME) and left(pathInfo,len(CGI.SCRIPT_NAME)) is CGI.SCRIPT_NAME ) {
+		if ( len( pathInfo ) gte len( CGI.SCRIPT_NAME ) and left( pathInfo, len( CGI.SCRIPT_NAME ) ) is CGI.SCRIPT_NAME ) {
 			// canonicalize for IIS:
-			pathInfo = right( pathInfo, len(pathInfo) - len(CGI.SCRIPT_NAME) );
+			if ( len( pathInfo ) eq len( CGI.SCRIPT_NAME ) ) {
+				pathInfo = '';
+			} else {
+				pathInfo = right( pathInfo, len( pathInfo ) - len( CGI.SCRIPT_NAME ) );
+			}
 		}
 		pathInfo = listToArray( pathInfo, '/' );
 		for ( sesIx = 1; sesIx lte arrayLen( pathInfo ); sesIx = sesIx + 1 ) {
@@ -323,7 +327,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4';
+		variables.framework.version = '0.6.4.1';
 
 	}
 
