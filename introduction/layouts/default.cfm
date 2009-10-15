@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<title>FW/1 - Framework One</title>
+		<base href="<cfoutput>#getDirectoryFromPath( CGI.SCRIPT_NAME )#</cfoutput>" />
 		<link rel="stylesheet" type="text/css" href="css/fw1.css" />
 	</head>
 	<body>
