@@ -107,9 +107,7 @@
 		
 		setupFrameworkDefaults();
 		
-		if ( isDefined('URL') and 
-				structKeyExists(URL, variables.framework.reload) and 
-				URL[variables.framework.reload] is variables.framework.password ) {
+		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
 		}
 		
@@ -332,7 +330,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4.5';
+		variables.framework.version = '0.6.4.6';
 
 	}
 
@@ -401,7 +399,7 @@
 	}
 	
 	/*
-	 * do not call/override
+	 * do not override
 	 */
 	function getController(section) { // "private"
 		var _controller_fw1 = getCachedComponent("controller",section);
@@ -411,7 +409,7 @@
 	}
 	
 	/*
-	 * do not call/override
+	 * do not override
 	 */
 	function getService(section) { // "private"
 		var _service_fw1 = getCachedComponent("service",section);
@@ -438,13 +436,21 @@
 	
 	}
 
-	function viewNotFound() {
-		
+	function viewNotFound() { // "private"
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.", 
 				detail="Either 'views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." );
-		
 	}
 	
+	function isFrameworkInitialized() { // "private"
+		return structKeyExists( application, variables.framework.applicationKey );
+	}
+	
+	function isFrameworkReloadRequest() { // "private"
+		return isDefined('URL') and 
+				structKeyExists(URL, variables.framework.reload) and 
+				URL[variables.framework.reload] is variables.framework.password;
+	}
+
 </cfscript><cfsilent>
 	
 	<!---
