@@ -330,7 +330,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4.6';
+		variables.framework.version = '0.6.5';
 
 	}
 
@@ -651,7 +651,14 @@
 		<cfargument name="method" />
 		
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
-			<cfinvoke component="#arguments.cfc#" method="#arguments.method#" rc="#request.context#" />
+			<cftry>
+				<cfinvoke component="#arguments.cfc#" method="#arguments.method#" rc="#request.context#" />
+			<cfcatch type="any">
+				<cfset request.failedCfcName = getMetadata( arguments.cfc ).fullname />
+				<cfset request.failedMethod = arguments.method />
+				<cfrethrow />
+			</cfcatch>
+			</cftry>
 		</cfif>
 
 	</cffunction>
@@ -663,8 +670,15 @@
 		<cfset var _result_fw1 = 0 />
 		
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
-			<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
-				argumentCollection="#request.context#" returnVariable="_result_fw1" />
+			<cftry>
+				<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
+					argumentCollection="#request.context#" returnVariable="_result_fw1" />
+			<cfcatch type="any">
+				<cfset request.failedCfcName = getMetadata( arguments.cfc ).fullname />
+				<cfset request.failedMethod = arguments.method />
+				<cfrethrow />
+			</cfcatch>
+			</cftry>
 			<cfif isDefined("_result_fw1")>
 				<cfreturn _result_fw1 />
 			</cfif>
