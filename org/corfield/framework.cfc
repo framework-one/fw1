@@ -326,7 +326,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4.2';
+		variables.framework.version = '0.6.4.3';
 
 	}
 
@@ -370,6 +370,9 @@
 		
 		if ( fileExists( expandPath( request.base & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			request.view = request.section & '/' & request.item;
+		} else {
+			// ensures original view not re-invoked for onError() case:
+			structDelete( request, 'view' );
 		}
 		
 		request.layouts = arrayNew(1);
