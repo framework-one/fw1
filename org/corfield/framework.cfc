@@ -332,7 +332,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4.4';
+		variables.framework.version = '0.6.4.5';
 
 	}
 
@@ -714,6 +714,9 @@
 		<cfargument name="type" type="string" required="true" />
 		<cfargument name="message" type="string" required="true" />
 		<cfargument name="detail" type="string" default="" />
+		
+		<cfthrow type="#arguments.type#" message="#arguments.message#" detail="#arguments.detail#" />
+		
 	</cffunction>
 	
 </cfsilent></cfcomponent>
