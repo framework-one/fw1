@@ -57,6 +57,11 @@
 		var item = getItem( action );
 		var tuple = structNew();
 		
+		if ( structKeyExists( request, "serviceExecutionComplete" ) ) {
+			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
+				detail="The service execution phase is complete. Services may not be added by end*() or after() controller methods." );
+		}
+		
 		tuple.service = getService(section);
 		tuple.item = item;
 		tuple.key = key;
@@ -200,6 +205,7 @@
 				}
 			}
 		}
+		request.serviceExecutionComplete = true;
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'end' & request.item );
 			doController( request.controller, 'after' );
@@ -326,7 +332,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.4.3';
+		variables.framework.version = '0.6.4.4';
 
 	}
 
@@ -432,6 +438,13 @@
 	
 	}
 
+	function viewNotFound() {
+		
+		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.", 
+				detail="Either 'views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." );
+		
+	}
+	
 </cfscript><cfsilent>
 	
 	<!---
@@ -697,11 +710,10 @@
 		
 	</cffunction>
 	
-	<cffunction name="viewNotFound" access="private" output="false" hint="Throw a nice, user-friendly exception.">
-		
-		<cfthrow type="FW1.viewNotFound" message="Unable to find a view for '#request.action#' action." 
-				detail="Either 'views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." />
-		
+	<cffunction name="raiseException" access="private" output="false" hint="Throw an exception, callable from script.">
+		<cfargument name="type" type="string" required="true" />
+		<cfargument name="message" type="string" required="true" />
+		<cfargument name="detail" type="string" default="" />
 	</cffunction>
 	
 </cfsilent></cfcomponent>
