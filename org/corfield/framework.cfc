@@ -330,7 +330,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.5';
+		variables.framework.version = '0.6.6';
 
 	}
 
@@ -527,7 +527,7 @@
 		<cfif arguments.append is not "none">
 			<cfif arguments.append is "all">
 				<cfloop item="key" collection="#request.context#">
-					<cfif isSimpleValue( request.context[key] )>
+					<cfif isSimpleValue( request.context[key] ) and isSimpleValue( request.context[key] )>
 						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
 					</cfif>
 				</cfloop>
