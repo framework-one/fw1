@@ -429,10 +429,13 @@
 		if ( not structKeyExists(variables.framework, 'maxNumContextsPreserved') ) {
 			variables.framework.maxNumContextsPreserved = 10;
 		}
+		if ( not structKeyExists(variables.framework, 'baseURL') ) {
+			variables.framework.baseURL = 'useCgiScriptName';
+		}
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.0';
+		variables.framework.version = '0.7.1';
 
 	}
 
@@ -624,6 +627,27 @@
 	</cffunction>
 
 	<!---
+		buildURL() should be used from views to construct urls when using subsystems or
+		in order to provide a simpler transition to using subsystems in the future
+	--->
+	<cffunction name="buildURL" access="public" output="false">
+		<cfargument name="action" type="string" />
+		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
+		<cfset var initialDelim = '?' />
+		<cfif arguments.path eq "useCgiScriptName">
+			<cfset arguments.path = CGI.SCRIPT_NAME />
+		</cfif>
+		<cfif find( '?', arguments.path ) gt 0>
+			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
+				<cfset initialDelim = '' />
+			<cfelse>
+				<cfset initialDelim = '&' />
+			</cfif>
+		</cfif>
+		<cfreturn "#arguments.path##initialDelim##variables.framework.action#=#getFullyQualifiedAction(arguments.action)#" />
+	</cffunction>
+
+	<!---
 		redirect() may be invoked inside controllers
 	--->
 	<cffunction name="redirect" access="public" output="false"
@@ -631,12 +655,11 @@
 		<cfargument name="action" type="string" />
 		<cfargument name="preserve" type="string" default="none" />
 		<cfargument name="append" type="string" default="none" />
-		<cfargument name="path" type="string" default="#CGI.SCRIPT_NAME#" />
+		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
 
 		<cfset var queryString = "" />
 		<cfset var key = "" />
 		<cfset var preserveKey = "" />
-		<cfset arguments.action = getFullyQualifiedAction( arguments.action )>
 
 		<cfif arguments.preserve is not "none">
 			<cfset preserveKey = saveFlashContext(arguments.preserve) />
@@ -659,7 +682,7 @@
 			</cfif>
 		</cfif>
 
-		<cflocation url="#arguments.path#?#framework.action#=#arguments.action##queryString#" addtoken="false" />
+		<cflocation url="#buildURL(arguments.action, arguments.path)##queryString#" addtoken="false" />
 
 	</cffunction>
 
