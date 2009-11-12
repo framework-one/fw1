@@ -22,9 +22,9 @@
 	 * - getBean(name) - returns the named bean
 	 */
 	function setBeanFactory(factory) {
-	
+
 		application[variables.framework.applicationKey].factory = factory;
-	
+
 	}
 
 	/*
@@ -48,29 +48,40 @@
 	 */
 	function setupRequest() { }
 
-	/*
-	 * call this from your controller to queue up additional services
-	 */
-	function service( action, key ) {
-		
+</cfscript><cfsilent>
+
+	<!--- call this from your controller to queue up additional services --->
+	<cffunction name="service" output="false">
+		<cfargument name="action" />
+		<cfargument name="key" />
+		<cfargument name="enforceExistence" required="false" default="true" />
+		<cfscript>
+		var subsystem = getSubsystem( action );
 		var section = getSection( action );
 		var item = getItem( action );
 		var tuple = structNew();
-		
+
 		if ( structKeyExists( request, "serviceExecutionComplete" ) ) {
 			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
 				detail="The service execution phase is complete. Services may not be added by end*() or after() controller methods." );
 		}
-		
-		tuple.service = getService(section);
+
+		tuple.service = getService(section=section, subsystem=subsystem);
 		tuple.item = item;
 		tuple.key = key;
-		
+		tuple.enforceExistence = enforceExistence;
+
 		if ( structKeyExists( tuple, "service" ) ) {
 			arrayAppend( request.services, tuple );
+		} else if ( enforceExistence ) {
+			raiseException( type="FW1.serviceCfcNotFound", message="Service '#action#' does not exist.",
+				detail="To have the execution of this service be conditional based upon its existence, pass in a third parameter of 'false'." );
 		}
-	}
-	
+		</cfscript>
+	</cffunction>
+
+</cfsilent><cfscript>
+
 	/*
 	 * it is better to set up your application configuration in
 	 * your setupApplication() method since that is called on a
@@ -82,7 +93,7 @@
 		setupFrameworkDefaults();
 		setupApplicationWrapper();
 	}
-	
+
 	/*
 	 * it is better to set up your session configuration in
 	 * your setupSession() method
@@ -93,7 +104,7 @@
 		setupFrameworkDefaults();
 		setupSession();
 	}
-	
+
 	/*
 	 * it is better to set up your request configuration in
 	 * your setupRequest() method
@@ -101,16 +112,16 @@
 	 * super.onRequestStart() first
 	 */
 	function onRequestStart(targetPath) {
-		
+
 		var pathInfo = CGI.PATH_INFO;
 		var sesIx = 0;
-		
+
 		setupFrameworkDefaults();
-		
+
 		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
 		}
-		
+
 		if ( structKeyExists(variables.framework, 'base') ) {
 			request.base = variables.framework.base;
 			if ( right(request.base,1) is not '/' ) {
@@ -144,14 +155,20 @@
 		}
 		pathInfo = listToArray( pathInfo, '/' );
 		for ( sesIx = 1; sesIx lte arrayLen( pathInfo ); sesIx = sesIx + 1 ) {
-			if ( sesIx eq 1 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx];
-			} else if ( sesIx eq 2 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
-			} else if ( sesIx mod 2 eq 1 ) {
-				request.context[ pathInfo[sesIx] ] = '';
+			if ( sesIx lte getMaxNumActionParts() ) {
+				if ( sesIx eq 1 ) {
+					request.context[variables.framework.action] = pathInfo[sesIx];
+				} else if ( sesIx eq 2 ) {
+					request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+				} else if ( sesIx eq 3 ) {
+					request.context[variables.framework.action] = pathInfo[sesIx-2] & ':' & pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+				}
 			} else {
-				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
+				if ( (sesIx - getMaxNumActionParts()) mod 2 eq 1 ) {
+					request.context[ pathInfo[sesIx] ] = '';
+				} else {
+					request.context[ pathInfo[sesIx] ] = pathInfo[sesIx];
+				}
 			}
 		}
 		// certain remote calls do not have URL or form scope:
@@ -160,32 +177,30 @@
 
 		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
-		}
-		// TODO: consider listLen() gt 2:
-		if ( listLen(request.context[variables.framework.action], '.') eq 1 ) {
-			request.context[variables.framework.action] = request.context[variables.framework.action] & '.' & variables.framework.defaultItem;
+		} else {
+			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
 		}
 		request.action = lCase(request.context[variables.framework.action]);
 
 		setupRequestWrapper();
-		
+
 		// allow CFC requests through directly:
 		if ( right(targetPath,4) is '.cfc' or targetPath is '/flex2gateway' ) {
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
 	}
-	
+
 	/*
 	 * not intended to be overridden, automatically deleted for CFC requests
 	 */
 	function onRequest(targetPath) {
-		
+
 		var out = 0;
 		var i = 0;
 		var svc = 0;
 		var _data_fw1 = 0;
-		
+
 		if ( structKeyExists( request, 'controller' ) ) {
 			doController( request.controller, 'before' );
 			doController( request.controller, 'start' & request.item );
@@ -195,9 +210,9 @@
 			svc = request.services[i];
 			if ( svc.key is '' ) {
 				// throw the result away:
-				doService( svc.service, svc.item );
+				doService( svc.service, svc.item, svc.enforceExistence );
 			} else {
-				_data_fw1 = doService( svc.service, svc.item );
+				_data_fw1 = doService( svc.service, svc.item, svc.enforceExistence );
 				if ( isDefined('_data_fw1') ) {
 					request.context[ svc.key ] = _data_fw1;
 				}
@@ -221,7 +236,7 @@
 		}
 		writeOutput( out );
 	}
-	
+
 	/*
 	 * can be overridden, calling super.onError(exception,event) is optional
 	 * depending on what error handling behavior you want
@@ -245,46 +260,113 @@
 		}
 
 	}
-	
+
 	/*
 	 * returns whatever the framework has been told is a bean factory
 	 */
 	function getBeanFactory() {
-		
+
 		return application[variables.framework.applicationKey].factory;
 	}
-	
+
 	/*
 	 * returns true iff the framework has been told about a bean factory
 	 */
 	function hasBeanFactory() {
-		
+
 		return structKeyExists(application[variables.framework.applicationKey], 'factory');
 	}
-	
+
 	/*
 	 * return the action URL variable name - allows applications to build URLs
 	 */
 	function getAction() {
 		return variables.framework.action;
 	}
-	
+
+	function usingSubsystems() {
+		return variables.framework.usingSubsystems;
+	}
+	function actionSpecifiesSubsystem( action ) {
+		if ( not usingSubsystems() ) {
+			return false;
+		}
+		return listLen( action, ':' ) gt 1 or right( action, 1 ) eq ':';
+	}
+	function getMaxNumActionParts() { // "private"
+		if (usingSubsystems()) {
+			return 3;
+		}
+		return 2;
+	}
+
+	/*
+	 * return the action without the subsystem
+	 */
+	function getSectionAndItem( action ) { // "private"
+		var sectionAndItem = '';
+		if ( usingSubsystems() and actionSpecifiesSubsystem( action ) ) {
+			if ( listLen( action, ':' ) gt 1 ) {
+				sectionAndItem = listLast( action, ':' );
+			}
+		} else {
+			sectionAndItem = action;
+		}
+		if ( len( sectionAndItem ) eq 0 ) {
+			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+		} else if ( listLen( sectionAndItem, '.' ) eq 1 ) {
+			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
+		} else {
+			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & listLast( sectionAndItem, '.' );
+		}
+		return sectionAndItem;
+	}
+
 	/*
 	 * return the item part of the action
 	 */
 	function getItem( action ) {
-		// TODO: consider listLen() gt 2:
-		return listLast( action, '.' );
+		return listLast( getSectionAndItem( action ), '.' );
 	}
-	
+
 	/*
 	 * return the section part of the action
 	 */
 	function getSection( action ) {
-		// TODO: consider listLen() gt 2:
-		return listFirst( action, '.' );
+		return listFirst( getSectionAndItem( action ), '.' );
 	}
-	
+
+	/*
+	 * return the subsystem part of the action
+	 */
+	function getSubsystem( action ) {
+		if ( actionSpecifiesSubsystem( action ) ) {
+			return listFirst( action, ':' );
+		}
+		return getDefaultSubsystem();
+	}
+
+	function getDefaultSubsystem() { // "private"
+		if (NOT usingSubsystems()) {
+			return '';
+		}
+		if ( structKeyExists( request, 'subsystem' ) ) {
+			return request.subsystem;
+		}
+		return variables.framework.defaultSubsystem;
+	}
+
+	/*
+	 * return an action with all applicable parts (subsystem, section, and item) specified
+	 * using defaults from the configuration or request where appropriate
+	 */
+	function getFullyQualifiedAction( action ) {
+		if ( usingSubsystems() ) {
+			return getSubsystem( action ) & ':' & getSectionAndItem( action );
+		}
+		return getSectionAndItem( action );
+	}
+
 	/*
 	 * return the default service result key
 	 * override this if you want the default service result to be
@@ -294,7 +376,7 @@
 	function getServiceKey( action ) {
 		return "data";
 	}
-	
+
 	/*
 	 * do not call/override - set your framework configuration
 	 * using variables.framework = { key/value pairs} in the pseudo-constructor
@@ -309,6 +391,12 @@
 		if ( not structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
+		if ( not structKeyExists(variables.framework, 'usingSubsystems') ) {
+			variables.framework.usingSubsystems = false;
+		}
+		if ( not structKeyExists(variables.framework, 'defaultSubsystem') ) {
+			variables.framework.defaultSubsystem = 'app1';
+		}
 		if ( not structKeyExists(variables.framework, 'defaultSection') ) {
 			variables.framework.defaultSection = 'main';
 		}
@@ -316,10 +404,18 @@
 			variables.framework.defaultItem = 'default';
 		}
 		if ( not structKeyExists(variables.framework, 'home') ) {
-			variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+			if (usingSubsystems()) {
+				variables.framework.home = variables.framework.defaultSubsystem & ':' & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+			} else {
+				variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+			}
 		}
 		if ( not structKeyExists(variables.framework, 'error') ) {
-			variables.framework.error = variables.framework.defaultSection & '.error';
+			if (usingSubsystems()) {
+				variables.framework.error = variables.framework.defaultSubsystem & ':' & variables.framework.defaultSection & '.error';
+			} else {
+				variables.framework.error = variables.framework.defaultSection & '.error';
+			}
 		}
 		if ( not structKeyExists(variables.framework, 'reload') ) {
 			variables.framework.reload = 'reload';
@@ -327,10 +423,16 @@
 		if ( not structKeyExists(variables.framework, 'password') ) {
 			variables.framework.password = 'true';
 		}
+		if ( not structKeyExists(variables.framework, 'preserveKeyURLKey') ) {
+			variables.framework.preserveKeyURLKey = 'fw1pk';
+		}
+		if ( not structKeyExists(variables.framework, 'maxNumContextsPreserved') ) {
+			variables.framework.maxNumContextsPreserved = 10;
+		}
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.6.6';
+		variables.framework.version = '0.7.0';
 
 	}
 
@@ -340,7 +442,7 @@
 	function setupApplicationWrapper() { // "private"
 
 		var framework = structNew();
-		
+
 		framework.cache = structNew();
 
 		framework.cache.lastReload = now();
@@ -351,7 +453,7 @@
 		setupApplication();
 
 	}
-	
+
 	/*
 	 * do not call/override
 	 */
@@ -359,70 +461,84 @@
 		setupSession();
 	}
 
+	function getSubsystemDirPrefix( subsystem ) { // "private"
+		if (subsystem eq '') {
+			return '';
+		}
+		return subsystem & '/';
+	}
+
 	/*
 	 * do not call/override
 	 */
 	function setupRequestWrapper() { // "private"
-	
+		request.subsystem = getSubsystem(request.action);
+		request.subsystembase = request.base & getSubsystemDirPrefix(request.subsystem);
 		request.section = getSection(request.action);
 		request.item = getItem(request.action);
 
-		request.controller = getController(request.section);
-		
+		request.controller = getController(section=request.section, subsystem=request.subsystem);
+
 		request.services = arrayNew(1);
-		service( request.action, getServiceKey( request.action ) );
-		
-		if ( fileExists( expandPath( request.base & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
+		service( request.action, getServiceKey( request.action ), false );
+
+		if ( fileExists( expandPath( request.subsystembase & 'views/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			request.view = request.section & '/' & request.item;
 		} else {
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
 		}
-		
+
 		request.layouts = arrayNew(1);
 		// look for item-specific layout:
-		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '/' & request.item & '.cfm' ) ) ) {
+		if ( fileExists( expandPath( request.subsystembase & 'layouts/' & request.section & '/' & request.item & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section & '/' & request.item);
 		}
 		// look for section-specific layout:
-		if ( fileExists( expandPath( request.base & 'layouts/' & request.section & '.cfm' ) ) ) {
+		if ( fileExists( expandPath( request.subsystembase & 'layouts/' & request.section & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section);
 		}
 		// look for site-wide layout:
 		if ( request.section is not 'default' and
-				fileExists( expandPath( request.base & 'layouts/default.cfm' ) ) ) {
+				fileExists( expandPath( request.subsystembase & 'layouts/default.cfm' ) ) ) {
 			arrayAppend(request.layouts, 'default');
 		}
-		
+
 		setupRequest();
 
 	}
-	
-	/*
-	 * do not override
-	 */
-	function getController(section) { // "private"
-		var _controller_fw1 = getCachedComponent("controller",section);
+</cfscript><cfsilent>
+
+	<!--- do not override --->
+	<cffunction name="getController" output="false">
+		<cfargument name="section" />
+		<cfargument name="subsystem" default="#getDefaultSubsystem()#" required="false" />
+		<cfscript>
+		var _controller_fw1 = getCachedComponent("controller",subsystem,section);
 		if ( isDefined('_controller_fw1') ) {
 			return _controller_fw1;
 		}
-	}
-	
-	/*
-	 * do not override
-	 */
-	function getService(section) { // "private"
-		var _service_fw1 = getCachedComponent("service",section);
+		</cfscript>
+	</cffunction>
+
+	<!--- do not override --->
+	<cffunction name="getService" output="false">
+		<cfargument name="section" />
+		<cfargument name="subsystem" default="#getDefaultSubsystem()#" required="false" />
+		<cfscript>
+		var _service_fw1 = getCachedComponent("service",subsystem,section);
 		if ( isDefined('_service_fw1') ) {
 			return _service_fw1;
 		}
-	}
-	
+		</cfscript>
+	</cffunction>
+
+</cfsilent><cfscript>
 	/*
 	 * do not call/override
 	 */
 	function failure(exception,event) { // "private"
-	
+
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
@@ -433,54 +549,54 @@
 		writeOutput( '<h2>#exception.message#</h2>' );
 		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
 		dumpException(exception);
-	
+
 	}
 
 	function viewNotFound() { // "private"
-		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.", 
-				detail="Either 'views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." );
+		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
+				detail="Either '#request.subsystembase#views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." );
 	}
-	
+
 	function isFrameworkInitialized() { // "private"
 		return structKeyExists( application, variables.framework.applicationKey );
 	}
-	
+
 	function isFrameworkReloadRequest() { // "private"
-		return isDefined('URL') and 
-				structKeyExists(URL, variables.framework.reload) and 
+		return isDefined('URL') and
+				structKeyExists(URL, variables.framework.reload) and
 				URL[variables.framework.reload] is variables.framework.password;
 	}
 
 </cfscript><cfsilent>
-	
+
 	<!---
 		layout() may be invoked inside views and layouts
 	--->
 	<cffunction name="layout" output="false" hint="Returns the UI generated by the named layout.">
 		<cfargument name="path" />
 		<cfargument name="body" />
-		
+
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
-		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#layouts/#arguments.path#.cfm"/></cfsavecontent>
-		
+
+		<cfsavecontent variable='response'><cfinclude template="#request.subsystembase#layouts/#arguments.path#.cfm"/></cfsavecontent>
+
 		<cfreturn response />
 	</cffunction>
-	
+
 	<!---
 		populate() may be invoked inside controllers
 	--->
-	<cffunction name="populate" access="public" output="false" 
+	<cffunction name="populate" access="public" output="false"
 			hint="Used to populate beans from the request context.">
 		<cfargument name="cfc" />
 		<cfargument name="keys" default="" />
-		
+
 		<cfset var key = 0 />
 		<cfset var property = 0 />
 		<cfset var args = 0 />
-		
+
 		<cfif arguments.keys is "">
 			<cfloop item="key" collection="#arguments.cfc#">
 				<cfif len(key) gt 3 and left(key,3) is "set">
@@ -504,30 +620,33 @@
 				</cfif>
 			</cfloop>
 		</cfif>
-		
+
 	</cffunction>
-	
+
 	<!---
 		redirect() may be invoked inside controllers
 	--->
-	<cffunction name="redirect" access="public" output="false" 
+	<cffunction name="redirect" access="public" output="false"
 			hint="Redirect to the specified action, optionally append specified request context items - or use session.">
 		<cfargument name="action" type="string" />
 		<cfargument name="preserve" type="string" default="none" />
 		<cfargument name="append" type="string" default="none" />
 		<cfargument name="path" type="string" default="#CGI.SCRIPT_NAME#" />
-		
+
 		<cfset var queryString = "" />
 		<cfset var key = "" />
-		
+		<cfset var preserveKey = "" />
+		<cfset arguments.action = getFullyQualifiedAction( arguments.action )>
+
 		<cfif arguments.preserve is not "none">
-			<cfset saveFlashContext(arguments.preserve) />
+			<cfset preserveKey = saveFlashContext(arguments.preserve) />
+			<cfset queryString = "&#variables.framework.preserveKeyURLKey#=#preserveKey#">
 		</cfif>
-		
+
 		<cfif arguments.append is not "none">
 			<cfif arguments.append is "all">
 				<cfloop item="key" collection="#request.context#">
-					<cfif isSimpleValue( request.context[key] ) and isSimpleValue( request.context[key] )>
+					<cfif isSimpleValue( request.context[key] )>
 						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
 					</cfif>
 				</cfloop>
@@ -541,37 +660,37 @@
 		</cfif>
 
 		<cflocation url="#arguments.path#?#framework.action#=#arguments.action##queryString#" addtoken="false" />
-		
+
 	</cffunction>
-	
+
 	<!---
 		view() may be invoked inside views and layouts
 	--->
 	<cffunction name="view" output="false" hint="Returns the UI generated by the named view. Can be called from layouts.">
 		<cfargument name="path" />
-		
+
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
-		
-		<cfsavecontent variable='response'><cfinclude template="#request.base#views/#arguments.path#.cfm"/></cfsavecontent>
-		
+
+		<cfsavecontent variable='response'><cfinclude template="#request.subsystembase#views/#arguments.path#.cfm"/></cfsavecontent>
+
 		<cfreturn response />
 
 	</cffunction>
-	
+
 	<!---
 		the following methods should not be invoked by user code nor overridden
 	--->
-	
-	<cffunction name="autowire" access="private" output="false" 
+
+	<cffunction name="autowire" access="private" output="false"
 			hint="Used to autowire controllers and services from a bean factory.">
 		<cfargument name="cfc" />
-		
+
 		<cfset var key = 0 />
 		<cfset var property = 0 />
 		<cfset var args = 0 />
-		
+
 		<cfloop item="key" collection="#arguments.cfc#">
 			<cfif len(key) gt 3 and left(key,3) is "set">
 				<cfset property = right(key, len(key)-3) />
@@ -583,33 +702,38 @@
 				</cfif>
 			</cfif>
 		</cfloop>
-		
+
 	</cffunction>
-	
+
 	<cffunction name="getCachedComponent" access="private" output="false">
 		<cfargument name="type" type="string" />
+		<cfargument name="subsystem" type="string" />
 		<cfargument name="section" type="string" />
-		
+
 		<cfset var cache = application[variables.framework.applicationKey].cache />
 		<cfset var types = type & 's' />
 		<cfset var cfc = 0 />
-		
-		<cfif not structKeyExists(cache[types], section)>
-			<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#section#" type="exclusive" timeout="30">
+		<cfset var subsystemDir = getSubsystemDirPrefix(arguments.subsystem) />
+		<cfset var subsystemDot = replace( subsystemDir, '/', '.', 'all' ) />
+		<cfset var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' ) />
+		<cfset var componentKey = subsystemUnderscore & section />
+
+		<cfif not structKeyExists(cache[types], componentKey)>
+			<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30">
 				<cfscript>
-					
-					if ( not structKeyExists(cache[types], section)) {
 
-						if ( hasBeanFactory() and getBeanFactory().containsBean( section & type ) ) {
+					if ( not structKeyExists(cache[types], componentKey)) {
 
-							cfc = getBeanFactory().getBean( section & type );
+						if ( hasBeanFactory() and getBeanFactory().containsBean( subsystem & section & type ) ) {
 
-						} else if ( fileExists( expandPath( cfcFilePath( request.cfcbase ) & types & '/' & section & '.cfc' ) ) ) {
+							cfc = getBeanFactory().getBean( subsystem & section & type );
+
+						} else if ( fileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
 
 							if ( request.cfcbase is '' ) {
-								cfc = createObject( 'component', types & '.' & section );
+								cfc = createObject( 'component', subsystemDot & types & '.' & section );
 							} else {
-								cfc = createObject( 'component', request.cfcbase & '.' & types & '.' & section );
+								cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
 							}
 							if ( structKeyExists( cfc, 'init' ) ) {
 								if ( type is 'controller' ) {
@@ -623,33 +747,33 @@
 								autowire( cfc );
 							}
 						}
-						
+
 						if ( isObject(cfc) ) {
-							cache[types][section] = cfc;
+							cache[types][componentKey] = cfc;
 						}
 					}
-					
+
 				</cfscript>
 			</cflock>
 		</cfif>
-		
-		<cfif structKeyExists(cache[types], section)>
-			<cfreturn cache[types][section] />
+
+		<cfif structKeyExists(cache[types], componentKey)>
+			<cfreturn cache[types][componentKey] />
 		</cfif>
 		<!--- else "return null" effectively --->
 	</cffunction>
-	
+
 	<cffunction name="cfcFilePath" access="private" output="false" hint="Changes a dotted path to a filesystem path">
 		<cfargument name="dottedPath" />
-		
+
 		<cfreturn '/' & replace( arguments.dottedPath, '.', '/', 'all' ) & '/' />
-		
+
 	</cffunction>
-	
+
 	<cffunction name="doController" access="private" output="false" hint="Executes a controller in context.">
 		<cfargument name="cfc" />
 		<cfargument name="method" />
-		
+
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cftry>
 				<cfinvoke component="#arguments.cfc#" method="#arguments.method#" rc="#request.context#" />
@@ -662,13 +786,14 @@
 		</cfif>
 
 	</cffunction>
-	
+
 	<cffunction name="doService" access="private" output="false" hint="Executes a controller in context.">
 		<cfargument name="cfc" />
 		<cfargument name="method" />
-		
+		<cfargument name="enforceExistence" />
+
 		<cfset var _result_fw1 = 0 />
-		
+
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cftry>
 				<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
@@ -682,44 +807,73 @@
 			<cfif isDefined("_result_fw1")>
 				<cfreturn _result_fw1 />
 			</cfif>
+		<cfelseif arguments.enforceExistence>
+			<cfset raiseException( type="FW1.serviceMethodNotFound", message="Service method '#arguments.method#' does not exist in service '#getMetadata( arguments.cfc ).fullname#'.",
+				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." )>
 		</cfif>
 
 	</cffunction>
-	
+
 	<cffunction name="dumpException" access="private" hint="Convenience method to dump an exception cleanly.">
 		<cfargument name="exception" />
-		
+
 		<cfdump var="#arguments.exception#" label="Exception"/>
-		
+
 	</cffunction>
-	
+
 	<cffunction name="restoreFlashContext" access="private" hint="Restore request context from session scope if present.">
-		
+		<cfset var preserveKey = "">
+		<cfset var preserveKeySessionKey = "">
+		<cfif NOT isDefined('URL') or NOT structKeyExists(URL, variables.framework.preserveKeyURLKey)>
+			<cfreturn>
+		</cfif>
+		<cfset preserveKey = URL[variables.framework.preserveKeyURLKey]>
+		<cfset preserveKeySessionKey = getPreserveKeySessionKey(preserveKey)>
 		<cftry>
-			<cfif structKeyExists(session,"__fw1")>
-				<cfset structAppend(request.context,session.__fw1) />
-				<cfset structDelete(session,"__fw1") />
+			<cfif structKeyExists(session,preserveKeySessionKey)>
+				<cfset structAppend(request.context,session[preserveKeySessionKey]) />
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
 		</cfcatch>
 		</cftry>
-		
+
 	</cffunction>
-	
-	<cffunction name="saveFlashContext" access="private" hint="Save request context to session scope if present.">
+
+	<cffunction name="getPreserveKeySessionKey" access="private" output="false">
+		<cfargument name="preserveKey" />
+		<cfreturn "__fw1#arguments.preserveKey#">
+	</cffunction>
+
+	<cffunction name="getNextPreserveKeyAndPurgeOld" access="private" output="false">
+		<cfset var nextPreserveKey = "" />
+		<cfset var oldKeyToPurge = "" />
+		<cflock scope="session" type="exclusive" timeout="30">
+			<cfparam name="session.__fw1NextPreserveKey" default="1" />
+			<cfset nextPreserveKey = session.__fw1NextPreserveKey/>
+			<cfset session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1/>
+		</cflock>
+		<cfset oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved>
+		<cfif StructKeyExists(session, getPreserveKeySessionKey(oldKeyToPurge))>
+			<cfset structDelete(session, getPreserveKeySessionKey(oldKeyToPurge)) />
+		</cfif>
+		<cfreturn nextPreserveKey>
+	</cffunction>
+
+	<cffunction name="saveFlashContext" returntype="string" access="private" hint="Save request context to session scope if present.">
 		<cfargument name="keys" type="string" />
-		
+		<cfset var currPreserveKey = getNextPreserveKeyAndPurgeOld() />
+		<cfset var preserveKeySessionKey = getPreserveKeySessionKey(currPreserveKey) />
 		<cfset var key = "" />
-		
+
 		<cftry>
-			<cfparam name="session.__fw1" default="#structNew()#" />
+			<cfparam name="session.#preserveKeySessionKey#" default="#structNew()#" />
 			<cfif arguments.keys is "all">
-				<cfset structAppend(session.__fw1,request.context) />
+				<cfset structAppend(session[preserveKeySessionKey],request.context) />
 			<cfelse>
 				<cfloop index="key" list="#arguments.keys#">
 					<cfif structKeyExists(request.context,key)>
-						<cfset session.__fw1[key] = request.context[key] />
+						<cfset session[preserveKeySessionKey][key] = request.context[key] />
 					</cfif>
 				</cfloop>
 			</cfif>
@@ -727,16 +881,16 @@
 			<!--- session scope not enabled, do nothing --->
 		</cfcatch>
 		</cftry>
-		
+		<cfreturn currPreserveKey>
 	</cffunction>
-	
+
 	<cffunction name="raiseException" access="private" output="false" hint="Throw an exception, callable from script.">
 		<cfargument name="type" type="string" required="true" />
 		<cfargument name="message" type="string" required="true" />
 		<cfargument name="detail" type="string" default="" />
-		
+
 		<cfthrow type="#arguments.type#" message="#arguments.message#" detail="#arguments.detail#" />
-		
+
 	</cffunction>
-	
+
 </cfsilent></cfcomponent>
