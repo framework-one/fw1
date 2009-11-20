@@ -223,10 +223,10 @@
 		}
 		out = view( request.view );
 		for ( i = 1; i lte arrayLen(request.layouts); i = i + 1 ) {
-			out = layout( request.layouts[i], out );
 			if ( structKeyExists(request, 'layout') and not request.layout ) {
 				break;
 			}
+			out = layout( request.layouts[i], out );
 		}
 		writeOutput( out );
 	}
@@ -430,7 +430,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.3';
+		variables.framework.version = '0.7.4';
 
 	}
 
