@@ -155,20 +155,14 @@
 		}
 		pathInfo = listToArray( pathInfo, '/' );
 		for ( sesIx = 1; sesIx lte arrayLen( pathInfo ); sesIx = sesIx + 1 ) {
-			if ( sesIx lte getMaxNumActionParts() ) {
-				if ( sesIx eq 1 ) {
-					request.context[variables.framework.action] = pathInfo[sesIx];
-				} else if ( sesIx eq 2 ) {
-					request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
-				} else if ( sesIx eq 3 ) {
-					request.context[variables.framework.action] = pathInfo[sesIx-2] & ':' & pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
-				}
+			if ( sesIx eq 1 ) {
+				request.context[variables.framework.action] = pathInfo[sesIx];
+			} else if ( sesIx eq 2 ) {
+				request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+			} else if ( sesIx mod 2 eq 1 ) {
+				request.context[ pathInfo[sesIx] ] = '';
 			} else {
-				if ( (sesIx - getMaxNumActionParts()) mod 2 eq 1 ) {
-					request.context[ pathInfo[sesIx] ] = '';
-				} else {
-					request.context[ pathInfo[sesIx] ] = pathInfo[sesIx];
-				}
+				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
 			}
 		}
 		// certain remote calls do not have URL or form scope:
@@ -293,12 +287,6 @@
 		}
 		return listLen( action, ':' ) gt 1 or right( action, 1 ) eq ':';
 	}
-	function getMaxNumActionParts() { // "private"
-		if (usingSubsystems()) {
-			return 3;
-		}
-		return 2;
-	}
 
 	/*
 	 * return the action without the subsystem
@@ -403,6 +391,9 @@
 		if ( not structKeyExists(variables.framework, 'defaultItem') ) {
 			variables.framework.defaultItem = 'default';
 		}
+		if ( not structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
+			variables.framework.siteWideLayoutSubsystem = 'common';
+		}
 		if ( not structKeyExists(variables.framework, 'home') ) {
 			if (usingSubsystems()) {
 				variables.framework.home = variables.framework.defaultSubsystem & ':' & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
@@ -435,7 +426,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.1';
+		variables.framework.version = '0.7.2';
 
 	}
 
@@ -470,11 +461,11 @@
 		}
 		return subsystem & '/';
 	}
-
 	/*
 	 * do not call/override
 	 */
 	function setupRequestWrapper() { // "private"
+	    var siteWideLayoutBase = request.base & getSubsystemDirPrefix(variables.framework.siteWideLayoutSubsystem);
 		request.subsystem = getSubsystem(request.action);
 		request.subsystembase = request.base & getSubsystemDirPrefix(request.subsystem);
 		request.section = getSection(request.action);
@@ -501,12 +492,16 @@
 		if ( fileExists( expandPath( request.subsystembase & 'layouts/' & request.section & '.cfm' ) ) ) {
 			arrayAppend(request.layouts, request.section);
 		}
-		// look for site-wide layout:
+		// look for subsystem-specific layout (site-wide layout if not using subsystems):
 		if ( request.section is not 'default' and
 				fileExists( expandPath( request.subsystembase & 'layouts/default.cfm' ) ) ) {
 			arrayAppend(request.layouts, 'default');
 		}
-
+        // look for site-wide layout (only applicable if using subsystems)
+        if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase and
+				fileExists( expandPath( siteWideLayoutBase & 'layouts/default.cfm' ) ) ) {
+            arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & ':default');
+		}
 		setupRequest();
 
 	}
@@ -569,7 +564,18 @@
 				structKeyExists(URL, variables.framework.reload) and
 				URL[variables.framework.reload] is variables.framework.password;
 	}
-
+    function parseViewOrLayoutPath( path ) {
+        var pathInfo = StructNew();
+        var subsystem = getSubsystem( arguments.path );
+        if ( not usingSubsystems() ) {
+            pathInfo.base = request.base;
+            pathInfo.path = arguments.path;
+        } else {
+            pathInfo.base = request.base & getSubsystemDirPrefix( subsystem );
+            pathInfo.path = listLast( arguments.path, ':' );
+        }
+        return pathInfo;
+    }
 </cfscript><cfsilent>
 
 	<!---
@@ -582,8 +588,9 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
+		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
 
-		<cfsavecontent variable='response'><cfinclude template="#request.subsystembase#layouts/#arguments.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#layouts/#pathInfo.path#.cfm"/></cfsavecontent>
 
 		<cfreturn response />
 	</cffunction>
@@ -695,8 +702,9 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
+		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
 
-		<cfsavecontent variable='response'><cfinclude template="#request.subsystembase#views/#arguments.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#views/#pathInfo.path#.cfm"/></cfsavecontent>
 
 		<cfreturn response />
 
