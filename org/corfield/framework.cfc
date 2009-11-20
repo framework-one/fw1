@@ -303,7 +303,11 @@
 		if ( len( sectionAndItem ) eq 0 ) {
 			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		} else if ( listLen( sectionAndItem, '.' ) eq 1 ) {
-			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
+		    if ( left( sectionAndItem, 1 ) eq '.' ) {
+			    sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
+		    } else {
+			    sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
+			}
 		} else {
 			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & listLast( sectionAndItem, '.' );
 		}
@@ -426,7 +430,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.2';
+		variables.framework.version = '0.7.3';
 
 	}
 
