@@ -217,6 +217,7 @@
 			doController( request.controller, 'end' & request.item );
 			doController( request.controller, 'after' );
 		}
+		request.controllerExecutionComplete = true;
 		if ( not structKeyExists(request, 'view') ) {
 			// unable to find a matching view - fail with a nice exception
 			viewNotFound();
@@ -430,7 +431,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.4';
+		variables.framework.version = '0.7.5';
 
 	}
 
@@ -707,6 +708,11 @@
 		<cfset var response = '' />
 		<cfset var local = structNew() />
 		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
+
+		<cfif not structKeyExists( request, "controllerExecutionComplete" ) >
+			<cfset raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
+				detail="The view method should not be called prior to the completion of the controller execution phase." ) />
+		</cfif>
 
 		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#views/#pathInfo.path#.cfm"/></cfsavecontent>
 
