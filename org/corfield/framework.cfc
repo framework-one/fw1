@@ -346,6 +346,10 @@
 		if ( structKeyExists( request, 'subsystem' ) ) {
 			return request.subsystem;
 		}
+		if ( variables.framework.defaultSubsystem eq "" ) {
+            raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
+                    detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
+		}
 		return variables.framework.defaultSubsystem;
 	}
 
@@ -431,7 +435,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.5.1';
+		variables.framework.version = '0.7.6';
 
 	}
 
