@@ -388,7 +388,7 @@
 			variables.framework.usingSubsystems = false;
 		}
 		if ( not structKeyExists(variables.framework, 'defaultSubsystem') ) {
-			variables.framework.defaultSubsystem = 'app1';
+			variables.framework.defaultSubsystem = 'home';
 		}
 		if ( not structKeyExists(variables.framework, 'defaultSection') ) {
 			variables.framework.defaultSection = 'main';
@@ -431,7 +431,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.5';
+		variables.framework.version = '0.7.5.1';
 
 	}
 
