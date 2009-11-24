@@ -314,31 +314,30 @@
 		}
 		return sectionAndItem;
 	}
+</cfscript><cfsilent>
 
-	/*
-	 * return the item part of the action
-	 */
-	function getItem( action ) {
-		return listLast( getSectionAndItem( action ), '.' );
-	}
+	<!--- return the item part of the action --->
+	<cffunction name="getItem" output="false">
+	    <cfargument name="action" default="#request.action#" />
+		<cfreturn listLast( getSectionAndItem( arguments.action ), '.' ) />
+	</cffunction>
 
-	/*
-	 * return the section part of the action
-	 */
-	function getSection( action ) {
-		return listFirst( getSectionAndItem( action ), '.' );
-	}
+	<!--- return the section part of the action --->
+	<cffunction name="getSection" output="false">
+	    <cfargument name="action" default="#request.action#" />
+		<cfreturn listFirst( getSectionAndItem( arguments.action ), '.' ) />
+	</cffunction>
 
-	/*
-	 * return the subsystem part of the action
-	 */
-	function getSubsystem( action ) {
-		if ( actionSpecifiesSubsystem( action ) ) {
-			return listFirst( action, ':' );
-		}
-		return getDefaultSubsystem();
-	}
+	<!--- return the subsystem part of the action --->
+	<cffunction name="getSubsystem" output="false">
+	    <cfargument name="action" default="#request.action#" />
+		<cfif actionSpecifiesSubsystem( arguments.action ) >
+			<cfreturn listFirst( arguments.action, ':' ) />
+		</cfif>
+		<cfreturn getDefaultSubsystem() />
+	</cffunction>
 
+</cfsilent><cfscript>
 	function getDefaultSubsystem() { // "private"
 		if (NOT usingSubsystems()) {
 			return '';
@@ -435,7 +434,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.6';
+		variables.framework.version = '0.7.7';
 
 	}
 
@@ -598,6 +597,11 @@
 		<cfset var response = '' />
 		<cfset var local = structNew() />
 		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
+
+		<cfif not structKeyExists( request, "controllerExecutionComplete" ) >
+			<cfset raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
+				detail="The layout method should not be called prior to the completion of the controller execution phase." ) />
+		</cfif>
 
 		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#layouts/#pathInfo.path#.cfm"/></cfsavecontent>
 
