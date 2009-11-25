@@ -9,7 +9,7 @@
 		and form data (and URL data is overwritten by form data).
 		Note also that session management must be enabled in Application.cfc!</p>
 	<form action="" method="get">
-		<input type="hidden" name="action" value="main.submit" />
+		<input type="hidden" name="action" value="#getFullyQualifiedAction('main.submit')#" />
 		Name: <input type="text" name="name" /><br />
 		<input type="submit" name="submit" value="Submit" />
 	</form>

@@ -282,6 +282,7 @@
 	function usingSubsystems() {
 		return variables.framework.usingSubsystems;
 	}
+	
 	function actionSpecifiesSubsystem( action ) {
 		if ( not usingSubsystems() ) {
 			return false;
@@ -339,7 +340,7 @@
 
 </cfsilent><cfscript>
 	function getDefaultSubsystem() { // "private"
-		if (NOT usingSubsystems()) {
+		if ( not usingSubsystems() ) {
 			return '';
 		}
 		if ( structKeyExists( request, 'subsystem' ) ) {
@@ -653,10 +654,13 @@
 	<cffunction name="buildURL" access="public" output="false">
 		<cfargument name="action" type="string" />
 		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
+		
 		<cfset var initialDelim = '?' />
+		
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
 		</cfif>
+		
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
 				<cfset initialDelim = '' />
@@ -664,7 +668,9 @@
 				<cfset initialDelim = '&' />
 			</cfif>
 		</cfif>
+		
 		<cfreturn "#arguments.path##initialDelim##variables.framework.action#=#getFullyQualifiedAction(arguments.action)#" />
+		
 	</cffunction>
 
 	<!---
