@@ -305,10 +305,10 @@
 		if ( len( sectionAndItem ) eq 0 ) {
 			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		} else if ( listLen( sectionAndItem, '.' ) eq 1 ) {
-		    if ( left( sectionAndItem, 1 ) eq '.' ) {
-			    sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
-		    } else {
-			    sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
+			if ( left( sectionAndItem, 1 ) eq '.' ) {
+				sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
+			} else {
+				sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
 			}
 		} else {
 			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & listLast( sectionAndItem, '.' );
@@ -319,19 +319,19 @@
 
 	<!--- return the item part of the action --->
 	<cffunction name="getItem" output="false">
-	    <cfargument name="action" default="#request.action#" />
+		<cfargument name="action" default="#request.action#" />
 		<cfreturn listLast( getSectionAndItem( arguments.action ), '.' ) />
 	</cffunction>
 
 	<!--- return the section part of the action --->
 	<cffunction name="getSection" output="false">
-	    <cfargument name="action" default="#request.action#" />
+		<cfargument name="action" default="#request.action#" />
 		<cfreturn listFirst( getSectionAndItem( arguments.action ), '.' ) />
 	</cffunction>
 
 	<!--- return the subsystem part of the action --->
 	<cffunction name="getSubsystem" output="false">
-	    <cfargument name="action" default="#request.action#" />
+		<cfargument name="action" default="#request.action#" />
 		<cfif actionSpecifiesSubsystem( arguments.action ) >
 			<cfreturn listFirst( arguments.action, ':' ) />
 		</cfif>
@@ -347,8 +347,8 @@
 			return request.subsystem;
 		}
 		if ( variables.framework.defaultSubsystem eq "" ) {
-            raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
-                    detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
+			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
+					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
 		}
 		return variables.framework.defaultSubsystem;
 	}
@@ -423,6 +423,9 @@
 		if ( not structKeyExists(variables.framework, 'password') ) {
 			variables.framework.password = 'true';
 		}
+		if ( not structKeyExists(variables.framework, 'reloadApplicationOnEveryRequest') ) {
+			variables.framework.reloadApplicationOnEveryRequest = false;
+		}
 		if ( not structKeyExists(variables.framework, 'preserveKeyURLKey') ) {
 			variables.framework.preserveKeyURLKey = 'fw1pk';
 		}
@@ -435,7 +438,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.7.1';
+		variables.framework.version = '0.7.8';
 
 	}
 
@@ -474,7 +477,7 @@
 	 * do not call/override
 	 */
 	function setupRequestWrapper() { // "private"
-	    var siteWideLayoutBase = request.base & getSubsystemDirPrefix(variables.framework.siteWideLayoutSubsystem);
+		var siteWideLayoutBase = request.base & getSubsystemDirPrefix(variables.framework.siteWideLayoutSubsystem);
 		request.subsystem = getSubsystem(request.action);
 		request.subsystembase = request.base & getSubsystemDirPrefix(request.subsystem);
 		request.section = getSection(request.action);
@@ -506,10 +509,10 @@
 				fileExists( expandPath( request.subsystembase & 'layouts/default.cfm' ) ) ) {
 			arrayAppend(request.layouts, 'default');
 		}
-        // look for site-wide layout (only applicable if using subsystems)
-        if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase and
+		// look for site-wide layout (only applicable if using subsystems)
+		if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase and
 				fileExists( expandPath( siteWideLayoutBase & 'layouts/default.cfm' ) ) ) {
-            arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & ':default');
+			arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & ':default');
 		}
 		setupRequest();
 
@@ -569,22 +572,24 @@
 	}
 
 	function isFrameworkReloadRequest() { // "private"
-		return isDefined('URL') and
-				structKeyExists(URL, variables.framework.reload) and
-				URL[variables.framework.reload] is variables.framework.password;
+		return ( isDefined('URL') and
+					structKeyExists(URL, variables.framework.reload) and
+					URL[variables.framework.reload] is variables.framework.password ) or
+				variables.framework.reloadApplicationOnEveryRequest;
 	}
-    function parseViewOrLayoutPath( path ) {
-        var pathInfo = StructNew();
-        var subsystem = getSubsystem( arguments.path );
-        if ( not usingSubsystems() ) {
-            pathInfo.base = request.base;
-            pathInfo.path = arguments.path;
-        } else {
-            pathInfo.base = request.base & getSubsystemDirPrefix( subsystem );
-            pathInfo.path = listLast( arguments.path, ':' );
-        }
-        return pathInfo;
-    }
+	
+	function parseViewOrLayoutPath( path ) {
+		var pathInfo = StructNew();
+		var subsystem = getSubsystem( arguments.path );
+		if ( not usingSubsystems() ) {
+			pathInfo.base = request.base;
+			pathInfo.path = arguments.path;
+		} else {
+			pathInfo.base = request.base & getSubsystemDirPrefix( subsystem );
+			pathInfo.path = listLast( arguments.path, ':' );
+		}
+		return pathInfo;
+	}
 </cfscript><cfsilent>
 
 	<!---
