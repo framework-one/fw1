@@ -71,7 +71,7 @@
 		tuple.key = key;
 		tuple.enforceExistence = enforceExistence;
 
-		if ( structKeyExists( tuple, "service" ) ) {
+		if ( structKeyExists( tuple, "service" ) and isObject( tuple.service ) ) {
 			arrayAppend( request.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type="FW1.serviceCfcNotFound", message="Service '#action#' does not exist.",
@@ -195,7 +195,7 @@
 		var svc = 0;
 		var _data_fw1 = 0;
 
-		if ( structKeyExists( request, 'controller' ) ) {
+		if ( structKeyExists( request, 'controller' ) and isObject( request.controller ) ) {
 			doController( request.controller, 'before' );
 			doController( request.controller, 'start' & request.item );
 			doController( request.controller, request.item );
@@ -213,7 +213,7 @@
 			}
 		}
 		request.serviceExecutionComplete = true;
-		if ( structKeyExists( request, 'controller' ) ) {
+		if ( structKeyExists( request, 'controller' ) and isObject( request.controller ) ) {
 			doController( request.controller, 'end' & request.item );
 			doController( request.controller, 'after' );
 		}
@@ -438,7 +438,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.8';
+		variables.framework.version = '0.7.8.1';
 
 	}
 
