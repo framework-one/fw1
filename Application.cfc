@@ -9,7 +9,7 @@
 	
 	// The above code is for OpenBD 1.1. On CF8 and Railo 3.1 you could just do:
 	// variables.framework = {
-	// 		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction';
+	// 		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction'
 	// }
 
 </cfscript></cfcomponent>
