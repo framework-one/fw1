@@ -208,7 +208,20 @@
 			} else {
 				_data_fw1 = doService( svc.service, svc.item, svc.enforceExistence );
 				if ( isDefined('_data_fw1') ) {
-					request.context[ svc.key ] = _data_fw1;
+				    svc.data = _data_fw1;
+				    if ( variables.framework.allowServiceOutputInputChaining ) {
+    					request.context[ svc.key ] = svc.data;
+				    }
+				}
+			}
+		}
+		if ( not variables.framework.allowServiceOutputInputChaining ) {
+			// wait till all the services are done executing before making their results available in the request context
+			// in order to prevent using one services outputs as the inputs to another service
+			for ( i = 1; i lte arrayLen(request.services); i = i + 1 ) {
+				svc = request.services[i];
+				if ( structKeyExists( svc, 'data' ) {
+					request.context[ svc.key ] = svc.data;
 				}
 			}
 		}
@@ -282,7 +295,7 @@
 	function usingSubsystems() {
 		return variables.framework.usingSubsystems;
 	}
-	
+
 	function actionSpecifiesSubsystem( action ) {
 		if ( not usingSubsystems() ) {
 			return false;
@@ -435,10 +448,13 @@
 		if ( not structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
 		}
+		if ( not structKeyExists(variables.framework, 'allowServiceOutputInputChaining') ) {
+			variables.framework.allowServiceOutputInputChaining = false;
+		}
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.8.1';
+		variables.framework.version = '0.8.1';
 
 	}
 
@@ -577,7 +593,7 @@
 					URL[variables.framework.reload] is variables.framework.password ) or
 				variables.framework.reloadApplicationOnEveryRequest;
 	}
-	
+
 	function parseViewOrLayoutPath( path ) {
 		var pathInfo = StructNew();
 		var subsystem = getSubsystem( arguments.path );
@@ -659,13 +675,13 @@
 	<cffunction name="buildURL" access="public" output="false">
 		<cfargument name="action" type="string" />
 		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
-		
+
 		<cfset var initialDelim = '?' />
-		
+
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
 		</cfif>
-		
+
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
 				<cfset initialDelim = '' />
@@ -673,9 +689,9 @@
 				<cfset initialDelim = '&' />
 			</cfif>
 		</cfif>
-		
+
 		<cfreturn "#arguments.path##initialDelim##variables.framework.action#=#getFullyQualifiedAction(arguments.action)#" />
-		
+
 	</cffunction>
 
 	<!---
