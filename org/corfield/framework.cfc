@@ -208,20 +208,7 @@
 			} else {
 				_data_fw1 = doService( svc.service, svc.item, svc.enforceExistence );
 				if ( isDefined('_data_fw1') ) {
-				    svc.data = _data_fw1;
-				    if ( variables.framework.allowServiceOutputInputChaining ) {
-    					request.context[ svc.key ] = svc.data;
-				    }
-				}
-			}
-		}
-		if ( not variables.framework.allowServiceOutputInputChaining ) {
-			// wait till all the services are done executing before making their results available in the request context
-			// in order to prevent using one services outputs as the inputs to another service
-			for ( i = 1; i lte arrayLen(request.services); i = i + 1 ) {
-				svc = request.services[i];
-				if ( structKeyExists( svc, 'data' ) {
-					request.context[ svc.key ] = svc.data;
+					request.context[ svc.key ] = _data_fw1;
 				}
 			}
 		}
@@ -448,13 +435,10 @@
 		if ( not structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
 		}
-		if ( not structKeyExists(variables.framework, 'allowServiceOutputInputChaining') ) {
-			variables.framework.allowServiceOutputInputChaining = false;
-		}
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.8.1';
+		variables.framework.version = '0.7.8.1';
 
 	}
 
