@@ -248,6 +248,7 @@
 			request.action = variables.framework.error;
 			request.exception = exception;
 			request.event = event;
+			structDelete( request, 'serviceExecutionComplete' );
 			setupRequestWrapper();
 			onRequest('');
 		} catch (any e) {
@@ -438,7 +439,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.8.1';
+		variables.framework.version = '0.7.8.2';
 
 	}
 
