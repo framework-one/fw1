@@ -336,7 +336,7 @@
 			return hasSubsystemBeanFactory(request.subsystem);
 		}
 		if ( len(variables.framework.defaultSubsystem) gt 0 ) {
-			return hasSubsystemBeanFactory(request.subsystem);
+			return hasSubsystemBeanFactory(variables.framework.defaultSubsystem);
 		}
 		return false;
 	}
