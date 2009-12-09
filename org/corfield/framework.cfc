@@ -28,6 +28,18 @@
 	}
 
 	/*
+	 * call this from your setupSubsystem() method to tell the framework
+	 * about your subsystem-specific bean factory - only assumption is that it supports:
+	 * - containsBean(name) - returns true if factory contains that named bean, else false
+	 * - getBean(name) - returns the named bean
+	 */
+	function setSubsystemBeanFactory(subsystem, factory) {
+		ensureNewFrameworkStructsExist();
+		application[variables.framework.applicationKey].subsystemFactories[subsystem] = factory;
+
+	}
+
+	/*
 	 * override this to provide application-specific initialization
 	 * if you want the framework to use a bean factory and autowire
 	 * controllers and services, call setBeanFactory(factory) in your
@@ -35,6 +47,8 @@
 	 * you do not need to call super.setupApplication()
 	 */
 	function setupApplication() { }
+
+	function setupSubsystem( subsystem ) {}
 
 	/*
 	 * override this to provide session-specific initialization
@@ -120,6 +134,9 @@
 
 		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
+		}
+		if ( isFrameworkReloadRequest() ) {
+			markAllSubsystemsAsUninitialized();
 		}
 
 		if ( structKeyExists(variables.framework, 'base') ) {
@@ -257,20 +274,86 @@
 
 	}
 
-	/*
-	 * returns whatever the framework has been told is a bean factory
-	 */
-	function getBeanFactory() {
+</cfscript><cfsilent>
+	<!---
+		returns whatever the framework has been told is a bean factory
+		this will return a subsystem-specific bean factory if one
+		exists for the current request's subsystem (or for the specified subsystem
+		if passed in)
+	--->
+	<cffunction name="getBeanFactory" output="false">
+		<cfargument name="subsystem" required="false" default="" />
+		<cfscript>
+			if ( len(subsystem) gt 0 ) {
+				if ( hasSubsystemBeanFactory(subsystem) ) {
+					return getSubsystemBeanFactory(subsystem);
+				}
+				return getDefaultBeanFactory();
+			}
+			if ( not usingSubsystems() ) {
+				return getDefaultBeanFactory();
+			}
+			if ( structKeyExists( request, 'subsystem' ) and len(request.subsystem) gt 0 ) {
+				return getBeanFactory(request.subsystem);
+			}
+			if ( len(variables.framework.defaultSubsystem) gt 0 ) {
+				return getBeanFactory(variables.framework.defaultSubsystem);
+			}
+			return getDefaultBeanFactory();
+		</cfscript>
+	</cffunction>
 
+</cfsilent><cfscript>
+
+	/*
+	* returns the bean factory set via setBeanFactory
+	*/
+	function getDefaultBeanFactory() {
 		return application[variables.framework.applicationKey].factory;
 	}
 
 	/*
-	 * returns true iff the framework has been told about a bean factory
+	* returns the bean factory set via setSubsystemBeanFactory
+	* same effect as getBeanFactory when not using subsystems
+	*/
+	function getSubsystemBeanFactory(subsystem) {
+		return application[variables.framework.applicationKey].subsystemFactories[arguments.subsystem];
+	}
+
+
+	/*
+	 * returns true iff a call to getBeanFactory() will successfully return a bean factory
+	 * previously set via setBeanFactory or setSubsystemBeanFactory
 	 */
 	function hasBeanFactory() {
+		if ( hasDefaultBeanFactory() ) {
+			return true;
+		}
+		if ( not usingSubsystems() ) {
+			return false;
+		}
+		if ( structKeyExists( request, 'subsystem' ) ) {
+			return hasSubsystemBeanFactory(request.subsystem);
+		}
+		if ( len(variables.framework.defaultSubsystem) gt 0 ) {
+			return hasSubsystemBeanFactory(request.subsystem);
+		}
+		return false;
+	}
 
+	/*
+	 * returns true iff the framework has been told about a bean factory via setBeanFactory
+	 */
+	function hasDefaultBeanFactory() {
 		return structKeyExists(application[variables.framework.applicationKey], 'factory');
+	}
+
+	/*
+	 * returns true if a subsystem specific bean factory has been set
+	 */
+	function hasSubsystemBeanFactory(subsystem) {
+		ensureNewFrameworkStructsExist();
+		return structKeyExists( application[variables.framework.applicationKey].subsystemFactories, subsystem );
 	}
 
 	/*
@@ -439,7 +522,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.7.8.2';
+		variables.framework.version = '0.8.1';
 
 	}
 
@@ -455,10 +538,22 @@
 		framework.cache.lastReload = now();
 		framework.cache.controllers = structNew();
 		framework.cache.services = structNew();
+		framework.subsystemFactories = structNew();
+		framework.subsystems = structNew();
 
 		application[variables.framework.applicationKey] = framework;
 		setupApplication();
 
+	}
+
+	function ensureNewFrameworkStructsExist() { // "private"
+		var framework = application[variables.framework.applicationKey];
+		if ( not structKeyExists(framework, 'subsystemFactories') ) {
+			framework.subsystemFactories = structNew();
+		}
+		if ( not structKeyExists(framework, 'subsystems') ) {
+			framework.subsystems = structNew();
+		}
 	}
 
 	/*
@@ -483,6 +578,8 @@
 		request.subsystembase = request.base & getSubsystemDirPrefix(request.subsystem);
 		request.section = getSection(request.action);
 		request.item = getItem(request.action);
+
+		setupSubsystemWrapper(request.subsystem);
 
 		request.controller = getController(section=request.section, subsystem=request.subsystem);
 
@@ -516,9 +613,25 @@
 			arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & ':default');
 		}
 		setupRequest();
-
 	}
+
+
 </cfscript><cfsilent>
+
+	<cffunction name="setupSubsystemWrapper" output="false">
+		<cfargument name="subsystem" required="true" />
+		<cfif not usingSubsystems()>
+			<cfreturn>
+		</cfif>
+		<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#arguments.subsystem#" type="exclusive" timeout="30">
+			<cfscript>
+				if ( not isSubsystemInitialized(subsystem) ) {
+					application[variables.framework.applicationKey].subsystems[subsystem] = Now();
+					setupSubsystem(subsystem=subsystem);
+				}
+			</cfscript>
+		</cflock>
+	</cffunction>
 
 	<!--- do not override --->
 	<cffunction name="getController" output="false">
@@ -577,6 +690,15 @@
 					structKeyExists(URL, variables.framework.reload) and
 					URL[variables.framework.reload] is variables.framework.password ) or
 				variables.framework.reloadApplicationOnEveryRequest;
+	}
+
+	function isSubsystemInitialized(subsystem) { // "private"
+		ensureNewFrameworkStructsExist();
+		return structKeyExists(application[variables.framework.applicationKey].subsystems, subsystem);
+	}
+
+	function markAllSubsystemsAsUninitialized() { // "private"
+		application[variables.framework.applicationKey].subsystems = structNew();
 	}
 
 	function parseViewOrLayoutPath( path ) {
@@ -747,6 +869,7 @@
 	<cffunction name="autowire" access="private" output="false"
 			hint="Used to autowire controllers and services from a bean factory.">
 		<cfargument name="cfc" />
+		<cfargument name="beanFactory" />
 
 		<cfset var key = 0 />
 		<cfset var property = 0 />
@@ -755,10 +878,10 @@
 		<cfloop item="key" collection="#arguments.cfc#">
 			<cfif len(key) gt 3 and left(key,3) is "set">
 				<cfset property = right(key, len(key)-3) />
-				<cfif getBeanFactory().containsBean(property)>
+				<cfif arguments.beanFactory.containsBean(property)>
 					<!--- args = [ getBeanFactory().getBean(property) ] does not seem to be portable --->
 					<cfset args = structNew() />
-					<cfset args[property] = getBeanFactory().getBean(property) />
+					<cfset args[property] = arguments.beanFactory.getBean(property) />
 					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 				</cfif>
 			</cfif>
@@ -778,6 +901,9 @@
 		<cfset var subsystemDot = replace( subsystemDir, '/', '.', 'all' ) />
 		<cfset var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' ) />
 		<cfset var componentKey = subsystemUnderscore & section />
+		<cfset var beanName = section & type />
+
+		<cfset setupSubsystemWrapper(subsystem) />
 
 		<cfif not structKeyExists(cache[types], componentKey)>
 			<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30">
@@ -785,9 +911,13 @@
 
 					if ( not structKeyExists(cache[types], componentKey)) {
 
-						if ( hasBeanFactory() and getBeanFactory().containsBean( subsystem & section & type ) ) {
+						if ( usingSubsystems() and hasSubsystemBeanFactory(subsystem) and getSubsystemBeanFactory(subsystem).containsBean(beanName) ) {
 
-							cfc = getBeanFactory().getBean( subsystem & section & type );
+							cfc = getSubsystemBeanFactory(subsystem).getBean( beanName );
+
+						} else if ( not usingSubsystems() and hasDefaultBeanFactory() and getDefaultBeanFactory().containsBean(beanName) ) {
+
+							cfc = getDefaultBeanFactory().getBean( beanName );
 
 						} else if ( fileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
 
@@ -804,8 +934,8 @@
 								}
 							}
 
-							if ( hasBeanFactory() ) {
-								autowire( cfc );
+							if ( hasDefaultBeanFactory() OR hasSubsystemBeanFactory(subsystem) ) {
+   								autowire( cfc, getBeanFactory(subsystem) );
 							}
 						}
 
