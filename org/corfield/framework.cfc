@@ -317,6 +317,7 @@
 	* same effect as getBeanFactory when not using subsystems
 	*/
 	function getSubsystemBeanFactory(subsystem) {
+		setupSubsystemWrapper(subsystem);
 		return application[variables.framework.applicationKey].subsystemFactories[arguments.subsystem];
 	}
 
