@@ -135,9 +135,6 @@
 		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
 		}
-		if ( isFrameworkReloadRequest() ) {
-			markAllSubsystemsAsUninitialized();
-		}
 
 		if ( structKeyExists(variables.framework, 'base') ) {
 			request.base = variables.framework.base;
@@ -523,7 +520,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.8.1';
+		variables.framework.version = '0.8.1.1';
 
 	}
 
@@ -696,10 +693,6 @@
 	function isSubsystemInitialized(subsystem) { // "private"
 		ensureNewFrameworkStructsExist();
 		return structKeyExists(application[variables.framework.applicationKey].subsystems, subsystem);
-	}
-
-	function markAllSubsystemsAsUninitialized() { // "private"
-		application[variables.framework.applicationKey].subsystems = structNew();
 	}
 
 	function parseViewOrLayoutPath( path ) {
