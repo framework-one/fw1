@@ -21,9 +21,9 @@
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
 	 * - getBean(name) - returns the named bean
 	 */
-	function setBeanFactory(factory) {
+	function setBeanFactory( factory ) {
 
-		application[variables.framework.applicationKey].factory = factory;
+		application[ variables.framework.applicationKey ].factory = factory;
 
 	}
 
@@ -33,9 +33,10 @@
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
 	 * - getBean(name) - returns the named bean
 	 */
-	function setSubsystemBeanFactory(subsystem, factory) {
+	function setSubsystemBeanFactory( subsystem, factory ) {
+		
 		ensureNewFrameworkStructsExist();
-		application[variables.framework.applicationKey].subsystemFactories[subsystem] = factory;
+		application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ] = factory;
 
 	}
 
@@ -48,6 +49,14 @@
 	 */
 	function setupApplication() { }
 
+	/*
+	 * override this to provide subsystem-specific initialization
+	 * if you want the framework to use a bean factory and autowire
+	 * controllers and services, call
+	 *   setSubsystemBeanFactory( subsystem, factory )
+	 * in your setupSubsystem() method
+	 * you do not need to call super.setupSubsystem( subsystem )
+	 */
 	function setupSubsystem( subsystem ) {}
 
 	/*
@@ -306,16 +315,19 @@
 	* returns the bean factory set via setBeanFactory
 	*/
 	function getDefaultBeanFactory() {
-		return application[variables.framework.applicationKey].factory;
+		return application[ variables.framework.applicationKey ].factory;
 	}
 
 	/*
 	* returns the bean factory set via setSubsystemBeanFactory
 	* same effect as getBeanFactory when not using subsystems
 	*/
-	function getSubsystemBeanFactory(subsystem) {
-		setupSubsystemWrapper(subsystem);
-		return application[variables.framework.applicationKey].subsystemFactories[arguments.subsystem];
+	function getSubsystemBeanFactory( subsystem ) {
+		
+		setupSubsystemWrapper( subsystem );
+		
+		return application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ];
+		
 	}
 
 
@@ -324,34 +336,43 @@
 	 * previously set via setBeanFactory or setSubsystemBeanFactory
 	 */
 	function hasBeanFactory() {
+		
 		if ( hasDefaultBeanFactory() ) {
 			return true;
 		}
+		
 		if ( not usingSubsystems() ) {
 			return false;
 		}
+		
 		if ( structKeyExists( request, 'subsystem' ) ) {
 			return hasSubsystemBeanFactory(request.subsystem);
 		}
+		
 		if ( len(variables.framework.defaultSubsystem) gt 0 ) {
 			return hasSubsystemBeanFactory(variables.framework.defaultSubsystem);
 		}
+		
 		return false;
+		
 	}
 
 	/*
 	 * returns true iff the framework has been told about a bean factory via setBeanFactory
 	 */
 	function hasDefaultBeanFactory() {
-		return structKeyExists(application[variables.framework.applicationKey], 'factory');
+		return structKeyExists( application[ variables.framework.applicationKey ], 'factory' );
 	}
 
 	/*
 	 * returns true if a subsystem specific bean factory has been set
 	 */
-	function hasSubsystemBeanFactory(subsystem) {
+	function hasSubsystemBeanFactory( subsystem ) {
+		
 		ensureNewFrameworkStructsExist();
-		return structKeyExists( application[variables.framework.applicationKey].subsystemFactories, subsystem );
+		
+		return structKeyExists( application[ variables.framework.applicationKey ].subsystemFactories, subsystem );
+		
 	}
 
 	/*
@@ -366,6 +387,7 @@
 	}
 
 	function actionSpecifiesSubsystem( action ) {
+		
 		if ( not usingSubsystems() ) {
 			return false;
 		}
@@ -376,7 +398,9 @@
 	 * return the action without the subsystem
 	 */
 	function getSectionAndItem( action ) { // "private"
+	
 		var sectionAndItem = '';
+		
 		if ( usingSubsystems() and actionSpecifiesSubsystem( action ) ) {
 			if ( listLen( action, ':' ) gt 1 ) {
 				sectionAndItem = listLast( action, ':' );
@@ -384,6 +408,7 @@
 		} else {
 			sectionAndItem = action;
 		}
+		
 		if ( len( sectionAndItem ) eq 0 ) {
 			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		} else if ( listLen( sectionAndItem, '.' ) eq 1 ) {
@@ -395,44 +420,58 @@
 		} else {
 			sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & listLast( sectionAndItem, '.' );
 		}
+		
 		return sectionAndItem;
+		
 	}
 </cfscript><cfsilent>
 
 	<!--- return the item part of the action --->
 	<cffunction name="getItem" output="false">
 		<cfargument name="action" default="#request.action#" />
+
 		<cfreturn listLast( getSectionAndItem( arguments.action ), '.' ) />
+
 	</cffunction>
 
 	<!--- return the section part of the action --->
 	<cffunction name="getSection" output="false">
 		<cfargument name="action" default="#request.action#" />
+
 		<cfreturn listFirst( getSectionAndItem( arguments.action ), '.' ) />
+
 	</cffunction>
 
 	<!--- return the subsystem part of the action --->
 	<cffunction name="getSubsystem" output="false">
 		<cfargument name="action" default="#request.action#" />
+
 		<cfif actionSpecifiesSubsystem( arguments.action ) >
 			<cfreturn listFirst( arguments.action, ':' ) />
 		</cfif>
+
 		<cfreturn getDefaultSubsystem() />
+
 	</cffunction>
 
 </cfsilent><cfscript>
 	function getDefaultSubsystem() { // "private"
+	
 		if ( not usingSubsystems() ) {
 			return '';
 		}
+
 		if ( structKeyExists( request, 'subsystem' ) ) {
 			return request.subsystem;
 		}
+
 		if ( variables.framework.defaultSubsystem eq "" ) {
 			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
 					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
 		}
+
 		return variables.framework.defaultSubsystem;
+		
 	}
 
 	/*
@@ -440,10 +479,13 @@
 	 * using defaults from the configuration or request where appropriate
 	 */
 	function getFullyQualifiedAction( action ) {
+
 		if ( usingSubsystems() ) {
 			return getSubsystem( action ) & ':' & getSectionAndItem( action );
 		}
+
 		return getSectionAndItem( action );
+
 	}
 
 	/*
@@ -520,7 +562,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '0.8.1.1';
+		variables.framework.version = '1.0';
 
 	}
 
@@ -545,13 +587,17 @@
 	}
 
 	function ensureNewFrameworkStructsExist() { // "private"
+	
 		var framework = application[variables.framework.applicationKey];
+
 		if ( not structKeyExists(framework, 'subsystemFactories') ) {
 			framework.subsystemFactories = structNew();
 		}
+
 		if ( not structKeyExists(framework, 'subsystems') ) {
 			framework.subsystems = structNew();
 		}
+
 	}
 
 	/*
@@ -562,16 +608,20 @@
 	}
 
 	function getSubsystemDirPrefix( subsystem ) { // "private"
-		if (subsystem eq '') {
+
+		if ( subsystem eq '' ) {
 			return '';
 		}
+
 		return subsystem & '/';
 	}
 	/*
 	 * do not call/override
 	 */
 	function setupRequestWrapper() { // "private"
+
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix(variables.framework.siteWideLayoutSubsystem);
+
 		request.subsystem = getSubsystem(request.action);
 		request.subsystembase = request.base & getSubsystemDirPrefix(request.subsystem);
 		request.section = getSection(request.action);
@@ -618,9 +668,11 @@
 
 	<cffunction name="setupSubsystemWrapper" output="false">
 		<cfargument name="subsystem" required="true" />
+
 		<cfif not usingSubsystems()>
 			<cfreturn>
 		</cfif>
+
 		<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#arguments.subsystem#" type="exclusive" timeout="30">
 			<cfscript>
 				if ( not isSubsystemInitialized(subsystem) ) {
@@ -629,6 +681,7 @@
 				}
 			</cfscript>
 		</cflock>
+
 	</cffunction>
 
 	<!--- do not override --->
@@ -637,6 +690,7 @@
 		<cfargument name="subsystem" default="#getDefaultSubsystem()#" required="false" />
 		<cfscript>
 		var _controller_fw1 = getCachedComponent("controller",subsystem,section);
+
 		if ( isDefined('_controller_fw1') ) {
 			return _controller_fw1;
 		}
@@ -649,6 +703,7 @@
 		<cfargument name="subsystem" default="#getDefaultSubsystem()#" required="false" />
 		<cfscript>
 		var _service_fw1 = getCachedComponent("service",subsystem,section);
+
 		if ( isDefined('_service_fw1') ) {
 			return _service_fw1;
 		}
@@ -659,7 +714,7 @@
 	/*
 	 * do not call/override
 	 */
-	function failure(exception,event) { // "private"
+	function failure( exception, event ) { // "private"
 
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
@@ -690,14 +745,19 @@
 				variables.framework.reloadApplicationOnEveryRequest;
 	}
 
-	function isSubsystemInitialized(subsystem) { // "private"
+	function isSubsystemInitialized( subsystem ) { // "private"
+	
 		ensureNewFrameworkStructsExist();
-		return structKeyExists(application[variables.framework.applicationKey].subsystems, subsystem);
+
+		return structKeyExists( application[ variables.framework.applicationKey ].subsystems, subsystem );
+
 	}
 
 	function parseViewOrLayoutPath( path ) {
+		
 		var pathInfo = StructNew();
 		var subsystem = getSubsystem( arguments.path );
+
 		if ( not usingSubsystems() ) {
 			pathInfo.base = request.base;
 			pathInfo.path = arguments.path;
@@ -705,7 +765,9 @@
 			pathInfo.base = request.base & getSubsystemDirPrefix( subsystem );
 			pathInfo.path = listLast( arguments.path, ':' );
 		}
+
 		return pathInfo;
+
 	}
 </cfscript><cfsilent>
 
@@ -928,8 +990,8 @@
 								}
 							}
 
-							if ( hasDefaultBeanFactory() OR hasSubsystemBeanFactory(subsystem) ) {
-   								autowire( cfc, getBeanFactory(subsystem) );
+							if ( hasDefaultBeanFactory() or hasSubsystemBeanFactory( subsystem ) ) {
+   								autowire( cfc, getBeanFactory( subsystem ) );
 							}
 						}
 
@@ -979,7 +1041,7 @@
 
 		<cfset var _result_fw1 = 0 />
 
-		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
+		<cfif structKeyExists( arguments.cfc, arguments.method ) or structKeyExists( arguments.cfc, "onMissingMethod" )>
 			<cftry>
 				<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
 					argumentCollection="#request.context#" returnVariable="_result_fw1" />
@@ -1009,7 +1071,8 @@
 	<cffunction name="restoreFlashContext" access="private" hint="Restore request context from session scope if present.">
 		<cfset var preserveKey = "">
 		<cfset var preserveKeySessionKey = "">
-		<cfif NOT isDefined('URL') or NOT structKeyExists(URL, variables.framework.preserveKeyURLKey)>
+			
+		<cfif not isDefined('URL') or not structKeyExists( URL, variables.framework.preserveKeyURLKey )>
 			<cfreturn>
 		</cfif>
 		<cfset preserveKey = URL[variables.framework.preserveKeyURLKey]>
@@ -1027,26 +1090,33 @@
 
 	<cffunction name="getPreserveKeySessionKey" access="private" output="false">
 		<cfargument name="preserveKey" />
-		<cfreturn "__fw1#arguments.preserveKey#">
+
+		<cfreturn "__fw1#arguments.preserveKey#" />
+
 	</cffunction>
 
 	<cffunction name="getNextPreserveKeyAndPurgeOld" access="private" output="false">
 		<cfset var nextPreserveKey = "" />
 		<cfset var oldKeyToPurge = "" />
+		
 		<cflock scope="session" type="exclusive" timeout="30">
 			<cfparam name="session.__fw1NextPreserveKey" default="1" />
-			<cfset nextPreserveKey = session.__fw1NextPreserveKey/>
+			<cfset nextPreserveKey = session.__fw1NextPreserveKey />
 			<cfset session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1/>
 		</cflock>
+		
 		<cfset oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved>
 		<cfif StructKeyExists(session, getPreserveKeySessionKey(oldKeyToPurge))>
 			<cfset structDelete(session, getPreserveKeySessionKey(oldKeyToPurge)) />
 		</cfif>
-		<cfreturn nextPreserveKey>
+		
+		<cfreturn nextPreserveKey />
+		
 	</cffunction>
 
 	<cffunction name="saveFlashContext" returntype="string" access="private" hint="Save request context to session scope if present.">
 		<cfargument name="keys" type="string" />
+		
 		<cfset var currPreserveKey = getNextPreserveKeyAndPurgeOld() />
 		<cfset var preserveKeySessionKey = getPreserveKeySessionKey(currPreserveKey) />
 		<cfset var key = "" />
@@ -1066,7 +1136,9 @@
 			<!--- session scope not enabled, do nothing --->
 		</cfcatch>
 		</cftry>
-		<cfreturn currPreserveKey>
+
+		<cfreturn currPreserveKey />
+
 	</cffunction>
 
 	<cffunction name="raiseException" access="private" output="false" hint="Throw an exception, callable from script.">

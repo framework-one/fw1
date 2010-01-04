@@ -7,7 +7,7 @@
 	// controllers/layouts/services/views are in this folder:
 	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction';
 	
-	// The above code is for OpenBD 1.1. On CF8 and Railo 3.1 you could just do:
+	// If your CFML engine supports it, you can create the framework struct like this:
 	// variables.framework = {
 	// 		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction'
 	// }
