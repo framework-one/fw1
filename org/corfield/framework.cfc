@@ -252,11 +252,11 @@
 			doController( request.controller, 'after' );
 		}
 		request.controllerExecutionComplete = true;
-		if ( not structKeyExists(request, 'view') ) {
-			writeOutput( onMissingView( request.context ) );
-			return;
+		if ( structKeyExists(request, 'view') ) {
+			out = view( request.view );
+		} else {
+			out = onMissingView( request.context );
 		}
-		out = view( request.view );
 		for ( i = 1; i lte arrayLen(request.layouts); i = i + 1 ) {
 			if ( structKeyExists(request, 'layout') and not request.layout ) {
 				break;
