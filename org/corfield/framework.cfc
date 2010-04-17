@@ -1,6 +1,6 @@
 <cfcomponent><cfscript>
 /*
-	Copyright (c) 2009, Sean Corfield, Ryan Cogswell
+	Copyright (c) 2009-2010, Sean Corfield, Ryan Cogswell
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -1039,11 +1039,18 @@
 		<cfargument name="cfc" />
 		<cfargument name="method" />
 
+		<cfset var meta = 0 />
+		
 		<cfif structKeyExists(arguments.cfc,arguments.method) or structKeyExists(arguments.cfc,"onMissingMethod")>
 			<cftry>
 				<cfinvoke component="#arguments.cfc#" method="#arguments.method#" rc="#request.context#" />
 			<cfcatch type="any">
-				<cfset request.failedCfcName = getMetadata( arguments.cfc ).fullname />
+				<cfset meta = getMetadata( arguments.cfc ) />
+				<cfif structKeyExists( meta, 'fullname' )>
+					<cfset request.failedCfcName = meta.fullname />
+				<cfelse>
+					<cfset request.failedCfcName = meta.name />
+				</cfif>
 				<cfset request.failedMethod = arguments.method />
 				<cfrethrow />
 			</cfcatch>
