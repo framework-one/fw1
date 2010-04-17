@@ -15,6 +15,8 @@
 	limitations under the License.
 */
 
+	this.name = hash( getCurrentTemplatePath() );
+
 	/*
 	 * call this from your setupApplication() method to tell the framework
 	 * about your bean factory - only assumption is that it supports:
