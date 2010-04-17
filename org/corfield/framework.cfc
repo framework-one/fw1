@@ -806,26 +806,28 @@
 
 		<cfset var key = 0 />
 		<cfset var property = 0 />
+		<cfset var trimProperty = 0 />
 		<cfset var args = 0 />
 
 		<cfif arguments.keys is "">
 			<cfloop item="key" collection="#arguments.cfc#">
-				<cfif len(key) gt 3 and left(key,3) is "set">
-					<cfset property = right(key, len(key)-3) />
-					<cfif structKeyExists(request.context,property)>
+				<cfif len( key ) gt 3 and left( key, 3 ) is "set">
+					<cfset property = right( key, len( key ) - 3 ) />
+					<cfif structKeyExists( request.context, property )>
 						<cfset args = structNew() />
-						<cfset args[property] = request.context[property] />
+						<cfset args[ property ] = request.context[ property ] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					</cfif>
 				</cfif>
 			</cfloop>
 		<cfelse>
 			<cfloop index="property" list="#arguments.keys#">
-				<cfset key = "set" & property />
+				<cfset trimProperty = trim( property ) />
+				<cfset key = "set" & trimProperty />
 				<cfif structKeyExists( arguments.cfc, key )>
-					<cfif structKeyExists(request.context,property)>
+					<cfif structKeyExists( request.context, trimProperty )>
 						<cfset args = structNew() />
-						<cfset args[property] = request.context[property] />
+						<cfset args[ trimProperty ] = request.context[ trimProperty ] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					</cfif>
 				</cfif>
