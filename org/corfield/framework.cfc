@@ -116,6 +116,17 @@
 		setupFrameworkDefaults();
 		setupApplicationWrapper();
 	}
+	
+	/*
+	 * this can be overridden if you want to change the behavior when
+	 * FW/1 cannot find a matching view
+	 */
+	function onMissingView( rc ) {
+		// unable to find a matching view - fail with a nice exception
+		viewNotFound();
+		// if we got here, we would return the string to be rendered
+		// but viewNotFound() throws an exception...
+	}
 
 	/*
 	 * it is better to set up your session configuration in
@@ -242,8 +253,8 @@
 		}
 		request.controllerExecutionComplete = true;
 		if ( not structKeyExists(request, 'view') ) {
-			// unable to find a matching view - fail with a nice exception
-			viewNotFound();
+			writeOutput( onMissingView( request.context ) );
+			return;
 		}
 		out = view( request.view );
 		for ( i = 1; i lte arrayLen(request.layouts); i = i + 1 ) {
