@@ -72,6 +72,33 @@
 	 * you do not need to call super.setupRequest()
 	 */
 	function setupRequest() { }
+	
+	/*
+	 * call this from your Application.cfc methods to queue up additional controller
+	 * method calls at the start of the request
+	 */
+	function controller( action ) {
+		var subsystem = getSubsystem( action );
+		var section = getSection( action );
+		var item = getItem( action );
+		var tuple = structNew();
+		
+		if ( structKeyExists( request, 'controllerExecutionStarted' ) ) {
+			raiseException( type="FW1.controllerExecutionStarted", message="Controller '#action#' may not be added at this point.",
+				detail="The controller execution phase has already started. Controllers may not be added by other controller methods." );
+		}
+		
+		tuple.controller = getController( section = section, subsystem = subsystem );
+		tuple.key = subsystem & variables.framework.subsystemDelimiter & section;
+		tuple.item = item;
+		
+		if ( structKeyExists( tuple, "controller" ) and isObject( tuple.controller ) ) {
+			if ( not structKeyExists( request, 'controllers' ) ) {
+				request.controllers = arrayNew(1);
+			}
+			arrayAppend( request.controllers, tuple );
+		}
+	}
 
 </cfscript><cfsilent>
 
@@ -228,30 +255,45 @@
 
 		var out = 0;
 		var i = 0;
-		var svc = 0;
+		var tuple = 0;
 		var _data_fw1 = 0;
+		var once = structNew();
 
-		if ( structKeyExists( request, 'controller' ) and isObject( request.controller ) ) {
-			doController( request.controller, 'before' );
-			doController( request.controller, 'start' & request.item );
-			doController( request.controller, request.item );
+		request.controllerExecutionStarted = true;
+		if ( structKeyExists( request, 'controllers' ) ) {
+			for ( i = 1; i lte arrayLen( request.controllers ); i = i + 1 ) {
+				tuple = request.controllers[ i ];
+				// run before once per controller:
+				if ( not structKeyExists( once, tuple.key ) ) {
+					once[ tuple.key ] = i;
+					doController( tuple.controller, 'before' );
+				}
+				doController( tuple.controller, 'start' & tuple.item );
+				doController( tuple.controller, tuple.item );
+			}
 		}
 		for ( i = 1; i lte arrayLen(request.services); i = i + 1 ) {
-			svc = request.services[i];
-			if ( svc.key is '' ) {
+			tuple = request.services[i];
+			if ( tuple.key is '' ) {
 				// throw the result away:
-				doService( svc.service, svc.item, svc.enforceExistence );
+				doService( tuple.service, tuple.item, tuple.enforceExistence );
 			} else {
-				_data_fw1 = doService( svc.service, svc.item, svc.enforceExistence );
+				_data_fw1 = doService( tuple.service, tuple.item, tuple.enforceExistence );
 				if ( isDefined('_data_fw1') ) {
-					request.context[ svc.key ] = _data_fw1;
+					request.context[ tuple.key ] = _data_fw1;
 				}
 			}
 		}
 		request.serviceExecutionComplete = true;
-		if ( structKeyExists( request, 'controller' ) and isObject( request.controller ) ) {
-			doController( request.controller, 'end' & request.item );
-			doController( request.controller, 'after' );
+		if ( structKeyExists( request, 'controllers' ) ) {
+			for ( i = arrayLen( request.controllers ); i gte 1; i = i - 1 ) {
+				tuple = request.controllers[ i ];
+				doController( tuple.controller, 'end' & tuple.item );
+				// run after once per controller:
+				if ( once[ tuple.key ] eq i ) {
+					doController( tuple.controller, 'after' );
+				}
+			}
 		}
 		request.controllerExecutionComplete = true;
 		if ( structKeyExists(request, 'view') ) {
@@ -578,8 +620,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0';
-
+		variables.framework.version = '1.0.117';
 	}
 
 	/*
@@ -645,7 +686,7 @@
 
 		setupSubsystemWrapper(request.subsystem);
 
-		request.controller = getController(section=request.section, subsystem=request.subsystem);
+		controller( request.action );
 
 		request.services = arrayNew(1);
 		service( request.action, getServiceKey( request.action ), false );
