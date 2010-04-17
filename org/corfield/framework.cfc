@@ -391,7 +391,7 @@
 		if ( not usingSubsystems() ) {
 			return false;
 		}
-		return listLen( action, ':' ) gt 1 or right( action, 1 ) eq ':';
+		return listLen( action, variables.framework.subsystemDelimiter ) gt 1 or right( action, 1 ) eq variables.framework.subsystemDelimiter;
 	}
 
 	/*
@@ -402,8 +402,8 @@
 		var sectionAndItem = '';
 		
 		if ( usingSubsystems() and actionSpecifiesSubsystem( action ) ) {
-			if ( listLen( action, ':' ) gt 1 ) {
-				sectionAndItem = listLast( action, ':' );
+			if ( listLen( action, variables.framework.subsystemDelimiter ) gt 1 ) {
+				sectionAndItem = listLast( action, variables.framework.subsystemDelimiter );
 			}
 		} else {
 			sectionAndItem = action;
@@ -447,7 +447,7 @@
 		<cfargument name="action" default="#request.action#" />
 
 		<cfif actionSpecifiesSubsystem( arguments.action ) >
-			<cfreturn listFirst( arguments.action, ':' ) />
+			<cfreturn listFirst( arguments.action, variables.framework.subsystemDelimiter ) />
 		</cfif>
 
 		<cfreturn getDefaultSubsystem() />
@@ -481,7 +481,7 @@
 	function getFullyQualifiedAction( action ) {
 
 		if ( usingSubsystems() ) {
-			return getSubsystem( action ) & ':' & getSectionAndItem( action );
+			return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
 		}
 
 		return getSectionAndItem( action );
@@ -524,19 +524,22 @@
 		if ( not structKeyExists(variables.framework, 'defaultItem') ) {
 			variables.framework.defaultItem = 'default';
 		}
+		if ( not structKeyExists(variables.framework, 'subsystemDelimiter') ) {
+			variables.framework.subsystemDelimiter = ':';
+		}
 		if ( not structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
 			variables.framework.siteWideLayoutSubsystem = 'common';
 		}
 		if ( not structKeyExists(variables.framework, 'home') ) {
 			if (usingSubsystems()) {
-				variables.framework.home = variables.framework.defaultSubsystem & ':' & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+				variables.framework.home = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 			} else {
 				variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 			}
 		}
 		if ( not structKeyExists(variables.framework, 'error') ) {
 			if (usingSubsystems()) {
-				variables.framework.error = variables.framework.defaultSubsystem & ':' & variables.framework.defaultSection & '.error';
+				variables.framework.error = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.error';
 			} else {
 				variables.framework.error = variables.framework.defaultSection & '.error';
 			}
@@ -658,7 +661,7 @@
 		// look for site-wide layout (only applicable if using subsystems)
 		if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase and
 				fileExists( expandPath( siteWideLayoutBase & 'layouts/default.cfm' ) ) ) {
-			arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & ':default');
+			arrayAppend(request.layouts, variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter & 'default');
 		}
 		setupRequest();
 	}
@@ -763,7 +766,7 @@
 			pathInfo.path = arguments.path;
 		} else {
 			pathInfo.base = request.base & getSubsystemDirPrefix( subsystem );
-			pathInfo.path = listLast( arguments.path, ':' );
+			pathInfo.path = listLast( arguments.path, variables.framework.subsystemDelimiter );
 		}
 
 		return pathInfo;

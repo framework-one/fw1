@@ -12,6 +12,8 @@
 		defaultSection = 'main',
 		// default item name:
 		defaultItem = 'default',
+		// if using subsystems, the delimiter between the subsystem and the action:
+		subsystemDelimiter = ':',
 		// if using subsystems, the name of the subsystem containing the global layouts:
 		siteWideLayoutSubsystem = 'common',
 		// the default when no action is specified:
