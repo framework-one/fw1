@@ -620,7 +620,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.117';
+		variables.framework.version = '1.0.118';
 	}
 
 	/*
@@ -857,6 +857,7 @@
 			hint="Used to populate beans from the request context.">
 		<cfargument name="cfc" />
 		<cfargument name="keys" default="" />
+		<cfargument name="trustKeys" default="false" />
 
 		<cfset var key = 0 />
 		<cfset var property = 0 />
@@ -864,21 +865,36 @@
 		<cfset var args = 0 />
 
 		<cfif arguments.keys is "">
-			<cfloop item="key" collection="#arguments.cfc#">
-				<cfif len( key ) gt 3 and left( key, 3 ) is "set">
-					<cfset property = right( key, len( key ) - 3 ) />
-					<cfif structKeyExists( request.context, property )>
+			<cfif arguments.trustKeys>
+				<!--- assume everything in the request context can be set into the CFC --->
+				<cfloop item="property" collection="#request.context#">
+					<cfset key = "set" & property />
+					<cftry>
 						<cfset args = structNew() />
 						<cfset args[ property ] = request.context[ property ] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+					<cfcatch type="any">
+						<!--- ignore failures to set properties: caveat developer! --->
+					</cfcatch>
+					</cftry>
+				</cfloop>
+			<cfelse>
+				<cfloop item="key" collection="#arguments.cfc#">
+					<cfif len( key ) gt 3 and left( key, 3 ) is "set">
+						<cfset property = right( key, len( key ) - 3 ) />
+						<cfif structKeyExists( request.context, property )>
+							<cfset args = structNew() />
+							<cfset args[ property ] = request.context[ property ] />
+							<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+						</cfif>
 					</cfif>
-				</cfif>
-			</cfloop>
+				</cfloop>
+			</cfif>
 		<cfelse>
 			<cfloop index="property" list="#arguments.keys#">
 				<cfset trimProperty = trim( property ) />
 				<cfset key = "set" & trimProperty />
-				<cfif structKeyExists( arguments.cfc, key )>
+				<cfif structKeyExists( arguments.cfc, key ) or arguments.trustKeys>
 					<cfif structKeyExists( request.context, trimProperty )>
 						<cfset args = structNew() />
 						<cfset args[ trimProperty ] = request.context[ trimProperty ] />
