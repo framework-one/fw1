@@ -334,6 +334,14 @@
 		}
 
 	}
+	
+	/*
+	 * can be overridden to customize how views and layouts are found - can be
+	 * used to provide skinning / common views / layouts etc
+	 */
+	function customizeViewOrLayoutPath( pathInfo, type, fullPath ) {
+		return fullPath;
+	}
 
 </cfscript><cfsilent>
 	<!---
@@ -620,7 +628,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.118';
+		variables.framework.version = '1.0.123';
 	}
 
 	/*
@@ -810,7 +818,7 @@
 
 	}
 
-	function parseViewOrLayoutPath( path ) {
+	function parseViewOrLayoutPath( path, type ) {
 		
 		var pathInfo = StructNew();
 		var subsystem = getSubsystem( arguments.path );
@@ -823,7 +831,7 @@
 			pathInfo.path = listLast( arguments.path, variables.framework.subsystemDelimiter );
 		}
 
-		return pathInfo;
+		return customizeViewOrLayoutPath( pathInfo, type, '#pathInfo.base##type#s/#pathInfo.path#.cfm' );
 
 	}
 </cfscript><cfsilent>
@@ -838,14 +846,14 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
-		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
+		<cfset var layoutPath = parseViewOrLayoutPath( arguments.path, 'layout' ) />
 
 		<cfif not structKeyExists( request, "controllerExecutionComplete" ) >
 			<cfset raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
 				detail="The layout method should not be called prior to the completion of the controller execution phase." ) />
 		</cfif>
 
-		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#layouts/#pathInfo.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#layoutPath#"/></cfsavecontent>
 
 		<cfreturn response />
 	</cffunction>
@@ -980,14 +988,14 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
-		<cfset var pathInfo = parseViewOrLayoutPath( arguments.path ) />
+		<cfset var viewPath = parseViewOrLayoutPath( arguments.path, 'view' ) />
 
 		<cfif not structKeyExists( request, "controllerExecutionComplete" ) >
 			<cfset raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
 				detail="The view method should not be called prior to the completion of the controller execution phase." ) />
 		</cfif>
 
-		<cfsavecontent variable='response'><cfinclude template="#pathInfo.base#views/#pathInfo.path#.cfm"/></cfsavecontent>
+		<cfsavecontent variable='response'><cfinclude template="#viewPath#"/></cfsavecontent>
 
 		<cfreturn response />
 
