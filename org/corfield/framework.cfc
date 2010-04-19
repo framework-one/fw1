@@ -344,6 +344,8 @@
 			request.action = variables.framework.error;
 			request.exception = exception;
 			request.event = event;
+			structDelete( request, 'controllerExecutionComplete' );
+			structDelete( request, 'controllerExecutionStarted' );
 			structDelete( request, 'serviceExecutionComplete' );
 			setupRequestWrapper();
 			onRequest('');
@@ -922,7 +924,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.131';
+		variables.framework.version = '1.0.132';
 	}
 
 	function setupRequestWrapper() { // "private"
