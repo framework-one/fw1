@@ -313,7 +313,7 @@
 	 */
 	function layout( path, body ) {
 		var layoutPath = parseViewOrLayoutPath( arguments.path, 'layout' );
-		return internalView( layoutPath );
+		return internalLayout( layoutPath, body );
 	}
 
 	/*
@@ -924,7 +924,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.132';
+		variables.framework.version = '1.0.133';
 	}
 
 	function setupRequestWrapper() { // "private"
