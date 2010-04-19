@@ -757,18 +757,20 @@
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
-		testLayout = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
-													'default', 'layout' );
-		if ( request.section is not 'default' and
-				fileExists( expandPath( testLayout ) ) ) {
-			arrayAppend( request.layouts, testLayout );
+		if ( request.section is not 'default' ) {
+			testLayout = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
+														'default', 'layout' );
+			if ( fileExists( expandPath( testLayout ) ) ) {
+				arrayAppend( request.layouts, testLayout );
+			}
 		}
 		// look for site-wide layout (only applicable if using subsystems)
-		testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
-													'default', 'layout' );
-		if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase and
-				fileExists( expandPath( testLayout ) ) ) {
-			arrayAppend( request.layouts, testLayout );
+		if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase ) {
+			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
+														'default', 'layout' );
+			if ( fileExists( expandPath( testLayout ) ) ) {
+				arrayAppend( request.layouts, testLayout );
+			}
 		}
 	}
 
@@ -934,7 +936,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.134';
+		variables.framework.version = '1.0.135';
 	}
 
 	function setupRequestWrapper() { // "private"
