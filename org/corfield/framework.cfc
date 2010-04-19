@@ -17,6 +17,14 @@
 
 	this.name = hash( getCurrentTemplatePath() );
 
+	function actionSpecifiesSubsystem( action ) {
+		
+		if ( not usingSubsystems() ) {
+			return false;
+		}
+		return listLen( action, variables.framework.subsystemDelimiter ) gt 1 or right( action, 1 ) eq variables.framework.subsystemDelimiter;
+	}
+
 </cfscript><cfsilent>
 
 	<!---
@@ -127,6 +135,28 @@
 	 */
 	function getDefaultBeanFactory() {
 		return application[ variables.framework.applicationKey ].factory;
+	}
+
+	/*
+	 * returns the name of the default subsystem
+	 */
+	function getDefaultSubsystem() {
+	
+		if ( not usingSubsystems() ) {
+			return '';
+		}
+
+		if ( structKeyExists( request, 'subsystem' ) ) {
+			return request.subsystem;
+		}
+
+		if ( variables.framework.defaultSubsystem eq "" ) {
+			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
+					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
+		}
+
+		return variables.framework.defaultSubsystem;
+		
 	}
 
 	/*
@@ -697,14 +727,6 @@
  
 </cfsilent><cfscript>
 
-	function actionSpecifiesSubsystem( action ) { // "private"
-		
-		if ( not usingSubsystems() ) {
-			return false;
-		}
-		return listLen( action, variables.framework.subsystemDelimiter ) gt 1 or right( action, 1 ) eq variables.framework.subsystemDelimiter;
-	}
-
 	function buildViewAndLayoutQueue() { // "private"
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
@@ -773,25 +795,6 @@
 		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
 		dumpException(exception);
 
-	}
-
-	function getDefaultSubsystem() { // "private"
-	
-		if ( not usingSubsystems() ) {
-			return '';
-		}
-
-		if ( structKeyExists( request, 'subsystem' ) ) {
-			return request.subsystem;
-		}
-
-		if ( variables.framework.defaultSubsystem eq "" ) {
-			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
-					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
-		}
-
-		return variables.framework.defaultSubsystem;
-		
 	}
 
 	function getSubsystemDirPrefix( subsystem ) { // "private"
