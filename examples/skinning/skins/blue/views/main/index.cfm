@@ -1,0 +1,1 @@
+﻿<p>This is the blue default page.</p>
