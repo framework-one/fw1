@@ -76,5 +76,20 @@
 		<!--- user saved so by default lets go back to the users list page --->
 		<cfset variables.fw.redirect("user.list")>
 	</cffunction>
+
+	<cffunction name="checkAjaxRequest" access="public" output="false" returntype="void"> 
+		<cfargument name="rc" type="struct" required="true" /> 
+
+		<cfset var httpData = getHttpRequestData() /> 
+
+		<!--- do nothing if isAjaxRequest is already in request context ---> 
+		<cfif structKeyExists( rc, "isAjaxRequest" ) AND isBoolean( rc.isAjaxRequest )> 
+			<cfreturn /> 
+		</cfif> 
+		<!--- AJAX request if custom HTTP request header "X-Requested-With" is "XMLHttpRequest" ---> 
+		<cfset rc.isAjaxRequest = ( structKeyExists(httpData, "headers") 
+				AND structKeyExists(httpData.headers, "X-Requested-With") 
+				AND httpData.headers["X-Requested-With"] EQ "XMLHttpRequest" ) /> 
+	</cffunction>
 	
 </cfcomponent>
