@@ -388,13 +388,13 @@
 				doController( tuple.controller, tuple.item );
 			}
 		}
-		for ( i = 1; i lte arrayLen(request.services); i = i + 1 ) {
+		for ( i = 1; i lte arrayLen( request.services ); i = i + 1 ) {
 			tuple = request.services[i];
 			if ( tuple.key is '' ) {
 				// throw the result away:
-				doService( tuple.service, tuple.item, tuple.enforceExistence );
+				doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
 			} else {
-				_data_fw1 = doService( tuple.service, tuple.item, tuple.enforceExistence );
+				_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
 				if ( isDefined('_data_fw1') ) {
 					request.context[ tuple.key ] = _data_fw1;
 				}
@@ -621,6 +621,7 @@
 	<cffunction name="service" output="false">
 		<cfargument name="action" />
 		<cfargument name="key" />
+		<cfargument name="args" default="#structNew()#" />
 		<cfargument name="enforceExistence" required="false" default="true" />
 		<cfscript>
 		var subsystem = getSubsystem( action );
@@ -636,6 +637,7 @@
 		tuple.service = getService(section=section, subsystem=subsystem);
 		tuple.item = item;
 		tuple.key = key;
+		tuple.args = args;
 		tuple.enforceExistence = enforceExistence;
 
 		if ( structKeyExists( tuple, "service" ) and isObject( tuple.service ) ) {
@@ -920,7 +922,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.128';
+		variables.framework.version = '1.0.131';
 	}
 
 	function setupRequestWrapper() { // "private"
@@ -935,7 +937,7 @@
 		controller( request.action );
 
 		request.services = arrayNew(1);
-		service( request.action, getServiceKey( request.action ), false );
+		service( request.action, getServiceKey( request.action ), structNew(), false );
 
 		setupRequest();
 	}
@@ -1008,14 +1010,16 @@
 	<cffunction name="doService" access="private" output="false" hint="Executes a controller in context.">
 		<cfargument name="cfc" />
 		<cfargument name="method" />
+		<cfargument name="args" />
 		<cfargument name="enforceExistence" />
 
 		<cfset var _result_fw1 = 0 />
 
 		<cfif structKeyExists( arguments.cfc, arguments.method ) or structKeyExists( arguments.cfc, "onMissingMethod" )>
 			<cftry>
+				<cfset structAppend( arguments.args, request.context, false ) />
 				<cfinvoke component="#arguments.cfc#" method="#arguments.method#"
-					argumentCollection="#request.context#" returnVariable="_result_fw1" />
+					argumentCollection="#arguments.args#" returnVariable="_result_fw1" />
 			<cfcatch type="any">
 				<cfset request.failedCfcName = getMetadata( arguments.cfc ).fullname />
 				<cfset request.failedMethod = arguments.method />
