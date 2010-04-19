@@ -340,6 +340,7 @@
 	 * used to provide skinning / common views / layouts etc
 	 */
 	function customizeViewOrLayoutPath( pathInfo, type, fullPath ) {
+		// fullPath is: '#pathInfo.base##type#s/#pathInfo.path#.cfm'
 		return fullPath;
 	}
 
@@ -628,7 +629,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.123';
+		variables.framework.version = '1.0.124';
 	}
 
 	/*
