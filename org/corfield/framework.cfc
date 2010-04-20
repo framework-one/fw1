@@ -373,6 +373,7 @@
 	 * specific list of keys).  By default FW/1 silently ignores these errors.
 	 * Available in the arguments are the bean cfc and the property that was
 	 * being set when the error occurred as well as the request context structure.
+	 * You can also reference the cfcatch variable for details about the error.
 	 */
 	function onPopulateError( cfc, property, rc ) {
 	}
@@ -947,7 +948,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.139';
+		variables.framework.version = '1.0.140';
 	}
 
 	function setupRequestWrapper() { // "private"
