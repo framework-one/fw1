@@ -367,6 +367,17 @@
 	}
 
 	/*
+	 * This can be overridden if you want to change the behavior when
+	 * FW/1 encounters an error when trying to populate bean properties
+	 * using all of the keys in the request context (rather than a
+	 * specific list of keys).  By default FW/1 silently ignores these errors.
+	 * Available in the arguments are the bean cfc and the property that was
+	 * being set when the error occurred as well as the request context structure.
+	 */
+	function onPopulateError( cfc, property, rc ) {
+	}
+
+	/*
 	 * not intended to be overridden, automatically deleted for CFC requests
 	 */
 	function onRequest(targetPath) {
@@ -548,7 +559,7 @@
 						<cfset args[ property ] = request.context[ property ] />
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					<cfcatch type="any">
-						<!--- ignore failures to set properties: caveat developer! --->
+						<cfset onPopulateError( arguments.cfc, property, request.context ) />
 					</cfcatch>
 					</cftry>
 				</cfloop>
@@ -936,7 +947,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.135';
+		variables.framework.version = '1.0.136';
 	}
 
 	function setupRequestWrapper() { // "private"
