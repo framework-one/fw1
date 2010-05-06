@@ -8,3 +8,5 @@ Project home: http://fw1.riaforge.org
 Documentation wiki: http://fw1.riaforge.org/wiki/
 
 Blog: http://fw1.riaforge.org/blog/
+
+Support: http://groups.google.com/group/framework-one/
