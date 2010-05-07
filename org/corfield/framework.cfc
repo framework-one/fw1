@@ -960,12 +960,12 @@
 
 		setupSubsystemWrapper( request.subsystem );
 
-		controller( request.action );
-
 		request.services = arrayNew(1);
-		service( request.action, getServiceKey( request.action ), structNew(), false );
 
 		setupRequest();
+
+		controller( request.action );
+		service( request.action, getServiceKey( request.action ), structNew(), false );
 	}
 
 	function setupSessionWrapper() { // "private"
