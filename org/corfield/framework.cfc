@@ -517,7 +517,7 @@
 		setupRequestWrapper();
 
 		// allow CFC requests through directly:
-		if ( right(targetPath,4) is '.cfc' or targetPath is '/flex2gateway' ) {
+		if ( listFind ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or targetPath eq framework.flexGatewayPath ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
@@ -945,6 +945,12 @@
 		if ( not structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
 		}
+		if ( not structKeyExists(variables.framework, 'unhandledExtensions') ) {
+			variables.framework.unhandledExtensions = 'cfc';
+		}
+		if ( not structKeyExists(variables.framework, 'flexGatewayPath') ) {
+			variables.framework.flexGatewayPath = '/flex2gateway';
+		}				
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
