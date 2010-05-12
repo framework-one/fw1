@@ -1011,7 +1011,15 @@
 	<cffunction name="cfcFilePath" access="private" output="false" hint="Changes a dotted path to a filesystem path">
 		<cfargument name="dottedPath" />
 
-		<cfreturn '/' & replace( arguments.dottedPath, '.', '/', 'all' ) & '/' />
+		<cfif arguments.dottedPath eq '' >
+		
+			<cfreturn "/" />
+			
+		<cfelse>
+		
+			<cfreturn '/' & replace( arguments.dottedPath, '.', '/', 'all' ) & '/' />
+		
+		</cfif>
 
 	</cffunction>
 
