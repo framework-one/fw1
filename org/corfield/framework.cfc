@@ -130,6 +130,11 @@
 
 </cfsilent><cfscript>
 
+	function getConfig()
+	{
+		return framework;
+	}
+
 	/*
 	 * returns the bean factory set via setBeanFactory
 	 */
