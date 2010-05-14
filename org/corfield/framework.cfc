@@ -132,7 +132,8 @@
 
 	function getConfig()
 	{
-		return framework;
+		// duplicating makes it read only from outside the framework
+		return duplicate ( framework );
 	}
 
 	/*
@@ -521,8 +522,9 @@
 
 		setupRequestWrapper();
 
-		// allow CFC requests through directly:
-		if ( listFind ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or targetPath eq framework.flexGatewayPath ) {		
+		// allow configured extensions and paths to pass through to the requested template.
+		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
+		if ( listFindNoCase ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or reFindNoCase( "^(" & replaceNoCase( reReplace ( framework.unhandledPaths, "((\+)|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)", "\\\1", "all"), ",", "|", "all") & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
@@ -950,11 +952,13 @@
 		if ( not structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
 		}
+		// NOTE: unhandledExtensions is a list of file extensions that are not handled by FW/1
 		if ( not structKeyExists(variables.framework, 'unhandledExtensions') ) {
 			variables.framework.unhandledExtensions = 'cfc';
 		}
-		if ( not structKeyExists(variables.framework, 'flexGatewayPath') ) {
-			variables.framework.flexGatewayPath = '/flex2gateway';
+		// NOTE: you can provide a comma delimited list of paths.  Since comma is the delim, it can not be part of your path URL to exclude
+		if ( not structKeyExists(variables.framework, 'unhandledPaths') ) {
+			variables.framework.unhandledPaths = '/flex2gateway';
 		}				
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
