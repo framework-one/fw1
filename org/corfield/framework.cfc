@@ -524,7 +524,7 @@
 
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
-		if ( listFindNoCase ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or reFindNoCase( "^(" & replaceNoCase( reReplace ( framework.unhandledPaths, "((\+)|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)", "\\\1", "all"), ",", "|", "all") & ")", arguments.targetPath ) ) {		
+		if ( listFindNoCase ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or reFindNoCase( "^(" & replaceNoCase( reReplace ( framework.unhandledPaths, "(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)", "\\\1", "all"), ",", "|", "all") & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
