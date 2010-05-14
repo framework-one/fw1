@@ -728,6 +728,13 @@
 	 * you do not need to call super.setupSubsystem( subsystem )
 	 */
 	function setupSubsystem( subsystem ) { }
+	
+	/*
+	 * use this to override the default view
+	 */
+	function setView( action ) {
+		request.overrideViewAction = action;
+	}
 
 	/*
 	 * returns true if the application is configured to use subsystems
@@ -754,10 +761,22 @@
 	function buildViewAndLayoutQueue() { // "private"
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
+		// default behavior:
+		var subsystem = request.subsystem;
+		var section = request.section;
+		var item = request.item;
+		
+		// has view been overridden?
+		if ( structKeyExists( request, 'overrideViewAction' ) ) {
+			subsystem = getSubsystem( request.overrideViewAction );
+			section = getSection( request.overrideViewAction );
+			item = getItem( request.overrideViewAction );
+		}
+		var subsystembase = request.base & getSubsystemDirPrefix( subsystem );
 
 		// view and layout setup - used to be in setupRequestWrapper():
-		request.view = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
-													request.section & '/' & request.item, 'view' );
+		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+													section & '/' & item, 'view' );
 		if ( not fileExists( expandPath( request.view ) ) ) {
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
@@ -765,27 +784,27 @@
 
 		request.layouts = arrayNew(1);
 		// look for item-specific layout:
-		testLayout = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
-													request.section & '/' & request.item, 'layout' );
+		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+													section & '/' & item, 'layout' );
 		if ( fileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for section-specific layout:
-		testLayout = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
-													request.section, 'layout' );
+		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+													section, 'layout' );
 		if ( fileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
 		if ( request.section is not 'default' ) {
-			testLayout = parseViewOrLayoutPath( request.subsystem & variables.framework.subsystemDelimiter &
+			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( fileExists( expandPath( testLayout ) ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
 		}
 		// look for site-wide layout (only applicable if using subsystems)
-		if ( usingSubsystems() and siteWideLayoutBase is not request.subsystembase ) {
+		if ( usingSubsystems() and siteWideLayoutBase is not subsystembase ) {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( fileExists( expandPath( testLayout ) ) ) {
