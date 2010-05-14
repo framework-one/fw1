@@ -132,8 +132,8 @@
 
 	function getConfig()
 	{
-		// duplicating makes it read only from outside the framework
-		return duplicate ( framework );
+		// return a copy to make it read only from outside the framework:
+		return structCopy( framework );
 	}
 
 	/*
@@ -524,7 +524,8 @@
 
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
-		if ( listFindNoCase ( framework.unhandledExtensions, listLast ( arguments.targetPath, "." ) ) or reFindNoCase( "^(" & replaceNoCase( reReplace ( framework.unhandledPaths, "(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)", "\\\1", "all"), ",", "|", "all") & ")", arguments.targetPath ) ) {		
+		if ( listFindNoCase( framework.unhandledExtensions, listLast( arguments.targetPath, "." ) ) or 
+				REFindNoCase( "^(" & framework.unhandledPathRegex & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
@@ -960,10 +961,14 @@
 		if ( not structKeyExists(variables.framework, 'unhandledPaths') ) {
 			variables.framework.unhandledPaths = '/flex2gateway';
 		}				
+		// convert unhandledPaths to regex:
+		variables.framework.unhandledPathRegex = replaceNoCase(
+			REReplace( variables.framework.unhandledPaths, '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)', '\\\1', 'all' ),
+			',', '|', 'all' );
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.0.140';
+		variables.framework.version = '1.0.1_0513';
 	}
 
 	function setupRequestWrapper() { // "private"
