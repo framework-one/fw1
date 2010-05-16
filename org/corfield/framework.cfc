@@ -165,21 +165,24 @@
 
 	}
 
-	/*
-	 * return an action with all applicable parts (subsystem, section, and item) specified
-	 * using defaults from the configuration or request where appropriate
-	 */
-	function getFullyQualifiedAction( action ) {
-
-		if ( usingSubsystems() ) {
-			return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
-		}
-
-		return getSectionAndItem( action );
-
-	}
-
 </cfscript><cfsilent>
+
+	<!---
+		return an action with all applicable parts (subsystem, section, and item) specified
+		 using defaults from the configuration or request where appropriate
+	--->
+	<cffunction name="getFullyQualifiedAction" output="false">
+		<cfargument name="action" default="#request.action#" />
+
+		<cfscript>
+			if ( usingSubsystems() ) {
+				return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+			}
+
+			return getSectionAndItem( action );
+		</cfscript>
+
+	</cffunction>
 
 	<!--- return the item part of the action --->
 	<cffunction name="getItem" output="false">
@@ -197,13 +200,11 @@
 
 	</cffunction>
 
-</cfsilent><cfscript>
+	<!--- return the action without the subsystem --->
+	<cffunction name="getSectionAndItem" output="false">
+		<cfargument name="action" default="#request.action#" />
 
-	/*
-	 * return the action without the subsystem
-	 */
-	function getSectionAndItem( action ) { // "private"
-
+		<cfscript>
 		var sectionAndItem = '';
 
 		if ( usingSubsystems() and actionSpecifiesSubsystem( action ) ) {
@@ -227,8 +228,11 @@
 		}
 
 		return sectionAndItem;
+		</cfscript>
 
-	}
+	</cffunction>
+
+</cfsilent><cfscript>
 
 	/*
 	 * return the default service result key
