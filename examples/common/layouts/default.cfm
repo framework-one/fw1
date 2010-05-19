@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>FW/1 - Framework One - Examples</title>
-		<base href="<cfoutput>#getDirectoryFromPath( CGI.SCRIPT_NAME )#</cfoutput>" />
+		<base href="<cfoutput>#iif( CGI.HTTPS eq "on", de("https"), de("http") ) & "://" & CGI.HTTP_HOST & getDirectoryFromPath( CGI.SCRIPT_NAME )#</cfoutput>" />
 		<link rel="stylesheet" type="text/css" href="../css/fw1.css" />
 	</head>
 	<body>
