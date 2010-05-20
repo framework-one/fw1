@@ -13,7 +13,7 @@
 	
 	function authorize( rc ) {
 		// check to make sure the user is logged on
-		if ( NOT structkeyexists(session,"auth") OR ( NOT session.auth.isLoggedIn and 
+		if ( not structkeyexists(session,"auth") or ( not session.auth.isLoggedIn and 
 				not listfindnocase( 'login', variables.fw.getSection() ) and 
 				not listfindnocase( 'main.error', variables.fw.getFullyQualifiedAction() ) ) ) {
 			variables.fw.redirect('login.showform');
