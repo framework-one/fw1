@@ -19,6 +19,15 @@
 			<cfset variables.fw.redirect('main') />
 		</cfif>
 	</cffunction>
+	
+	<cffunction name="showForm" access="public" returntype="void">
+		<!--- empty function merely to show form --->
+		<cfset session.auth.isLoggedIn = false />
+		<cfset session.auth.fullname = 'Guest' />
+		<cfset structdelete(session.auth,'user') />
+		<cfset rc.message = ['Please Login'] />
+		<cfset variables.fw.redirect('login','message') />
+	</cffunction>
 
 	<cffunction name="login" access="public" returntype="void">
 		<cfargument name="rc" type="struct" required="yes" />
