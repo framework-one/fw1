@@ -92,7 +92,11 @@
 				<cfset basePath = basePath & varDelim & extraArgs />
 			</cfif>
 			<cfif queryPart is not ''>
-				<cfset basePath = basePath & '?' & queryPart />
+				<cfif ses>
+					<cfset basePath = basePath & '?' & queryPart />
+				<cfelse>
+					<cfset basePath = basePath & '&' & queryPart />
+				</cfif>
 			</cfif>
 			<cfif anchor is not ''>
 				<cfset basePath = basePath & '##' & anchor />
