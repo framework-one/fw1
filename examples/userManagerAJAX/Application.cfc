@@ -27,6 +27,7 @@
 		<cfargument name="preserve" type="string" default="none" />
 		<cfargument name="append" type="string" default="none" />
 		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
+		<cfargument name="queryString" type="string" default="" />
 		
 		<cfif arguments.append NEQ "all">
 			<cfif arguments.append EQ "none">
