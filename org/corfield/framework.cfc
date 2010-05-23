@@ -34,11 +34,24 @@
 	<cffunction name="buildURL" access="public" output="false">
 		<cfargument name="action" type="string" />
 		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
+		<cfargument name="queryString" type="string" default="" />
 
 		<cfset var initialDelim = '?' />
+		<cfset var varDelim = '&' />
+		<cfset var equalDelim = '=' />
+		<cfset var basePath = '' />
+		<cfset var extraArgs = '' />
+		<cfset var queryPart = '' />
+		<cfset var anchor = '' />
+		<cfset var ses = false />
+		<cfset var omitIndex = false />
 
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
+			<cfif variables.framework.SESOmitIndex>
+				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
+				<cfset omitIndex = true />
+			</cfif>
 		</cfif>
 
 		<cfif find( '?', arguments.path ) gt 0>
@@ -47,9 +60,46 @@
 			<cfelse>
 				<cfset initialDelim = '&' />
 			</cfif>
+		<cfelseif structKeyExists( request, 'generateSES' ) and request.generateSES>
+			<cfif omitIndex>
+				<cfset initialDelim = '' />
+			<cfelse>
+				<cfset initialDelim = '/' />
+			</cfif>
+			<cfset varDelim = '/' />
+			<cfset equalDelim = '/' />
+			<cfset ses = true />
 		</cfif>
 
-		<cfreturn "#arguments.path##initialDelim##variables.framework.action#=#getFullyQualifiedAction(arguments.action)#" />
+		<cfif ses>
+			<cfset basePath = arguments.path & initialDelim & replace( getFullyQualifiedAction( arguments.action ), '.', '/' ) />
+		<cfelse>
+			<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & getFullyQualifiedAction(arguments.action) />
+		</cfif>
+		
+		<cfif len( arguments.queryString )>
+			<cfset extraArgs = REReplace( arguments.queryString, '([^\?\##]*).*', '\1') />
+			<cfif find( '?', arguments.queryString )>
+				<cfset queryPart = REReplace( arguments.queryString, '[^\?]*\?([^\##]*).*', '\1') />
+			</cfif>
+			<cfif find( '##', arguments.queryString )>
+				<cfset anchor = REReplace( arguments.queryString, '[^\##]*\##(.*)', '\1' ) />
+			</cfif>
+			<cfif ses>
+				<cfset extraArgs = listChangeDelims( extraArgs, '/', '&=' ) />
+			</cfif>
+			<cfif extraArgs is not ''>
+				<cfset basePath = basePath & varDelim & extraArgs />
+			</cfif>
+			<cfif queryPart is not ''>
+				<cfset basePath = basePath & '?' & queryPart />
+			</cfif>
+			<cfif anchor is not ''>
+				<cfset basePath = basePath & '##' & anchor />
+			</cfif>
+		</cfif>
+		
+		<cfreturn basePath />
 
 	</cffunction>
 
@@ -463,6 +513,7 @@
 
 		var pathInfo = CGI.PATH_INFO;
 		var sesIx = 0;
+		var sesN = 0;
 
 		setupFrameworkDefaults();
 
@@ -501,8 +552,22 @@
 			// pathInfo is bogus so ignore it:
 			pathInfo = '';
 		}
-		pathInfo = listToArray( pathInfo, '/' );
-		for ( sesIx = 1; sesIx lte arrayLen( pathInfo ); sesIx = sesIx + 1 ) {
+		try {
+			// we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
+			// any system that doesn't support .split() just in case (empty items won't work there!)
+			if ( len( pathInfo ) gt 1 ) {
+				pathInfo = right( pathInfo, len( pathInfo ) - 1 ).split( '/' );
+			} else {
+				pathInfo = arrayNew( 1 );
+			}
+		} catch ( any exception ) {
+			pathInfo = listToArray( pathInfo, '/' );
+		}
+		sesN = arrayLen( pathInfo );
+		if ( sesN gt 0 or variables.framework.generateSES ) {
+			request.generateSES = true;
+		}
+		for ( sesIx = 1; sesIx lte sesN; sesIx = sesIx + 1 ) {
 			if ( sesIx eq 1 ) {
 				request.context[variables.framework.action] = pathInfo[sesIx];
 			} else if ( sesIx eq 2 ) {
@@ -613,33 +678,46 @@
 		<cfargument name="preserve" type="string" default="none" />
 		<cfargument name="append" type="string" default="none" />
 		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
+		<cfargument name="queryString" type="string" default="" />
 
-		<cfset var queryString = "" />
+		<cfset var baseQueryString = "" />
 		<cfset var key = "" />
 		<cfset var preserveKey = "" />
 
 		<cfif arguments.preserve is not "none">
 			<cfset preserveKey = saveFlashContext(arguments.preserve) />
-			<cfset queryString = "&#variables.framework.preserveKeyURLKey#=#preserveKey#">
+			<cfset baseQueryString = "#variables.framework.preserveKeyURLKey#=#preserveKey#">
 		</cfif>
 
 		<cfif arguments.append is not "none">
 			<cfif arguments.append is "all">
 				<cfloop item="key" collection="#request.context#">
 					<cfif isSimpleValue( request.context[key] )>
-						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+						<cfset baseQueryString = listAppend( queryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
 					</cfif>
 				</cfloop>
 			<cfelse>
 				<cfloop index="key" list="#arguments.append#">
 					<cfif structKeyExists( request.context, key ) and isSimpleValue( request.context[key] )>
-						<cfset queryString = queryString & "&" & key & "=" & urlEncodedFormat( request.context[key] ) />
+						<cfset baseQueryString = listAppend( queryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
 					</cfif>
 				</cfloop>
 			</cfif>
 		</cfif>
+		
+		<cfif baseQueryString is not ''>
+			<cfif arguments.queryString is not ''>
+				<cfif left( arguments.queryString, 1 ) is '?' or left( arguments.queryString, 1 ) is '##'>
+					<cfset baseQueryString = baseQueryString & arguments.queryString />
+				<cfelse>
+					<cfset baseQueryString = baseQueryString & '&' & arguments.queryString />
+				</cfif>
+			</cfif>
+		<cfelse>
+			<cfset baseQueryString = arguments.queryString />
+		</cfif>
 
-		<cflocation url="#buildURL(arguments.action, arguments.path)##queryString#" addtoken="false" />
+		<cflocation url="#buildURL( arguments.action, arguments.path, baseQueryString )#" addtoken="false" />
 
 	</cffunction>
 
@@ -975,6 +1053,12 @@
 		}
 		if ( not structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
+		}
+		if ( not structKeyExists(variables.framework, 'generateSES') ) {
+			variables.framework.generateSES = false;
+		}
+		if ( not structKeyExists(variables.framework, 'SESOmitIndex') ) {
+			variables.framework.SESOmitIndex = false;
 		}
 		// NOTE: unhandledExtensions is a list of file extensions that are not handled by FW/1
 		if ( not structKeyExists(variables.framework, 'unhandledExtensions') ) {
