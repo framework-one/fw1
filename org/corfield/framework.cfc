@@ -851,6 +851,7 @@
 		var subsystem = request.subsystem;
 		var section = request.section;
 		var item = request.item;
+		var subsystembase = '';
 		
 		// has view been overridden?
 		if ( structKeyExists( request, 'overrideViewAction' ) ) {
@@ -858,7 +859,7 @@
 			section = getSection( request.overrideViewAction );
 			item = getItem( request.overrideViewAction );
 		}
-		var subsystembase = request.base & getSubsystemDirPrefix( subsystem );
+		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
 
 		// view and layout setup - used to be in setupRequestWrapper():
 		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
