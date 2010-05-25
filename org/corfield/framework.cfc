@@ -697,13 +697,13 @@
 			<cfif arguments.append is "all">
 				<cfloop item="key" collection="#request.context#">
 					<cfif isSimpleValue( request.context[key] )>
-						<cfset baseQueryString = listAppend( queryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
+						<cfset baseQueryString = listAppend( baseQueryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
 					</cfif>
 				</cfloop>
 			<cfelse>
 				<cfloop index="key" list="#arguments.append#">
 					<cfif structKeyExists( request.context, key ) and isSimpleValue( request.context[key] )>
-						<cfset baseQueryString = listAppend( queryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
+						<cfset baseQueryString = listAppend( baseQueryString, key & "=" & urlEncodedFormat( request.context[key] ), '&' ) />
 					</cfif>
 				</cfloop>
 			</cfif>
