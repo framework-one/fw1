@@ -581,10 +581,10 @@
 				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
 			}
 		}
-		restoreFlashContext();
 		// certain remote calls do not have URL or form scope:
 		if ( isDefined('URL') ) structAppend(request.context,URL);
 		if ( isDefined('form') ) structAppend(request.context,form);
+		restoreFlashContext();
 
 		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
@@ -1366,10 +1366,10 @@
 		<cfset var preserveKey = "">
 		<cfset var preserveKeySessionKey = "">
 
-		<cfif not isDefined('URL') or not structKeyExists( URL, variables.framework.preserveKeyURLKey )>
+		<cfif not structKeyExists( request.context, variables.framework.preserveKeyURLKey )>
 			<cfreturn>
 		</cfif>
-		<cfset preserveKey = URL[variables.framework.preserveKeyURLKey]>
+		<cfset preserveKey = request.context[variables.framework.preserveKeyURLKey]>
 		<cfset preserveKeySessionKey = getPreserveKeySessionKey(preserveKey)>
 		<cftry>
 			<cfif structKeyExists(session,preserveKeySessionKey)>
