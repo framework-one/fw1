@@ -53,6 +53,12 @@
 				<cfset omitIndex = true />
 			</cfif>
 		</cfif>
+		
+		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
+			<!--- shorthand for action/queryString pairing --->
+			<cfset arguments.queryString = REReplace( arguments.action, '[^\?]*\?', '') />
+			<cfset arguments.action = REReplace( arguments.action, '([^\?\##]*).*', '\1') />
+		</cfif>
 
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
@@ -1080,7 +1086,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1RC1.3';
+		variables.framework.version = '1.1RC1.4';
 	}
 
 	function setupRequestWrapper() { // "private"
