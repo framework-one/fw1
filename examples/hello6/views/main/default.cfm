@@ -13,4 +13,6 @@
 		Name: <input type="text" name="name" /><br />
 		<input type="submit" name="submit" value="Submit" />
 	</form>
+	<p>Use buildURL() queryString to the same effect: <a href="#buildURL( action='main.submit', queryString='name=QueryString' )#">Pass name via QueryString</a></p>
+	<p>Use buildURL() shortcut to the same effect: <a href="#buildURL( 'main.submit?name=Shortcut' )#">Pass name via Shortcut</a></p>
 </cfoutput>
