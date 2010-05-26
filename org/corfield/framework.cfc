@@ -547,7 +547,6 @@
 		if ( not structKeyExists(request, 'context') ) {
 			request.context = structNew();
 		}
-		restoreFlashContext();
 		// SES URLs by popular request :)
 		if ( len( pathInfo ) gt len( CGI.SCRIPT_NAME ) and left( pathInfo, len( CGI.SCRIPT_NAME ) ) is CGI.SCRIPT_NAME ) {
 			// canonicalize for IIS:
@@ -582,6 +581,7 @@
 				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
 			}
 		}
+		restoreFlashContext();
 		// certain remote calls do not have URL or form scope:
 		if ( isDefined('URL') ) structAppend(request.context,URL);
 		if ( isDefined('form') ) structAppend(request.context,form);
@@ -1373,7 +1373,7 @@
 		<cfset preserveKeySessionKey = getPreserveKeySessionKey(preserveKey)>
 		<cftry>
 			<cfif structKeyExists(session,preserveKeySessionKey)>
-				<cfset structAppend(request.context,session[preserveKeySessionKey]) />
+				<cfset structAppend(request.context,session[preserveKeySessionKey], false) />
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
