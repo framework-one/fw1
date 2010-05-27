@@ -527,12 +527,11 @@
 		var sesN = 0;
 
 		setupFrameworkDefaults();
+		setupRequestDefaults();
 
 		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
 		}
-
-		setupRequestDefaults();
 
 		if ( not structKeyExists(request, 'context') ) {
 			request.context = structNew();
@@ -602,6 +601,7 @@
 	 */
 	function onSessionStart() {
 		setupFrameworkDefaults();
+		setupRequestDefaults();
 		setupSession();
 	}
 
@@ -1083,7 +1083,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1RC1.4';
+		variables.framework.version = '1.1RC1.5';
 	}
 
 	function setupRequestDefaults() { // "private"
