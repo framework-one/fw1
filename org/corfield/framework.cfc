@@ -395,6 +395,7 @@
 	 */
 	function onApplicationStart() {
 		setupFrameworkDefaults();
+		setupRequestDefaults();
 		setupApplicationWrapper();
 	}
 
@@ -531,24 +532,7 @@
 			setupApplicationWrapper();
 		}
 
-		if ( structKeyExists(variables.framework, 'base') ) {
-			request.base = variables.framework.base;
-			if ( right(request.base,1) is not '/' ) {
-				request.base = request.base & '/';
-			}
-		} else {
-			request.base = getDirectoryFromPath(targetPath);
-		}
-		request.base = replace( request.base, chr(92), '/', 'all' );
-		if ( structKeyExists(variables.framework, 'cfcbase') ) {
-			request.cfcbase = variables.framework.cfcbase;
-		} else {
-			if ( len(request.base) eq 1 ) {
-				request.cfcbase = '';
-			} else {
-				request.cfcbase = replace( mid(request.base, 2, len(request.base)-2 ), '/', '.', 'all' );
-			}
-		}
+		setupRequestDefaults();
 
 		if ( not structKeyExists(request, 'context') ) {
 			request.context = structNew();
@@ -1015,6 +999,19 @@
 		if ( not structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
+		if ( not structKeyExists(variables.framework, 'base') ) {
+			variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME );
+		} else if ( right( variables.framework.base, 1 ) is not '/' ) {
+			variables.framework.base = variables.framework.base & '/';
+		}
+		variables.framework.base = replace( variables.framework.base, chr(92), '/', 'all' );
+		if ( not structKeyExists(variables.framework, 'cfcbase') ) {
+			if ( len( variables.framework.base ) eq 1 ) {
+				variables.framework.cfcbase = '';
+			} else {
+				variables.framework.cfcbase = replace( mid( variables.framework.base, 2, len(variables.framework.base)-2 ), '/', '.', 'all' );
+			}
+		}
 		if ( not structKeyExists(variables.framework, 'usingSubsystems') ) {
 			variables.framework.usingSubsystems = false;
 		}
@@ -1087,6 +1084,11 @@
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
 		variables.framework.version = '1.1RC1.4';
+	}
+
+	function setupRequestDefaults() { // "private"
+		request.base = variables.framework.base;
+		request.cfcbase = variables.framework.cfcbase;
 	}
 
 	function setupRequestWrapper() { // "private"
