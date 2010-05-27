@@ -395,6 +395,7 @@
 	 */
 	function onApplicationStart() {
 		setupFrameworkDefaults();
+		setupRequestDefaults();
 		setupApplicationWrapper();
 	}
 
@@ -531,24 +532,7 @@
 			setupApplicationWrapper();
 		}
 
-		if ( structKeyExists(variables.framework, 'base') ) {
-			request.base = variables.framework.base;
-			if ( right(request.base,1) is not '/' ) {
-				request.base = request.base & '/';
-			}
-		} else {
-			request.base = getDirectoryFromPath(targetPath);
-		}
-		request.base = replace( request.base, chr(92), '/', 'all' );
-		if ( structKeyExists(variables.framework, 'cfcbase') ) {
-			request.cfcbase = variables.framework.cfcbase;
-		} else {
-			if ( len(request.base) eq 1 ) {
-				request.cfcbase = '';
-			} else {
-				request.cfcbase = replace( mid(request.base, 2, len(request.base)-2 ), '/', '.', 'all' );
-			}
-		}
+		setupRequestDefaults();
 
 		if ( not structKeyExists(request, 'context') ) {
 			request.context = structNew();
@@ -1087,6 +1071,31 @@
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
 		variables.framework.version = '1.1RC1.4';
+	}
+
+	function setupRequestDefaults() { // "private"
+
+		var targetPath = cgi.script_name;
+
+		if ( structKeyExists( variables.framework, 'base' ) ) {
+			request.base = variables.framework.base;
+			if ( right( request.base, 1 ) is not '/' ) {
+				request.base = request.base & '/';
+			}
+		} else {
+			request.base = getDirectoryFromPath( targetPath );
+		}
+		request.base = replace( request.base, chr(92), '/', 'all' );
+
+		if ( structKeyExists( variables.framework, 'cfcbase' ) ) {
+			request.cfcbase = variables.framework.cfcbase;
+		} else {
+			if ( len( request.base ) eq 1 ) {
+				request.cfcbase = '';
+			} else {
+				request.cfcbase = replace( mid( request.base, 2, len(request.base)-2 ), '/', '.', 'all' );
+			}
+		}
 	}
 
 	function setupRequestWrapper() { // "private"
