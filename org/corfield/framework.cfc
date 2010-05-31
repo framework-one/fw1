@@ -975,19 +975,26 @@
 
 	function setupApplicationWrapper() { // "private"
 
-		var framework = structNew();
-
-		framework.cache = structNew();
-
-		framework.cache.lastReload = now();
-		framework.cache.controllers = structNew();
-		framework.cache.services = structNew();
-		framework.subsystemFactories = structNew();
-		framework.subsystems = structNew();
-
-		application[variables.framework.applicationKey] = framework;
-		setupApplication();
-
+		// in order to handle multiple requests while reloading, we need to ensure we do
+		// *not* blow away the factories which may get recreated by setupApplication()
+		var frameworkCache = structNew();
+		frameworkCache.lastReload = now();
+		frameworkCache.controllers = structNew();
+		frameworkCache.services = structNew();
+		// reset just the cache:
+		application[variables.framework.applicationKey].cache = frameworkCache;
+		application[variables.framework.applicationKey].subsystems = structNew();
+		
+		setupApplication(); // expect this to recreate the main bean factory
+		
+		// worst case, beans get created / wired and cached between emptying the cache
+		// and recreation of the bean factory so blow away the cache again:
+		frameworkCache = structNew();
+		frameworkCache.lastReload = now();
+		frameworkCache.controllers = structNew();
+		frameworkCache.services = structNew();
+		application[variables.framework.applicationKey].cache = frameworkCache;
+		application[variables.framework.applicationKey].subsystems = structNew();
 	}
 
 	function setupFrameworkDefaults() { // "private"
@@ -1083,7 +1090,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1RC1.5';
+		variables.framework.version = '1.1RC1.6';
 	}
 
 	function setupRequestDefaults() { // "private"
