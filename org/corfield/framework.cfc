@@ -973,29 +973,57 @@
 		request.failedMethod = arguments.method;
 	}
 
-	function setupApplicationWrapper() { // "private"
+</cfscript>
 
-		// in order to handle multiple requests while reloading, we need to ensure we do
-		// *not* blow away the factories which may get recreated by setupApplication()
-		var frameworkCache = structNew();
-		frameworkCache.lastReload = now();
-		frameworkCache.controllers = structNew();
-		frameworkCache.services = structNew();
-		// reset just the cache:
-		application[variables.framework.applicationKey].cache = frameworkCache;
-		application[variables.framework.applicationKey].subsystems = structNew();
+	<cffunction name="setupApplicationWrapper" returntype="void" access="private" output="false">
+	
+		<!---
+			since this can be called on a reload, we need to lock it to prevent other threads
+			trying to reload the app at the same time since we're messing with the main application
+			data struct... if the application is already running, we don't blow away the factories
+			because we don't want to affect other threads that may be running at this time
+		--->
+		<cfset var frameworkCache = structNew() />
+		<cfset var framework = structNew() />
+		<cfset var isReload = true />
+		<cfset frameworkCache.lastReload = now() />
+		<cfset frameworkCache.controllers = structNew() />
+		<cfset frameworkCache.services = structNew() />
+		<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10">
+			<cfif structKeyExists( application, variables.framework.applicationKey )>
+				<!--- application is already loaded, just reset the cache and trigger re-initialization of subsystems --->
+				<cfset application[variables.framework.applicationKey].cache = frameworkCache />
+				<cfset application[variables.framework.applicationKey].subsystems = structNew() />
+			<cfelse>
+				<!--- must be first request so we need to set up the entire structure --->
+				<cfset isReload = false />
+				<cfset framework.cache = frameworkCache />
+				<cfset framework.subsystems = structNew() />
+				<cfset framework.subsystemFactories = structNew() /> 
+				<cfset application[variables.framework.applicationKey] = framework />
+			</cfif>
+		</cflock>
 		
-		setupApplication(); // expect this to recreate the main bean factory
+		<!--- this will recreate the main bean factory on a reload: --->
+		<cfset setupApplication() />
 		
-		// worst case, beans get created / wired and cached between emptying the cache
-		// and recreation of the bean factory so blow away the cache again:
-		frameworkCache = structNew();
-		frameworkCache.lastReload = now();
-		frameworkCache.controllers = structNew();
-		frameworkCache.services = structNew();
-		application[variables.framework.applicationKey].cache = frameworkCache;
-		application[variables.framework.applicationKey].subsystems = structNew();
-	}
+		<cfif isReload>
+			<!---
+				it's possible that the cache got populated by another thread between resetting the cache above
+				and the factory getting recreated by the user code in setupApplication() so we flush the cache
+				again here to be safe / paranoid! 
+			--->
+			<cfset frameworkCache = structNew() />
+			<cfset frameworkCache.lastReload = now() />
+			<cfset frameworkCache.controllers = structNew() />
+			<cfset frameworkCache.services = structNew() />
+			<cfset application[variables.framework.applicationKey].cache = frameworkCache />
+			<cfset application[variables.framework.applicationKey].subsystems = structNew() />
+		</cfif>
+	
+	</cffunction>
+
+<cfscript>
 
 	function setupFrameworkDefaults() { // "private"
 
@@ -1090,7 +1118,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1RC1.6';
+		variables.framework.version = '1.1RC2';
 	}
 
 	function setupRequestDefaults() { // "private"
