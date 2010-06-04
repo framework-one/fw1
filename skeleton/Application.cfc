@@ -1,7 +1,7 @@
 <cfcomponent extends="org.corfield.framework" output="false">
 	
 	<!--- framework defaults (as struct literal):
-	variables.frameworks = {
+	variables.framework = {
 		// the name of the URL variable:
 		action = 'action',
 		// whether or not to use subsystems:
