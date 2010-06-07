@@ -6,8 +6,9 @@
 	this.sessionmanagement = true;
 	this.sessiontimeout = createTimeSpan(0,2,0,0);
 
-	// FW/1 - configuration:
-	variables.framework = {};
+	// setting framework.base so the application will work when there is a non-empty context root:
+	variables.framework = structNew();
+	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' );
 
 	function setupApplication()
 	{

@@ -17,5 +17,6 @@
 <p>Already done all of that? Want to run the FW/1 LitePost example?</p>
 <p>Yeah, take me to <a href="/litepost/fw1/">FW/1 LitePost</a>!</p>
 <p>To save you the trouble of figuring it out, the blog admin login is: chris / asstro</p>
+<p><strong>Note:</strong> this example will not run if you have a non-empty context root.</p>
 </body>
 </html>

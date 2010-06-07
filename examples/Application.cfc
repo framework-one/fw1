@@ -6,5 +6,7 @@
 	// FW/1 - configuration:
 	variables.framework = structNew();
 	variables.framework.usingSubsystems = true;
+	// setting framework.base so the application will work when there is a non-empty context root:
+	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' );
 	
 </cfscript></cfcomponent>
