@@ -5,8 +5,8 @@ corfield folder inside the org directory (or a /org mapping to the org directory
 
 Project home: http://fw1.riaforge.org
 
-Documentation wiki: http://fw1.riaforge.org/wiki/
+Documentation wiki: http://wiki.github.com/seancorfield/fw1/
 
-Blog: http://fw1.riaforge.org/blog/
+Blog: http://corfield.org/blog/archives.cfm/category/fw1
 
 Support: http://groups.google.com/group/framework-one/
