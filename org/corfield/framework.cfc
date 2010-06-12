@@ -1118,7 +1118,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1';
+		variables.framework.version = '1.1_1.2.001';
 	}
 
 	function setupRequestDefaults() { // "private"
@@ -1158,6 +1158,7 @@
 			hint="Used to autowire controllers and services from a bean factory.">
 		<cfargument name="cfc" />
 		<cfargument name="beanFactory" />
+		<cfargument name="type" />
 
 		<cfset var key = 0 />
 		<cfset var property = 0 />
@@ -1170,6 +1171,11 @@
 					<!--- args = [ getBeanFactory().getBean(property) ] does not seem to be portable --->
 					<cfset args = structNew() />
 					<cfset args[property] = arguments.beanFactory.getBean(property) />
+					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+				<cfelseif property is 'Framework' and arguments.type is 'controller'>
+					<!--- inject FW/1 into controller via setFramework() method --->
+					<cfset args = structNew() />
+					<cfset args.framework = this />
 					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 				</cfif>
 			</cfif>
@@ -1291,7 +1297,7 @@
 							}
 
 							if ( hasDefaultBeanFactory() or hasSubsystemBeanFactory( subsystem ) ) {
-   								autowire( cfc, getBeanFactory( subsystem ) );
+   								autowire( cfc, getBeanFactory( subsystem ), arguments.type );
 							}
 						}
 

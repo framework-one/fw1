@@ -2,6 +2,7 @@
 	
 	<cfset variables.fw = "">
 	
+	<!--- normal approach is to use an init() method to get FW/1 instance:
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="fw">
 		
@@ -9,11 +10,19 @@
 		
 		<cfreturn this>
 	</cffunction>
+	--->
+	
+	<!--- this shows the use of setter injection for the framework ---> 
+	<cffunction name="setFramework" access="public" output="false">
+		<cfargument name="framework" type="any" required="true" />
+		<cfset variables.fw = arguments.framework />
+	</cffunction>
 	
 	<cffunction name="setDepartmentService" access="public" output="false">
 		<cfargument name="departmentService" type="any" required="true" />
 		<cfset variables.departmentService = arguments.departmentService />
 	</cffunction>
+	
 	<cffunction name="getDepartmentService" access="public" returntype="any" output="false">
 		<cfreturn variables.departmentService />
 	</cffunction>
@@ -22,6 +31,7 @@
 		<cfargument name="userService" type="any" required="true" />
 		<cfset variables.userService = arguments.userService />
 	</cffunction>
+	
 	<cffunction name="getUserService" access="public" output="false" returntype="any">
 		<cfreturn variables.userService />
 	</cffunction>
