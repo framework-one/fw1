@@ -679,8 +679,10 @@
 		<cfset var preserveKey = "" />
 
 		<cfif arguments.preserve is not "none">
-			<cfset preserveKey = saveFlashContext(arguments.preserve) />
-			<cfset baseQueryString = "#variables.framework.preserveKeyURLKey#=#preserveKey#">
+			<cfset preserveKey = saveFlashContext( arguments.preserve ) />
+			<cfif variables.framework.maxNumContextsPreserved gt 1>
+				<cfset baseQueryString = "#variables.framework.preserveKeyURLKey#=#preserveKey#">
+			</cfif>
 		</cfif>
 
 		<cfif arguments.append is not "none">
@@ -1328,15 +1330,23 @@
 		<cfset var nextPreserveKey = "" />
 		<cfset var oldKeyToPurge = "" />
 
-		<cflock scope="session" type="exclusive" timeout="30">
-			<cfparam name="session.__fw1NextPreserveKey" default="1" />
-			<cfset nextPreserveKey = session.__fw1NextPreserveKey />
-			<cfset session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1/>
-		</cflock>
-
-		<cfset oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved>
-		<cfif StructKeyExists(session, getPreserveKeySessionKey(oldKeyToPurge))>
-			<cfset structDelete(session, getPreserveKeySessionKey(oldKeyToPurge)) />
+		<cfif variables.framework.maxNumContextsPreserved gt 1>
+			<cflock scope="session" type="exclusive" timeout="30">
+				<cfparam name="session.__fw1NextPreserveKey" default="1" />
+				<cfset nextPreserveKey = session.__fw1NextPreserveKey />
+				<cfset session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1 />
+			</cflock>
+			<cfset oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved />
+		<cfelse>
+			<cflock scope="session" type="exclusive" timeout="30">
+				<cfset session.__fw1PreserveKey = '' />
+				<cfset nextPreserveKey = session.__fw1PreserveKey />
+			</cflock>
+			<cfset oldKeyToPurge = '' />
+		</cfif>
+		
+		<cfif structKeyExists( session, getPreserveKeySessionKey( oldKeyToPurge ) )>
+			<cfset structDelete( session, getPreserveKeySessionKey( oldKeyToPurge ) ) />
 		</cfif>
 
 		<cfreturn nextPreserveKey />
@@ -1422,17 +1432,21 @@
 	</cffunction>
 
 	<cffunction name="restoreFlashContext" access="private" hint="Restore request context from session scope if present.">
-		<cfset var preserveKey = "">
-		<cfset var preserveKeySessionKey = "">
+		<cfset var preserveKey = '' />
+		<cfset var preserveKeySessionKey = '' />
 
-		<cfif not structKeyExists( request.context, variables.framework.preserveKeyURLKey )>
-			<cfreturn>
+		<cfif variables.framework.maxNumContextsPreserved gt 1>
+			<cfif not structKeyExists( request.context, variables.framework.preserveKeyURLKey )>
+				<cfreturn />
+			</cfif>
+			<cfset preserveKey = request.context[ variables.framework.preserveKeyURLKey ] />
+			<cfset preserveKeySessionKey = getPreserveKeySessionKey( preserveKey ) />
+		<cfelse>
+			<cfset preserveKeySessionKey = getPreserveKeySessionKey( '' ) />
 		</cfif>
-		<cfset preserveKey = request.context[variables.framework.preserveKeyURLKey]>
-		<cfset preserveKeySessionKey = getPreserveKeySessionKey(preserveKey)>
 		<cftry>
-			<cfif structKeyExists(session,preserveKeySessionKey)>
-				<cfset structAppend(request.context,session[preserveKeySessionKey], false) />
+			<cfif structKeyExists( session, preserveKeySessionKey )>
+				<cfset structAppend( request.context, session[ preserveKeySessionKey ], false ) />
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
@@ -1445,17 +1459,17 @@
 		<cfargument name="keys" type="string" />
 
 		<cfset var currPreserveKey = getNextPreserveKeyAndPurgeOld() />
-		<cfset var preserveKeySessionKey = getPreserveKeySessionKey(currPreserveKey) />
+		<cfset var preserveKeySessionKey = getPreserveKeySessionKey( currPreserveKey ) />
 		<cfset var key = "" />
 
 		<cftry>
 			<cfparam name="session.#preserveKeySessionKey#" default="#structNew()#" />
 			<cfif arguments.keys is "all">
-				<cfset structAppend(session[preserveKeySessionKey],request.context) />
+				<cfset structAppend( session[ preserveKeySessionKey ], request.context ) />
 			<cfelse>
 				<cfloop index="key" list="#arguments.keys#">
-					<cfif structKeyExists(request.context,key)>
-						<cfset session[preserveKeySessionKey][key] = request.context[key] />
+					<cfif structKeyExists( request.context, key )>
+						<cfset session[ preserveKeySessionKey ][ key ] = request.context[ key ] />
 					</cfif>
 				</cfloop>
 			</cfif>
