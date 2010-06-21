@@ -1120,7 +1120,7 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1_1.2_002';
+		variables.framework.version = '1.1_1.2_003';
 	}
 
 	function setupRequestDefaults() { // "private"
