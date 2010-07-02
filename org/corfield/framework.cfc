@@ -406,22 +406,26 @@
 	 * not seem to be passed exception or event correctly when something fails
 	 * in the code...
 	 */
-	function onError(exception,event) {
+	function onError( exception, event ) {
 
 		try {
+			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
 			}
-			request.action = variables.framework.error;
 			request.exception = exception;
 			request.event = event;
+			// reset lifecycle flags:
 			structDelete( request, 'controllerExecutionComplete' );
 			structDelete( request, 'controllerExecutionStarted' );
 			structDelete( request, 'serviceExecutionComplete' );
-			setupRequestWrapper();
-			onRequest('');
-		} catch (any e) {
-			failure(exception,event);
+			// setup the new controller action, based on the error action:
+			structDelete( request, 'controllers' );
+			request.action = variables.framework.error;
+			setupRequestWrapper( false );
+			onRequest( '' );
+		} catch ( any e ) {
+			failure( exception, event );
 		}
 
 	}
@@ -582,7 +586,7 @@
 		}
 		request.action = lCase(request.context[variables.framework.action]);
 
-		setupRequestWrapper();
+		setupRequestWrapper( true );
 
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
@@ -1131,18 +1135,18 @@
 		request.cfcbase = variables.framework.cfcbase;
 	}
 
-	function setupRequestWrapper() { // "private"
+	function setupRequestWrapper( runSetup ) { // "private"
 
 		request.subsystem = getSubsystem( request.action );
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
 		request.section = getSection( request.action );
 		request.item = getItem( request.action );
-
-		setupSubsystemWrapper( request.subsystem );
-
 		request.services = arrayNew(1);
-
-		setupRequest();
+		
+		if ( runSetup ) {
+			setupSubsystemWrapper( request.subsystem );
+			setupRequest();
+		}
 
 		controller( request.action );
 		service( request.action, getServiceKey( request.action ), structNew(), false );
