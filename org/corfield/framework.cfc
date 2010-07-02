@@ -265,17 +265,23 @@
 	function onError(exception,event) {
 
 		try {
+			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
 			}
-			request.action = variables.framework.error;
 			request.exception = exception;
 			request.event = event;
+			// reset lifecycle flags:
+			structDelete( request, 'controllerExecutionComplete' );
+			structDelete( request, 'controllerExecutionStarted' );
 			structDelete( request, 'serviceExecutionComplete' );
-			setupRequestWrapper();
-			onRequest('');
-		} catch (any e) {
-			failure(exception,event);
+			// setup the new controller action, based on the error action:
+			structDelete( request, 'controllers' );
+			request.action = variables.framework.error;
+			setupRequestWrapper( false );
+			onRequest( '' );
+		} catch ( any e ) {
+			failure( exception, event );
 		}
 
 	}
