@@ -9,4 +9,6 @@
 		<li>Exception message: #request.exception.message#</li>
 		<li>Exception detail: #request.exception.detail#</li>
 	</ul>
+<p>main.cfc:before() was called #rc.beforeCount# times.</p>
 </cfoutput>
+<cfdump var="#rc#"/>
