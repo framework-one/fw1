@@ -4,6 +4,7 @@
 <h2>Examples</h2>
 <cfoutput>
 <ul>
+	<li><a href="#buildURL('errortest:')#">errortest subsystem</a></li>
 	<li><a href="#buildURL('hello1:')#">hello1 subsystem</a></li>
 	<li><a href="#buildURL('hello2:')#">hello2 subsystem</a></li>
 	<li><a href="#buildURL('hello3:')#">hello3 subsystem</a></li>
