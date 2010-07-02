@@ -1,8 +1,8 @@
 ﻿<cfcomponent output="false">
 	<cffunction name="before" output="false">
 		<cfargument name="rc">
-		<cfparam name="rc.beforeCount" default="0">
-		<cfset rc.beforeCount = rc.beforeCount + 1>
+		<cfparam name="rc.beforeCalls" default="#arrayNew()#">
+		<cfset arrayAppend( rc.beforeCalls, request.action )>
 	</cffunction>
 	<cffunction name="default" output="false">
 		<cfargument name="rc">
