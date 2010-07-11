@@ -2,14 +2,13 @@ body {
 	margin: 0;
 }
 .wrap {
-	border: blue 1px solid;
-	margin: 5;
-	padding: 5;
+	border: green 2px solid;
+	margin: 5px;
+	padding: 5px;
 	font-family: verdana, helvetica;
 }
 .page {
-	padding: 5;
-	background-color: lightgray;
+	padding: 5px;
 }
 .footer {
 	text-align: center;
