@@ -1127,7 +1127,10 @@
 		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		variables.framework.version = '1.1_1.2_005';
+		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
+			variables.framework.suppressImplicitService = false;
+		}
+		variables.framework.version = '1.1_1.2_006';
 	}
 
 	function setupRequestDefaults() { // "private"
@@ -1149,7 +1152,9 @@
 		}
 
 		controller( request.action );
-		service( request.action, getServiceKey( request.action ), structNew(), false );
+		if ( not variables.framework.suppressImplicitService ) {
+			service( request.action, getServiceKey( request.action ), structNew(), false );
+		}
 	}
 
 	function setupSessionWrapper() { // "private"
