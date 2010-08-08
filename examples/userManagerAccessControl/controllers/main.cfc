@@ -37,7 +37,7 @@
 		<cfset newPasswordHash = userService.hashPassword(rc.newPassword) />
 		<cfset rc.passwordHash = newPasswordHash.hash />
 		<cfset rc.passwordSalt = newPasswordHash.salt />
-		<cfset variables.fw.populate(rc.user) />
+		<cfset variables.fw.populate( cfc = rc.user, trim = true )>
 
 		<!--- save the user and redirect --->
 		<cfset userService.save(rc.user) />

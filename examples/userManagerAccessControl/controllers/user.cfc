@@ -71,7 +71,7 @@
 		</cfif>
 
 		<!--- update the user object with the data entered --->
-		<cfset variables.fw.populate(rc.user)>
+		<cfset variables.fw.populate( cfc = rc.user, trim = true )>
 
 		<!--- if there were error, redirect the user to the form --->
 		<cfif not arrayIsEmpty(rc.message)>

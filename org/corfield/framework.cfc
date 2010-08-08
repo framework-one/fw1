@@ -619,6 +619,7 @@
 		<cfargument name="cfc" />
 		<cfargument name="keys" default="" />
 		<cfargument name="trustKeys" default="false" />
+		<cfargument name="trim" default="false" />
 
 		<cfset var key = 0 />
 		<cfset var property = 0 />
@@ -633,6 +634,7 @@
 					<cftry>
 						<cfset args = structNew() />
 						<cfset args[ property ] = request.context[ property ] />
+						<cfif arguments.trim and isSimpleValue( args[property] )><cfset args[property] = trim( args[property] ) /></cfif>
 						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					<cfcatch type="any">
 						<cfset onPopulateError( arguments.cfc, property, request.context ) />
@@ -646,6 +648,7 @@
 						<cfif structKeyExists( request.context, property )>
 							<cfset args = structNew() />
 							<cfset args[ property ] = request.context[ property ] />
+							<cfif arguments.trim and isSimpleValue( args[property] )><cfset args[property] = trim( args[property] ) /></cfif>
 							<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 						</cfif>
 					</cfif>
@@ -659,7 +662,8 @@
 					<cfif structKeyExists( request.context, trimProperty )>
 						<cfset args = structNew() />
 						<cfset args[ trimProperty ] = request.context[ trimProperty ] />
-						<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
+						<cfif arguments.trim and isSimpleValue( args[trimProperty] )><cfset args[trimProperty] = trim( args[trimProperty] ) /></cfif>
+					<cfinvoke component="#arguments.cfc#" method="#key#" argumentCollection="#args#" />
 					</cfif>
 				</cfif>
 			</cfloop>
@@ -1132,7 +1136,7 @@
 		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = false;
 		}
-		variables.framework.version = '1.1_1.2_007';
+		variables.framework.version = '1.1_1.2_008';
 	}
 
 	function setupRequestDefaults() { // "private"

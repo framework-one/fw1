@@ -59,7 +59,7 @@
 		<cfset user = userService.get(argumentCollection=rc)>
 		
 		<!--- update our user object with the data entered --->
-		<cfset variables.fw.populate(user)>
+		<cfset variables.fw.populate( cfc = user, trim = true )>
 		
 		<!--- update the department object with the new selection --->
 		<cfif structKeyExists(rc, "departmentId") AND len(rc.departmentId)>
