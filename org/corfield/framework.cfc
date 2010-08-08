@@ -614,7 +614,7 @@
 	<!---
 		populate() may be invoked inside controllers
 	--->
-	<cffunction name="populate" access="public" output="false"
+	<cffunction name="populate" returntype="any" access="public" output="false"
 			hint="Used to populate beans from the request context.">
 		<cfargument name="cfc" />
 		<cfargument name="keys" default="" />
@@ -664,6 +664,8 @@
 				</cfif>
 			</cfloop>
 		</cfif>
+		
+		<cfreturn arguments.cfc />
 
 	</cffunction>
 
@@ -1130,7 +1132,7 @@
 		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = false;
 		}
-		variables.framework.version = '1.1_1.2_006';
+		variables.framework.version = '1.1_1.2_007';
 	}
 
 	function setupRequestDefaults() { // "private"
