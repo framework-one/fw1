@@ -869,7 +869,7 @@
 		// view and layout setup - used to be in setupRequestWrapper():
 		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'view' );
-		if ( not fileExists( expandPath( request.view ) ) ) {
+		if ( not cachedFileExists( expandPath( request.view ) ) ) {
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
 		}
@@ -878,20 +878,20 @@
 		// look for item-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
-		if ( fileExists( expandPath( testLayout ) ) ) {
+		if ( cachedFileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for section-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section, 'layout' );
-		if ( fileExists( expandPath( testLayout ) ) ) {
+		if ( cachedFileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
 		if ( request.section is not 'default' ) {
 			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
-			if ( fileExists( expandPath( testLayout ) ) ) {
+			if ( cachedFileExists( expandPath( testLayout ) ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
 		}
@@ -899,7 +899,7 @@
 		if ( usingSubsystems() and siteWideLayoutBase is not subsystembase ) {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
-			if ( fileExists( expandPath( testLayout ) ) ) {
+			if ( cachedFileExists( expandPath( testLayout ) ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
 		}
@@ -1002,6 +1002,7 @@
 		<cfset var framework = structNew() />
 		<cfset var isReload = true />
 		<cfset frameworkCache.lastReload = now() />
+		<cfset frameworkCache.fileExists = structNew() />
 		<cfset frameworkCache.controllers = structNew() />
 		<cfset frameworkCache.services = structNew() />
 		<cflock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10">
@@ -1030,6 +1031,7 @@
 			--->
 			<cfset frameworkCache = structNew() />
 			<cfset frameworkCache.lastReload = now() />
+			<cfset frameworkCache.fileExists = structNew() />
 			<cfset frameworkCache.controllers = structNew() />
 			<cfset frameworkCache.services = structNew() />
 			<cfset application[variables.framework.applicationKey].cache = frameworkCache />
@@ -1136,7 +1138,10 @@
 		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = false;
 		}
-		variables.framework.version = '1.1_1.2_008';
+		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
+			variables.framework.cacheFileExists = false;
+		}
+		variables.framework.version = '1.1_1.2_009';
 	}
 
 	function setupRequestDefaults() { // "private"
@@ -1195,6 +1200,19 @@
 			</cfif>
 		</cfloop>
 
+	</cffunction>
+	
+	<cffunction name="cachedFileExists" returntype="boolean" access="private" output="false">
+		<cfargument name="filePath" />
+		<cfset var cache = application[variables.framework.applicationKey].cache />
+		<cfif not variables.framework.cacheFileExists>
+			<cfreturn fileExists( arguments.filePath ) />
+		</cfif>
+		<cfparam name="cache.fileExists" default="#structNew()#" />
+		<cfif not structKeyExists( cache.fileExists, arguments.filePath )>
+			<cfset cache.fileExists[arguments.filePath] = fileExists( arguments.filePath ) /> 
+		</cfif>
+		<cfreturn cache.fileExists[arguments.filePath] />
 	</cffunction>
 
 	<cffunction name="cfcFilePath" access="private" output="false" hint="Changes a dotted path to a filesystem path">
@@ -1297,7 +1315,7 @@
 							cfc = getDefaultBeanFactory().getBean( beanName );
 							if ( type is 'controller' ) injectFramework( cfc );
 
-						} else if ( fileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
+						} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
 
 							if ( request.cfcbase is '' ) {
 								cfc = createObject( 'component', subsystemDot & types & '.' & section );

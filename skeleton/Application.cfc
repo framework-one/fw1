@@ -49,6 +49,8 @@
 		// flash scope magic key and how many concurrent requests are supported:
 		preserveKeyURLKey = 'fw1pk',
 		maxNumContextsPreserved = 10,
+		// set this to true to cache the results of fileExists for performance:
+		cacheFileExists = false,
 		// change this if you need multiple FW/1 applications in a single CFML application:
 		applicationKey = 'org.corfield.framework'
 	};
