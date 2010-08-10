@@ -52,6 +52,12 @@
 				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
 				<cfset omitIndex = true />
 			</cfif>
+		<cfelseif arguments.path eq "useRequestURI">
+			<cfset arguments.path = getPageContext().getRequest().getRequestURI() />
+			<cfif variables.framework.SESOmitIndex>
+				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
+				<cfset omitIndex = true />
+			</cfif>
 		</cfif>
 		
 		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
@@ -560,7 +566,8 @@
 			pathInfo = listToArray( pathInfo, '/' );
 		}
 		sesN = arrayLen( pathInfo );
-		if ( sesN gt 0 or variables.framework.generateSES ) {
+		request.context.stuff = local;
+		if ( ( sesN gt 0 or variables.framework.generateSES ) and variables.framework.baseURL is not 'useRequestURI' ) {
 			request.generateSES = true;
 		}
 		for ( sesIx = 1; sesIx lte sesN; sesIx = sesIx + 1 ) {
