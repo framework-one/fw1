@@ -566,7 +566,6 @@
 			pathInfo = listToArray( pathInfo, '/' );
 		}
 		sesN = arrayLen( pathInfo );
-		request.context.stuff = local;
 		if ( ( sesN gt 0 or variables.framework.generateSES ) and variables.framework.baseURL is not 'useRequestURI' ) {
 			request.generateSES = true;
 		}
@@ -1148,7 +1147,7 @@
 		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
-		variables.framework.version = '1.1_1.2_009';
+		variables.framework.version = '1.1_1.2_010';
 	}
 
 	function setupRequestDefaults() { // "private"
@@ -1436,6 +1435,12 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
+		<cfset var $ = structNew() />
+		
+		<!--- integration point with Mura --->
+		<cfif structKeyExists( rc, '$' )>
+			<cfset $ = rc.$ />
+		</cfif>
 
 		<cfif not structKeyExists( request, "controllerExecutionComplete" ) >
 			<cfset raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
@@ -1454,6 +1459,12 @@
 		<cfset var rc = request.context />
 		<cfset var response = '' />
 		<cfset var local = structNew() />
+		<cfset var $ = structNew() />
+		
+		<!--- integration point with Mura --->
+		<cfif structKeyExists( rc, '$' )>
+			<cfset $ = rc.$ />
+		</cfif>
 		
 		<cfset structAppend( local, arguments.args ) />
 
