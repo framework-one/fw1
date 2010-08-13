@@ -5,7 +5,7 @@ corfield folder inside the org directory (or a /org mapping to the org directory
 
 Project home: http://fw1.riaforge.org
 
-Documentation wiki: http://wiki.github.com/seancorfield/fw1/
+Documentation wiki: http://github.com/seancorfield/fw1/wiki
 
 Blog: http://corfield.org/blog/archives.cfm/category/fw1
 
