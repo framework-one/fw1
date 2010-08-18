@@ -1179,8 +1179,13 @@
 	}
 
 	function viewNotFound() { // "private"
+
+		var pathInfo = structNew();
+		pathInfo.base = request.subsystembase;
+		pathInfo.path = '#request.section#/#request.item#';
+
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
-				detail="Either '#request.subsystembase#views/#request.section#/#request.item#.cfm' does not exist or variables.framework.base is not set correctly." );
+				detail="Either '#customizeViewOrLayoutPath( pathInfo, 'view', '#pathInfo.base#views/#pathInfo.path#.cfm' )#' does not exist or variables.framework.base is not set correctly." );
 	}
 
 </cfscript><cfsilent>
