@@ -4,8 +4,6 @@
 	
 	variables.framework = structNew();
 	variables.framework.defaultItem = 'index';
-	// setting framework.base so the application will work when there is a non-empty context root:
-	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' );
 
 	function setupRequest() {
 		controller( 'skin' );

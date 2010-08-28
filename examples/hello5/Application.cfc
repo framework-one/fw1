@@ -1,5 +1,4 @@
 <cfcomponent extends="org.corfield.framework"><cfscript>
-	this.name = 'fw1-hello5';
 	variables.framework = structNew();
 	// setting framework.base so the application will work when there is a non-empty context root:
 	variables.root = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' );
