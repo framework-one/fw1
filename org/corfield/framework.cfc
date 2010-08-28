@@ -15,7 +15,9 @@
 	limitations under the License.
 */
 
-	this.name = hash( getCurrentTemplatePath() );
+	this.name = hash( getBaseTemplatePath() );
+	variables.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
+	variables.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
 
 	function actionSpecifiesSubsystem( action ) {
 
@@ -532,7 +534,7 @@
 	 */
 	function onRequestStart(targetPath) {
 
-		var pathInfo = CGI.PATH_INFO;
+		var pathInfo = variables.cgiPathInfo;
 		var sesIx = 0;
 		var sesN = 0;
 
@@ -547,10 +549,10 @@
 			request.context = structNew();
 		}
 		// SES URLs by popular request :)
-		if ( len( pathInfo ) gt len( CGI.SCRIPT_NAME ) and left( pathInfo, len( CGI.SCRIPT_NAME ) ) is CGI.SCRIPT_NAME ) {
+		if ( len( pathInfo ) gt len( variables.cgiScriptName ) and left( pathInfo, len( variables.cgiScriptName ) ) is variables.cgiScriptName ) {
 			// canonicalize for IIS:
-			pathInfo = right( pathInfo, len( pathInfo ) - len( CGI.SCRIPT_NAME ) );
-		} else if ( len( pathInfo ) gt 0 and pathInfo is left( CGI.SCRIPT_NAME, len( pathInfo ) ) ) {
+			pathInfo = right( pathInfo, len( pathInfo ) - len( variables.cgiScriptName ) );
+		} else if ( len( pathInfo ) gt 0 and pathInfo is left( variables.cgiScriptName, len( pathInfo ) ) ) {
 			// pathInfo is bogus so ignore it:
 			pathInfo = '';
 		}
@@ -1058,7 +1060,7 @@
 			variables.framework.action = 'action';
 		}
 		if ( not structKeyExists(variables.framework, 'base') ) {
-			variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME );
+			variables.framework.base = getDirectoryFromPath( variables.cgiScriptName );
 		} else if ( right( variables.framework.base, 1 ) is not '/' ) {
 			variables.framework.base = variables.framework.base & '/';
 		}
