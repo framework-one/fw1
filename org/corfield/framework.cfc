@@ -47,6 +47,7 @@
 		<cfset var anchor = '' />
 		<cfset var ses = false />
 		<cfset var omitIndex = false />
+		<cfset var cosmeticAction = getFullyQualifiedAction( arguments.action ) />
 
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
@@ -84,11 +85,15 @@
 			<cfset equalDelim = '/' />
 			<cfset ses = true />
 		</cfif>
+		
+		<cfif usingSubsystems() and getSubsystem( cosmeticAction ) is getDefaultSubsystem()>
+			<cfset cosmeticAction = getSectionAndItem( cosmeticAction ) />
+		</cfif>
 
 		<cfif ses>
-			<cfset basePath = arguments.path & initialDelim & replace( getFullyQualifiedAction( arguments.action ), '.', '/' ) />
+			<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
 		<cfelse>
-			<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & getFullyQualifiedAction(arguments.action) />
+			<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
 		</cfif>
 		
 		<cfif len( arguments.queryString )>

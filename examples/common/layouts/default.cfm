@@ -9,6 +9,7 @@
 			<div class="page">
 				<img src="../css/fw1logo7.jpg"/>
 				<cfoutput>#body#</cfoutput>
+				<p><a href="<cfoutput>#buildURL( 'main.default' )#</cfoutput>">Examples Home</a></p>
 			</div>
 			<div class="footer">
 				(c) 2009-2010 Sean Corfield, Ryan Cogswell - 
