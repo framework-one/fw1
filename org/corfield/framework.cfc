@@ -41,13 +41,15 @@
 		<cfset var initialDelim = '?' />
 		<cfset var varDelim = '&' />
 		<cfset var equalDelim = '=' />
+		<cfset var curDelim = '' />
 		<cfset var basePath = '' />
 		<cfset var extraArgs = '' />
 		<cfset var queryPart = '' />
 		<cfset var anchor = '' />
 		<cfset var ses = false />
 		<cfset var omitIndex = false />
-		<cfset var cosmeticAction = getFullyQualifiedAction( arguments.action ) />
+		<cfset var cosmeticAction = '' />
+		<cfset var isHomeAction = '' />
 
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
@@ -68,6 +70,8 @@
 			<cfset arguments.queryString = REReplace( arguments.action, '[^\?]*\?', '') />
 			<cfset arguments.action = REReplace( arguments.action, '([^\?\##]*).*', '\1') />
 		</cfif>
+		<cfset cosmeticAction = getFullyQualifiedAction( arguments.action ) />
+		<cfset isHomeAction = cosmeticAction is getFullyQualifiedAction( variables.framework.home ) />
 
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
@@ -85,17 +89,12 @@
 			<cfset equalDelim = '/' />
 			<cfset ses = true />
 		</cfif>
-		
-		<cfif usingSubsystems() and getSubsystem( cosmeticAction ) is getDefaultSubsystem()>
+		<cfset curDelim = varDelim />
+
+		<cfif usingSubsystems() and getSubsystem( cosmeticAction ) is variables.framework.defaultSubsystem>
 			<cfset cosmeticAction = getSectionAndItem( cosmeticAction ) />
 		</cfif>
 
-		<cfif ses>
-			<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
-		<cfelse>
-			<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
-		</cfif>
-		
 		<cfif len( arguments.queryString )>
 			<cfset extraArgs = REReplace( arguments.queryString, '([^\?\##]*).*', '\1') />
 			<cfif find( '?', arguments.queryString )>
@@ -107,19 +106,36 @@
 			<cfif ses>
 				<cfset extraArgs = listChangeDelims( extraArgs, '/', '&=' ) />
 			</cfif>
-			<cfif extraArgs is not ''>
-				<cfset basePath = basePath & varDelim & extraArgs />
+		</cfif>
+		
+		<cfif ses>
+			<cfif isHomeAction and extraArgs is ''>
+				<cfset basePath = arguments.path />
+			<cfelse>
+				<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
 			</cfif>
-			<cfif queryPart is not ''>
-				<cfif ses>
-					<cfset basePath = basePath & '?' & queryPart />
-				<cfelse>
-					<cfset basePath = basePath & '&' & queryPart />
-				</cfif>
+		<cfelse>
+			<cfif isHomeAction>
+				<cfset basePath = arguments.path />
+				<cfset curDelim = '?' />
+			<cfelse>
+				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
 			</cfif>
-			<cfif anchor is not ''>
-				<cfset basePath = basePath & '##' & anchor />
+		</cfif>
+		
+		<cfif extraArgs is not ''>
+			<cfset basePath = basePath & curDelim & extraArgs />
+			<cfset curDelim = varDelim />
+		</cfif>
+		<cfif queryPart is not ''>
+			<cfif ses>
+				<cfset basePath = basePath & '?' & queryPart />
+			<cfelse>
+				<cfset basePath = basePath & curDelim & queryPart />
 			</cfif>
+		</cfif>
+		<cfif anchor is not ''>
+			<cfset basePath = basePath & '##' & anchor />
 		</cfif>
 		
 		<cfreturn basePath />
@@ -590,14 +606,17 @@
 		// certain remote calls do not have URL or form scope:
 		if ( isDefined('URL') ) structAppend(request.context,URL);
 		if ( isDefined('form') ) structAppend(request.context,form);
-		restoreFlashContext();
-
+		// figure out the request action before restoring flash context:
 		if ( not structKeyExists(request.context, variables.framework.action) ) {
 			request.context[variables.framework.action] = variables.framework.home;
 		} else {
 			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
 		}
 		request.action = lCase(request.context[variables.framework.action]);
+
+		restoreFlashContext();
+		// ensure flash context cannot override request action:
+		request.context[variables.framework.action] = request.action;
 
 		setupRequestWrapper( true );
 
@@ -1505,10 +1524,10 @@
 		<cfset var preserveKeySessionKey = '' />
 
 		<cfif variables.framework.maxNumContextsPreserved gt 1>
-			<cfif not structKeyExists( request.context, variables.framework.preserveKeyURLKey )>
+			<cfif not structKeyExists( URL, variables.framework.preserveKeyURLKey )>
 				<cfreturn />
 			</cfif>
-			<cfset preserveKey = request.context[ variables.framework.preserveKeyURLKey ] />
+			<cfset preserveKey = URL[ variables.framework.preserveKeyURLKey ] />
 			<cfset preserveKeySessionKey = getPreserveKeySessionKey( preserveKey ) />
 		<cfelse>
 			<cfset preserveKeySessionKey = getPreserveKeySessionKey( '' ) />
@@ -1516,6 +1535,7 @@
 		<cftry>
 			<cfif structKeyExists( session, preserveKeySessionKey )>
 				<cfset structAppend( request.context, session[ preserveKeySessionKey ], false ) />
+				<cfset structDelete( session, preserveKeySessionKey ) />
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
