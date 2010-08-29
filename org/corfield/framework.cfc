@@ -16,8 +16,8 @@
 */
 
 	this.name = hash( getBaseTemplatePath() );
-	variables.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
-	variables.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
+	variables.cgiScriptName = CGI.SCRIPT_NAME.replace( getContextRoot(), '' );
+	variables.cgiPathInfo = CGI.PATH_INFO.replace( getContextRoot(), '' );
 
 	function actionSpecifiesSubsystem( action ) {
 
