@@ -6,5 +6,6 @@
 	// FW/1 - configuration:
 	variables.framework = structNew();
 	variables.framework.usingSubsystems = true;
+	variables.framework.SESOmitIndex = true;
 	
 </cfscript></cfcomponent>
