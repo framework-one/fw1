@@ -1540,7 +1540,13 @@
 		<cftry>
 			<cfif structKeyExists( session, preserveKeySessionKey )>
 				<cfset structAppend( request.context, session[ preserveKeySessionKey ], false ) />
-				<cfset structDelete( session, preserveKeySessionKey ) />
+				<cfif variables.framework.maxNumContextsPreserved eq 1>
+					<!--- When multiple contexts are preserved, the oldest context is purged
+					 		within getNextPreserveKeyAndPurgeOld once the maximum is reached.
+					 		This allows for a browser refresh after the redirect to still receive
+					 		the same context. --->
+					<cfset structDelete( session, preserveKeySessionKey ) />
+				</cfif>
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
