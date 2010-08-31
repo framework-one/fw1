@@ -1,3 +1,4 @@
+
 <cfcomponent><cfscript>
 /*
 	Copyright (c) 2009-2010, Sean Corfield, Ryan Cogswell
@@ -612,7 +613,7 @@
 		} else {
 			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
 		}
-		request.action = lCase(request.context[variables.framework.action]);
+		request.action = validateAction( lCase(request.context[variables.framework.action]) );
 
 		restoreFlashContext();
 		// ensure flash context cannot override request action:
@@ -853,7 +854,7 @@
 	 * use this to override the default view
 	 */
 	function setView( action ) {
-		request.overrideViewAction = action;
+		request.overrideViewAction = validateAction( action );
 	}
 
 	/*
@@ -1203,6 +1204,14 @@
 
 	function setupSessionWrapper() { // "private"
 		setupSession();
+	}
+
+	function validateAction( action ) { // "private"
+		if ( findOneOf( '/\', action ) gt 0 ) {
+			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
+					detail="Actions are not allowed to embed sub-directory paths.");
+		}
+		return action;
 	}
 
 	function viewNotFound() { // "private"
