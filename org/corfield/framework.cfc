@@ -1,4 +1,3 @@
-
 <cfcomponent><cfscript>
 /*
 	Copyright (c) 2009-2010, Sean Corfield, Ryan Cogswell
@@ -1004,6 +1003,7 @@
 		// allow for :section/action to simplify logic in setupRequestWrapper():
 		pathInfo.path = listLast( arguments.path, variables.framework.subsystemDelimiter );
 		pathInfo.base = request.base;
+		pathInfo.subsystem = subsystem;
 		if ( usingSubsystems() ) {
 			pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
 		}
