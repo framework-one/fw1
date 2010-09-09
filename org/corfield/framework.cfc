@@ -612,7 +612,7 @@
 		} else {
 			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
 		}
-		request.action = lCase(request.context[variables.framework.action]);
+		request.action = validateAction( lCase(request.context[variables.framework.action]) );
 
 		restoreFlashContext();
 		// ensure flash context cannot override request action:
@@ -853,7 +853,7 @@
 	 * use this to override the default view
 	 */
 	function setView( action ) {
-		request.overrideViewAction = action;
+		request.overrideViewAction = validateAction( action );
 	}
 
 	/*
@@ -1003,6 +1003,7 @@
 		// allow for :section/action to simplify logic in setupRequestWrapper():
 		pathInfo.path = listLast( arguments.path, variables.framework.subsystemDelimiter );
 		pathInfo.base = request.base;
+		pathInfo.subsystem = subsystem;
 		if ( usingSubsystems() ) {
 			pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
 		}
@@ -1203,6 +1204,14 @@
 
 	function setupSessionWrapper() { // "private"
 		setupSession();
+	}
+
+	function validateAction( action ) { // "private"
+		if ( findOneOf( '/\', action ) gt 0 ) {
+			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
+					detail="Actions are not allowed to embed sub-directory paths.");
+		}
+		return action;
 	}
 
 	function viewNotFound() { // "private"
@@ -1531,7 +1540,13 @@
 		<cftry>
 			<cfif structKeyExists( session, preserveKeySessionKey )>
 				<cfset structAppend( request.context, session[ preserveKeySessionKey ], false ) />
-				<cfset structDelete( session, preserveKeySessionKey ) />
+				<cfif variables.framework.maxNumContextsPreserved eq 1>
+					<!--- When multiple contexts are preserved, the oldest context is purged
+					 		within getNextPreserveKeyAndPurgeOld once the maximum is reached.
+					 		This allows for a browser refresh after the redirect to still receive
+					 		the same context. --->
+					<cfset structDelete( session, preserveKeySessionKey ) />
+				</cfif>
 			</cfif>
 		<cfcatch type="any">
 			<!--- session scope not enabled, do nothing --->
