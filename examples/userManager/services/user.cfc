@@ -88,7 +88,7 @@
     </cffunction>
 	
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.models.User").init()>
+		<cfreturn createObject("component", "userManager.model.User").init()>
 	</cffunction>
 	
 	<cffunction name="save" access="public" output="false" returntype="void">

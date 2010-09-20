@@ -60,7 +60,7 @@
     </cffunction>
 	
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.models.Department").init()>
+		<cfreturn createObject("component", "userManager.model.Department").init()>
 	</cffunction>
 	
 </cfcomponent>

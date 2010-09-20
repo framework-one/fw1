@@ -46,7 +46,7 @@
     </cffunction>
 
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.models.Role").init()>
+		<cfreturn createObject("component", "userManager.model.Role").init()>
 	</cffunction>
 
 </cfcomponent>
