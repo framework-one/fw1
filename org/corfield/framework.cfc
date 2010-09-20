@@ -719,12 +719,10 @@
 		<cfset var baseQueryString = "" />
 		<cfset var key = "" />
 		<cfset var preserveKey = "" />
+		<cfset var targetURL = "" />
 
 		<cfif arguments.preserve is not "none">
 			<cfset preserveKey = saveFlashContext( arguments.preserve ) />
-			<cfif variables.framework.maxNumContextsPreserved gt 1>
-				<cfset baseQueryString = "#variables.framework.preserveKeyURLKey#=#preserveKey#">
-			</cfif>
 		</cfif>
 
 		<cfif arguments.append is not "none">
@@ -755,7 +753,20 @@
 			<cfset baseQueryString = arguments.queryString />
 		</cfif>
 
-		<cflocation url="#buildURL( arguments.action, arguments.path, baseQueryString )#" addtoken="false" />
+		<cfset targetURL = buildURL( arguments.action, arguments.path, baseQueryString ) />
+		<cfif preserveKey is not "" and variables.framework.maxNumContextsPreserved gt 1>
+			<cfif find( "?", targetURL )>
+				<cfset preserveKey = "&#variables.framework.preserveKeyURLKey#=#preserveKey#" />
+			<cfelse>
+				<cfset preserveKey = "?#variables.framework.preserveKeyURLKey#=#preserveKey#" />
+			</cfif>
+			<cfif find( "##", targetURL )>
+				<cfset targetURL = listFirst( targetURL, "##" ) & preserveKey & "##" & listRest( targetURL, "##" ) />
+			<cfelse>
+				<cfset targetURL = targetURL & preserveKey />
+			</cfif>
+		</cfif>
+		<cflocation url="#targetURL#" addtoken="false" />
 
 	</cffunction>
 
