@@ -624,8 +624,6 @@
 		// ensure flash context cannot override request action:
 		request.context[variables.framework.action] = request.action;
 
-		setupRequestWrapper( true );
-
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
 		// Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
@@ -634,6 +632,8 @@
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
+
+		setupRequestWrapper( true );
 	}
 
 	/*
