@@ -67,8 +67,8 @@
 		
 		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
 			<!--- shorthand for action/queryString pairing --->
-			<cfset arguments.queryString = REReplace( arguments.action, '[^\?]*\?', '') />
-			<cfset arguments.action = REReplace( arguments.action, '([^\?\##]*).*', '\1') />
+			<cfset arguments.queryString = listRest( arguments.action, '?' ) />
+			<cfset arguments.action = listFirst( arguments.action, '?##' ) />
 		</cfif>
 		<cfset cosmeticAction = getFullyQualifiedAction( arguments.action ) />
 		<cfset isHomeAction = cosmeticAction is getFullyQualifiedAction( variables.framework.home ) />
@@ -96,12 +96,12 @@
 		</cfif>
 
 		<cfif len( arguments.queryString )>
-			<cfset extraArgs = REReplace( arguments.queryString, '([^\?\##]*).*', '\1') />
+			<cfset extraArgs = listFirst( arguments.queryString, '?##' ) />
 			<cfif find( '?', arguments.queryString )>
-				<cfset queryPart = REReplace( arguments.queryString, '[^\?]*\?([^\##]*).*', '\1') />
+				<cfset queryPart = listRest( arguments.queryString, '?' ) />
 			</cfif>
 			<cfif find( '##', arguments.queryString )>
-				<cfset anchor = REReplace( arguments.queryString, '[^\##]*\##(.*)', '\1' ) />
+				<cfset anchor = listRest( arguments.queryString, '##' ) />
 			</cfif>
 			<cfif ses>
 				<cfset extraArgs = listChangeDelims( extraArgs, '/', '&=' ) />
@@ -621,7 +621,8 @@
 		setupRequestWrapper( true );
 
 		// allow configured extensions and paths to pass through to the requested template.
-		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
+		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
+		// Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
 		if ( listFindNoCase( framework.unhandledExtensions, listLast( arguments.targetPath, "." ) ) or 
 				REFindNoCase( "^(" & framework.unhandledPathRegex & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
