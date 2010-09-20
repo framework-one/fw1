@@ -755,13 +755,13 @@
 
 		<cfset targetURL = buildURL( arguments.action, arguments.path, baseQueryString ) />
 		<cfif preserveKey is not "" and variables.framework.maxNumContextsPreserved gt 1>
-			<cfif find( "?", targetURL )>
-				<cfset preserveKey = "&#variables.framework.preserveKeyURLKey#=#preserveKey#" />
+			<cfif find( '?', targetURL )>
+				<cfset preserveKey = '&#variables.framework.preserveKeyURLKey#=#preserveKey#' />
 			<cfelse>
-				<cfset preserveKey = "?#variables.framework.preserveKeyURLKey#=#preserveKey#" />
+				<cfset preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#' />
 			</cfif>
-			<cfif find( "##", targetURL )>
-				<cfset targetURL = listFirst( targetURL, "##" ) & preserveKey & "##" & listRest( targetURL, "##" ) />
+			<cfif find( '##', targetURL )>
+				<cfset targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' ) />
 			<cfelse>
 				<cfset targetURL = targetURL & preserveKey />
 			</cfif>
