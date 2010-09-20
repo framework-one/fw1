@@ -49,7 +49,8 @@
 		<cfset var ses = false />
 		<cfset var omitIndex = false />
 		<cfset var cosmeticAction = '' />
-		<cfset var isHomeAction = '' />
+		<cfset var isHomeAction = false />
+		<cfset var isDefaultItem = false />
 
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
@@ -72,6 +73,7 @@
 		</cfif>
 		<cfset cosmeticAction = getFullyQualifiedAction( arguments.action ) />
 		<cfset isHomeAction = cosmeticAction is getFullyQualifiedAction( variables.framework.home ) />
+		<cfset isDefaultItem = getItem( cosmeticAction ) is variables.framework.defaultItem />
 
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
@@ -111,6 +113,8 @@
 		<cfif ses>
 			<cfif isHomeAction and extraArgs is ''>
 				<cfset basePath = arguments.path />
+			<cfelseif isDefaultItem and extraArgs is ''>
+				<cfset basePath = arguments.path & initialDelim & listFirst( cosmeticAction, '.' ) />
 			<cfelse>
 				<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
 			</cfif>
@@ -118,6 +122,8 @@
 			<cfif isHomeAction>
 				<cfset basePath = arguments.path />
 				<cfset curDelim = '?' />
+			<cfelseif isDefaultItem>
+				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & listFirst( cosmeticAction, '.' ) />
 			<cfelse>
 				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
 			</cfif>
