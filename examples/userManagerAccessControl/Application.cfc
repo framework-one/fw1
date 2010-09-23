@@ -9,7 +9,7 @@
 	function setupApplication()
 	{
 		application.adminEmail = 'admin@mysite.com';
-		setBeanFactory(createObject("component", "models.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));
+		setBeanFactory(createObject("component", "model.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));
 	}
 
 	function setupSession() {

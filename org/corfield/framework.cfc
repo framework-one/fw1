@@ -49,7 +49,8 @@
 		<cfset var ses = false />
 		<cfset var omitIndex = false />
 		<cfset var cosmeticAction = '' />
-		<cfset var isHomeAction = '' />
+		<cfset var isHomeAction = false />
+		<cfset var isDefaultItem = false />
 
 		<cfif arguments.path eq "useCgiScriptName">
 			<cfset arguments.path = CGI.SCRIPT_NAME />
@@ -67,11 +68,12 @@
 		
 		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
 			<!--- shorthand for action/queryString pairing --->
-			<cfset arguments.queryString = REReplace( arguments.action, '[^\?]*\?', '') />
-			<cfset arguments.action = REReplace( arguments.action, '([^\?\##]*).*', '\1') />
+			<cfset arguments.queryString = listRest( arguments.action, '?' ) />
+			<cfset arguments.action = listFirst( arguments.action, '?##' ) />
 		</cfif>
 		<cfset cosmeticAction = getFullyQualifiedAction( arguments.action ) />
 		<cfset isHomeAction = cosmeticAction is getFullyQualifiedAction( variables.framework.home ) />
+		<cfset isDefaultItem = getItem( cosmeticAction ) is variables.framework.defaultItem />
 
 		<cfif find( '?', arguments.path ) gt 0>
 			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
@@ -96,12 +98,12 @@
 		</cfif>
 
 		<cfif len( arguments.queryString )>
-			<cfset extraArgs = REReplace( arguments.queryString, '([^\?\##]*).*', '\1') />
+			<cfset extraArgs = listFirst( arguments.queryString, '?##' ) />
 			<cfif find( '?', arguments.queryString )>
-				<cfset queryPart = REReplace( arguments.queryString, '[^\?]*\?([^\##]*).*', '\1') />
+				<cfset queryPart = listRest( arguments.queryString, '?' ) />
 			</cfif>
 			<cfif find( '##', arguments.queryString )>
-				<cfset anchor = REReplace( arguments.queryString, '[^\##]*\##(.*)', '\1' ) />
+				<cfset anchor = listRest( arguments.queryString, '##' ) />
 			</cfif>
 			<cfif ses>
 				<cfset extraArgs = listChangeDelims( extraArgs, '/', '&=' ) />
@@ -111,6 +113,8 @@
 		<cfif ses>
 			<cfif isHomeAction and extraArgs is ''>
 				<cfset basePath = arguments.path />
+			<cfelseif isDefaultItem and extraArgs is ''>
+				<cfset basePath = arguments.path & initialDelim & listFirst( cosmeticAction, '.' ) />
 			<cfelse>
 				<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
 			</cfif>
@@ -118,6 +122,8 @@
 			<cfif isHomeAction>
 				<cfset basePath = arguments.path />
 				<cfset curDelim = '?' />
+			<cfelseif isDefaultItem>
+				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & listFirst( cosmeticAction, '.' ) />
 			<cfelse>
 				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
 			</cfif>
@@ -618,15 +624,16 @@
 		// ensure flash context cannot override request action:
 		request.context[variables.framework.action] = request.action;
 
-		setupRequestWrapper( true );
-
 		// allow configured extensions and paths to pass through to the requested template.
-		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
+		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
+		// Meaning /myexcludepath will match "/myexcludepath" and all subdirectories  
 		if ( listFindNoCase( framework.unhandledExtensions, listLast( arguments.targetPath, "." ) ) or 
 				REFindNoCase( "^(" & framework.unhandledPathRegex & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 		}
+
+		setupRequestWrapper( true );
 	}
 
 	/*
@@ -719,12 +726,10 @@
 		<cfset var baseQueryString = "" />
 		<cfset var key = "" />
 		<cfset var preserveKey = "" />
+		<cfset var targetURL = "" />
 
 		<cfif arguments.preserve is not "none">
 			<cfset preserveKey = saveFlashContext( arguments.preserve ) />
-			<cfif variables.framework.maxNumContextsPreserved gt 1>
-				<cfset baseQueryString = "#variables.framework.preserveKeyURLKey#=#preserveKey#">
-			</cfif>
 		</cfif>
 
 		<cfif arguments.append is not "none">
@@ -755,7 +760,20 @@
 			<cfset baseQueryString = arguments.queryString />
 		</cfif>
 
-		<cflocation url="#buildURL( arguments.action, arguments.path, baseQueryString )#" addtoken="false" />
+		<cfset targetURL = buildURL( arguments.action, arguments.path, baseQueryString ) />
+		<cfif preserveKey is not "" and variables.framework.maxNumContextsPreserved gt 1>
+			<cfif find( '?', targetURL )>
+				<cfset preserveKey = '&#variables.framework.preserveKeyURLKey#=#preserveKey#' />
+			<cfelse>
+				<cfset preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#' />
+			</cfif>
+			<cfif find( '##', targetURL )>
+				<cfset targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' ) />
+			<cfelse>
+				<cfset targetURL = targetURL & preserveKey />
+			</cfif>
+		</cfif>
+		<cflocation url="#targetURL#" addtoken="false" />
 
 	</cffunction>
 
@@ -1175,7 +1193,7 @@
 		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
-		variables.framework.version = '1.1_1.2_010';
+		variables.framework.version = '1.2RC2';
 	}
 
 	function setupRequestDefaults() { // "private"

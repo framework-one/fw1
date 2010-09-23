@@ -11,7 +11,7 @@
 	
 	function setupApplication() 
 	{
-		setBeanFactory(createObject("component", "models.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));	
+		setBeanFactory(createObject("component", "model.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));	
 	}
 	</cfscript>
 	

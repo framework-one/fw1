@@ -60,7 +60,7 @@
     </cffunction>
 	
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManagerAJAX.models.Department").init()>
+		<cfreturn createObject("component", "userManagerAJAX.model.Department").init()>
 	</cffunction>
 	
 </cfcomponent>
