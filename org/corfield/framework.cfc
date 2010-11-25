@@ -1,4 +1,4 @@
-<cfcomponent><cfscript>
+<cfcomponent output="false"><cfscript>
 /*
 	Copyright (c) 2009-2010, Sean Corfield, Ryan Cogswell
 
@@ -1045,7 +1045,7 @@
 		request.failedMethod = arguments.method;
 	}
 
-</cfscript>
+</cfscript><cfsilent>
 
 	<cffunction name="setupApplicationWrapper" returntype="void" access="private" output="false">
 	
@@ -1097,7 +1097,7 @@
 	
 	</cffunction>
 
-<cfscript>
+</cfsilent><cfscript>
 
 	function setupFrameworkDefaults() { // "private"
 
@@ -1548,7 +1548,7 @@
 
 	</cffunction>
 
-	<cffunction name="restoreFlashContext" access="private" hint="Restore request context from session scope if present.">
+	<cffunction name="restoreFlashContext" access="private" output="false" hint="Restore request context from session scope if present.">
 		<cfset var preserveKey = '' />
 		<cfset var preserveKeySessionKey = '' />
 
@@ -1579,7 +1579,7 @@
 
 	</cffunction>
 
-	<cffunction name="saveFlashContext" returntype="string" access="private" hint="Save request context to session scope if present.">
+	<cffunction name="saveFlashContext" returntype="string" output="false" access="private" hint="Save request context to session scope if present.">
 		<cfargument name="keys" type="string" />
 
 		<cfset var currPreserveKey = getNextPreserveKeyAndPurgeOld() />
