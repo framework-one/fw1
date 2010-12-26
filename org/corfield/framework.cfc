@@ -1,6 +1,6 @@
-<cfcomponent output="false"><cfscript>
+component {
 /*
-	Copyright (c) 2009-2010, Sean Corfield, Ryan Cogswell
+	Copyright (c) 2009-2011, Sean Corfield, Ryan Cogswell
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -24,142 +24,128 @@
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
 
-	function actionSpecifiesSubsystem( action ) {
+	public boolean function actionSpecifiesSubsystem( string action ) {
 
 		if ( not usingSubsystems() ) {
 			return false;
 		}
-		return listLen( action, variables.framework.subsystemDelimiter ) gt 1 or right( action, 1 ) eq variables.framework.subsystemDelimiter;
+		return listLen( action, variables.framework.subsystemDelimiter ) > 1 ||
+			right( action, 1 ) == variables.framework.subsystemDelimiter;
 	}
 
-</cfscript><cfsilent>
 
-	<!---
-		buildURL() should be used from views to construct urls when using subsystems or
-		in order to provide a simpler transition to using subsystems in the future
-	--->
-	<cffunction name="buildURL" access="public" output="false">
-		<cfargument name="action" type="string" />
-		<cfargument name="path" type="string" default="#variables.framework.baseURL#" />
-		<cfargument name="queryString" type="string" default="" />
-
-		<cfset var initialDelim = '?' />
-		<cfset var varDelim = '&' />
-		<cfset var equalDelim = '=' />
-		<cfset var curDelim = '' />
-		<cfset var basePath = '' />
-		<cfset var extraArgs = '' />
-		<cfset var queryPart = '' />
-		<cfset var anchor = '' />
-		<cfset var ses = false />
-		<cfset var omitIndex = false />
-		<cfset var cosmeticAction = '' />
-		<cfset var isHomeAction = false />
-		<cfset var isDefaultItem = false />
-
-		<cfif arguments.path eq "useCgiScriptName">
-			<cfset arguments.path = CGI.SCRIPT_NAME />
-			<cfif variables.framework.SESOmitIndex>
-				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
-				<cfset omitIndex = true />
-			</cfif>
-		<cfelseif arguments.path eq "useRequestURI">
-			<cfset arguments.path = getPageContext().getRequest().getRequestURI() />
-			<cfif variables.framework.SESOmitIndex>
-				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
-				<cfset omitIndex = true />
-			</cfif>
-		</cfif>
+	/*
+	 *	buildURL() should be used from views to construct urls when using subsystems or
+	 *	in order to provide a simpler transition to using subsystems in the future
+	 */
+	public string function buildURL( string action, string path = variables.framework.baseURL, string queryString = '' ) {
+		var omitIndex = false;
+		if ( path == 'useCgiScriptName' ) {
+			path = CGI.SCRIPT_NAME;
+			if ( variables.framework.SESOmitIndex ) {
+				path = getDirectoryFromPath( path );
+				omitIndex = true;
+			}
+		} else if ( path == 'useRequestURI' ) {
+			path = getPageContext().getRequest().getRequestURI();
+			if ( variables.framework.SESOmitIndex ) {
+				path = getDirectoryFromPath( path );
+				omitIndex = true;
+			}
+		}
 		
-		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
-			<!--- shorthand for action/queryString pairing --->
-			<cfset arguments.queryString = listRest( arguments.action, '?' ) />
-			<cfset arguments.action = listFirst( arguments.action, '?##' ) />
-		</cfif>
-		<cfset cosmeticAction = getFullyQualifiedAction( arguments.action ) />
-		<cfset isHomeAction = cosmeticAction is getFullyQualifiedAction( variables.framework.home ) />
-		<cfset isDefaultItem = getItem( cosmeticAction ) is variables.framework.defaultItem />
-
-		<cfif find( '?', arguments.path ) gt 0>
-			<cfif right( arguments.path, 1 ) eq '?' or right( arguments.path, 1 ) eq '&'>
-				<cfset initialDelim = '' />
-			<cfelse>
-				<cfset initialDelim = '&' />
-			</cfif>
-		<cfelseif structKeyExists( request, 'generateSES' ) and request.generateSES>
-			<cfif omitIndex>
-				<cfset initialDelim = '' />
-			<cfelse>
-				<cfset initialDelim = '/' />
-			</cfif>
-			<cfset varDelim = '/' />
-			<cfset equalDelim = '/' />
-			<cfset ses = true />
-		</cfif>
-		<cfset curDelim = varDelim />
-
-		<cfif usingSubsystems() and getSubsystem( cosmeticAction ) is variables.framework.defaultSubsystem>
-			<cfset cosmeticAction = getSectionAndItem( cosmeticAction ) />
-		</cfif>
-
-		<cfif len( arguments.queryString )>
-			<cfset extraArgs = listFirst( arguments.queryString, '?##' ) />
-			<cfif find( '?', arguments.queryString )>
-				<cfset queryPart = listRest( arguments.queryString, '?' ) />
-			</cfif>
-			<cfif find( '##', arguments.queryString )>
-				<cfset anchor = listRest( arguments.queryString, '##' ) />
-			</cfif>
-			<cfif ses>
-				<cfset extraArgs = listChangeDelims( extraArgs, '/', '&=' ) />
-			</cfif>
-		</cfif>
+		if ( find( '?', action ) && queryString == '' ) {
+			queryString = listRest( action, '?' );
+			action = listFirst( action, '?##' );
+		}
+		var cosmeticAction = getFullyQualifiedACtion( action );
+		var isHomeAction = cosmeticAction == getFullyQualifiedAction( variables.framework.home );
+		var isDefaultItem = getItem( cosmeticAction ) == variables.framework.defaultItem;
 		
-		<cfif ses>
-			<cfif isHomeAction and extraArgs is ''>
-				<cfset basePath = arguments.path />
-			<cfelseif isDefaultItem and extraArgs is ''>
-				<cfset basePath = arguments.path & initialDelim & listFirst( cosmeticAction, '.' ) />
-			<cfelse>
-				<cfset basePath = arguments.path & initialDelim & replace( cosmeticAction, '.', '/' ) />
-			</cfif>
-		<cfelse>
-			<cfif isHomeAction>
-				<cfset basePath = arguments.path />
-				<cfset curDelim = '?' />
-			<cfelseif isDefaultItem>
-				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & listFirst( cosmeticAction, '.' ) />
-			<cfelse>
-				<cfset basePath = arguments.path & initialDelim & variables.framework.action & equalDelim & cosmeticAction />
-			</cfif>
-		</cfif>
+		var initialDelim = '?';
+		var varDelim = '&';
+		var equalDelim = '=';
+		var basePath = '';
+		var extraArgs = '';
+		var queryPart = '';
+		var anchor = '';
+		var ses = false;
+		if ( find( '?', path ) > 0 ) {
+			if ( right( path, 1 ) == '?' || right( path, 1 ) == '&' ) {
+				initialDelim = '';
+			} else {
+				initialDelim = '&';
+			}
+		} else if ( structKeyExists( request, 'generateSES' ) && request.generateSES ) {
+			if ( omitIndex ) {
+				initialDelim = '';
+			} else {
+				initialDelim = '/';
+			}
+			varDelim = '/';
+			equalDelim = '/';
+			ses = true;
+		}
+		var curDelim = varDelim;
 		
-		<cfif extraArgs is not ''>
-			<cfset basePath = basePath & curDelim & extraArgs />
-			<cfset curDelim = varDelim />
-		</cfif>
-		<cfif queryPart is not ''>
-			<cfif ses>
-				<cfset basePath = basePath & '?' & queryPart />
-			<cfelse>
-				<cfset basePath = basePath & curDelim & queryPart />
-			</cfif>
-		</cfif>
-		<cfif anchor is not ''>
-			<cfset basePath = basePath & '##' & anchor />
-		</cfif>
+		if ( usingSubsystems() && getSubsystem( cosmeticAction ) == variables.framework.defaultSubsystem ) {
+			cosmeticAction = getSectionAndItem( cosmeticAction );
+		}
 		
-		<cfreturn basePath />
-
-	</cffunction>
-
-</cfsilent><cfscript>
+		if ( len( queryString ) ) {
+			extraArgs = listFirst( queryString, '?##' );
+			if ( find( '?', queryString ) ) {
+				queryPart = listRest( queryString, '?' );
+			}
+			if ( find( '##', queryString ) ) {
+				anchor = listRest( queryString, '##' );
+			}
+			if ( ses ) {
+				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
+			}
+		}
+		
+		if ( ses ) {
+			if ( isHomeAction && extraArgs == '' ) {
+				basePath = path;
+			} else if ( isDefaultItem && extraArgs == '' ) {
+				basePath = path & initialDelim & listFirst( cosmeticAction, '.' );
+			} else {
+				basePath = path & initialDelim & replace( cosmeticAction, '.', '/' );
+			}
+		} else {
+			if ( isHomeAction ) {
+				basePath = path;
+				curDelim = '?';
+			} else if ( isDefaultItem ) {
+				basePath = path & initialDelim & variables.framework.action & equalDelim & listFirst( cosmeticAction, '.' );
+			} else {
+				basePath = path & initialDelim & variables.framework.action & equalDelim & cosmeticAction;
+			}
+		}
+		
+		if ( extraArgs != '' ) {
+			basePath = basePath & curDelim & extraArgs;
+			curDelim = varDelim;
+		}
+		if ( queryPart != '' ) {
+			if ( ses ) {
+				basePath = basePath & '?' & queryPart;
+			} else {
+				basePath = basePath & curDelim & queryPart;
+			}
+		}
+		if ( anchor != '' ) {
+			basePath = basePath & '##' & anchor;
+		}
+		return basePath;
+	}
 
 	/*
 	 * call this from your Application.cfc methods to queue up additional controller
 	 * method calls at the start of the request
 	 */
-	function controller( action ) {
+	public void function controller( string action ) {
 		var subsystem = getSubsystem( action );
 		var section = getSection( action );
 		var item = getItem( action );
@@ -174,7 +160,7 @@
 		tuple.key = subsystem & variables.framework.subsystemDelimiter & section;
 		tuple.item = item;
 
-		if ( structKeyExists( tuple, "controller" ) and isObject( tuple.controller ) ) {
+		if ( structKeyExists( tuple, "controller" ) && isObject( tuple.controller ) ) {
 			if ( not structKeyExists( request, 'controllers' ) ) {
 				request.controllers = arrayNew(1);
 			}
@@ -186,7 +172,7 @@
 	 * can be overridden to customize how views and layouts are found - can be
 	 * used to provide skinning / common views / layouts etc
 	 */
-	function customizeViewOrLayoutPath( pathInfo, type, fullPath ) {
+	public string function customizeViewOrLayoutPath( string pathInfo, string type, string fullPath ) {
 		// fullPath is: '#pathInfo.base##type#s/#pathInfo.path#.cfm'
 		return fullPath;
 	}
@@ -194,43 +180,36 @@
 	/*
 	 * return the action URL variable name - allows applications to build URLs
 	 */
-	function getAction() {
+	public string function getAction() {
 		return variables.framework.action;
 	}
-
-</cfscript><cfsilent>
-
-	<!---
-		returns whatever the framework has been told is a bean factory
-		this will return a subsystem-specific bean factory if one
-		exists for the current request's subsystem (or for the specified subsystem
-		if passed in)
-	--->
-	<cffunction name="getBeanFactory" output="false">
-		<cfargument name="subsystem" required="false" default="" />
-		<cfscript>
-			if ( len(subsystem) gt 0 ) {
-				if ( hasSubsystemBeanFactory(subsystem) ) {
-					return getSubsystemBeanFactory(subsystem);
-				}
-				return getDefaultBeanFactory();
-			}
-			if ( not usingSubsystems() ) {
-				return getDefaultBeanFactory();
-			}
-			if ( structKeyExists( request, 'subsystem' ) and len(request.subsystem) gt 0 ) {
-				return getBeanFactory(request.subsystem);
-			}
-			if ( len(variables.framework.defaultSubsystem) gt 0 ) {
-				return getBeanFactory(variables.framework.defaultSubsystem);
+	
+	/*
+	 *	returns whatever the framework has been told is a bean factory
+	 *	this will return a subsystem-specific bean factory if one
+	 *	exists for the current request's subsystem (or for the specified subsystem
+	 *	if passed in)
+	 */
+	public any function getBeanFactory( string subsystem = '' ) {
+		if ( len( subsystem ) > 0 ) {
+			if ( hasSubsystemBeanFactory( subsystem ) ) {
+				return getSubsystemBeanFactory( subsystem );
 			}
 			return getDefaultBeanFactory();
-		</cfscript>
-	</cffunction>
-
-</cfsilent><cfscript>
-
-	function getConfig()
+		}
+		if ( !usingSubsystems() ) {
+			return getDefaultBeanFactory();
+		}
+		if ( structKeyExists( request, 'subsystem' ) && len( request.subsystem ) > 0 ) {
+			return getBeanFactory( request.subsystem );
+		}
+		if ( len( variables.framework.defaultSubsystem ) > 0 ) {
+			return getBeanFactory( variables.framework.defaultSubsystem );
+		}
+		return getDefaultBeanFactory();
+	}
+	
+	public struct function getConfig()
 	{
 		// return a copy to make it read only from outside the framework:
 		return structCopy( framework );
@@ -239,14 +218,14 @@
 	/*
 	 * returns the bean factory set via setBeanFactory
 	 */
-	function getDefaultBeanFactory() {
+	public any function getDefaultBeanFactory() {
 		return application[ variables.framework.applicationKey ].factory;
 	}
 
 	/*
 	 * returns the name of the default subsystem
 	 */
-	function getDefaultSubsystem() {
+	public string function getDefaultSubsystem() {
 
 		if ( not usingSubsystems() ) {
 			return '';
@@ -264,7 +243,7 @@
 		return variables.framework.defaultSubsystem;
 
 	}
-
+/*
 </cfscript><cfsilent>
 
 	<!---
@@ -333,57 +312,50 @@
 	</cffunction>
 
 </cfsilent><cfscript>
-
+*/
 	/*
 	 * return the default service result key
 	 * override this if you want the default service result to be
 	 * stored under a different request context key, based on the
 	 * requested action, e.g., return getSection( action );
 	 */
-	function getServiceKey( action ) {
+	public string function getServiceKey( action ) {
 		return "data";
 	}
-
-</cfscript><cfsilent>
-
-	<!--- return the subsystem part of the action --->
-	<cffunction name="getSubsystem" output="false">
-		<cfargument name="action" default="#request.action#" />
-
-		<cfif actionSpecifiesSubsystem( arguments.action ) >
-			<cfreturn listFirst( arguments.action, variables.framework.subsystemDelimiter ) />
-		</cfif>
-
-		<cfreturn getDefaultSubsystem() />
-
-	</cffunction>
-
-</cfsilent><cfscript>
-
+	
 	/*
-	* returns the bean factory set via setSubsystemBeanFactory
-	* same effect as getBeanFactory when not using subsystems
-	*/
-	function getSubsystemBeanFactory( subsystem ) {
+	 * return the subsystem part of the action
+	 */
+	public string function getSubsystem( string action = request.action ) {
+		if ( actionSpecifiesSubsystem( action ) ) {
+			return listFirst( action, variables.framework.subsystemDelimiter );
+		}
+		return getDefaultSubsystem();
+	}
+	
+	/*
+	 * returns the bean factory set via setSubsystemBeanFactory
+	 * same effect as getBeanFactory when not using subsystems
+	 */
+	public any function getSubsystemBeanFactory( string subsystem ) {
 
 		setupSubsystemWrapper( subsystem );
 
 		return application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ];
 
 	}
-
-
+	
 	/*
 	 * returns true iff a call to getBeanFactory() will successfully return a bean factory
 	 * previously set via setBeanFactory or setSubsystemBeanFactory
 	 */
-	function hasBeanFactory() {
+	public boolean function hasBeanFactory() {
 
 		if ( hasDefaultBeanFactory() ) {
 			return true;
 		}
 
-		if ( not usingSubsystems() ) {
+		if ( !usingSubsystems() ) {
 			return false;
 		}
 
@@ -391,7 +363,7 @@
 			return hasSubsystemBeanFactory(request.subsystem);
 		}
 
-		if ( len(variables.framework.defaultSubsystem) gt 0 ) {
+		if ( len(variables.framework.defaultSubsystem) > 0 ) {
 			return hasSubsystemBeanFactory(variables.framework.defaultSubsystem);
 		}
 
@@ -402,14 +374,14 @@
 	/*
 	 * returns true iff the framework has been told about a bean factory via setBeanFactory
 	 */
-	function hasDefaultBeanFactory() {
+	public boolean function hasDefaultBeanFactory() {
 		return structKeyExists( application[ variables.framework.applicationKey ], 'factory' );
 	}
 
 	/*
 	 * returns true if a subsystem specific bean factory has been set
 	 */
-	function hasSubsystemBeanFactory( subsystem ) {
+	public boolean function hasSubsystemBeanFactory( string subsystem ) {
 
 		ensureNewFrameworkStructsExist();
 
@@ -421,8 +393,8 @@
 	 * layout() may be invoked inside layouts
 	 * returns the UI generated by the named layout and body
 	 */
-	function layout( path, body ) {
-		var layoutPath = parseViewOrLayoutPath( arguments.path, 'layout' );
+	public string function layout( string path, string body ) {
+		var layoutPath = parseViewOrLayoutPath( path, 'layout' );
 		return internalLayout( layoutPath, body );
 	}
 
@@ -433,7 +405,7 @@
 	 * if you do override onApplicationStart(), you must call
 	 * super.onApplicationStart() first
 	 */
-	function onApplicationStart() {
+	public boolean function onApplicationStart() {
 		setupFrameworkDefaults();
 		setupRequestDefaults();
 		setupApplicationWrapper();
@@ -446,7 +418,7 @@
 	 * not seem to be passed exception or event correctly when something fails
 	 * in the code...
 	 */
-	function onError( exception, event ) {
+	public void function onError( any exception, string event ) {
 
 		try {
 			// record details of the exception:
@@ -474,7 +446,7 @@
 	 * this can be overridden if you want to change the behavior when
 	 * FW/1 cannot find a matching view
 	 */
-	function onMissingView( rc ) {
+	public void function onMissingView( struct rc ) {
 		// unable to find a matching view - fail with a nice exception
 		viewNotFound();
 		// if we got here, we would return the string to be rendered
@@ -490,23 +462,25 @@
 	 * being set when the error occurred as well as the request context structure.
 	 * You can also reference the cfcatch variable for details about the error.
 	 */
-	function onPopulateError( cfc, property, rc ) {
+	public void function onPopulateError( any cfc, string property, struct rc ) {
 	}
 
 	/*
 	 * not intended to be overridden, automatically deleted for CFC requests
 	 */
-	function onRequest(targetPath) {
+	public boolean function onRequest( string targetPath ) {
 
 		var out = 0;
 		var i = 0;
 		var tuple = 0;
 		var _data_fw1 = 0;
 		var once = structNew();
+		var n = 0;
 
 		request.controllerExecutionStarted = true;
 		if ( structKeyExists( request, 'controllers' ) ) {
-			for ( i = 1; i lte arrayLen( request.controllers ); i = i + 1 ) {
+			n = arrayLen( request.controllers );
+			for ( i = 1; i <= n; i = i + 1 ) {
 				tuple = request.controllers[ i ];
 				// run before once per controller:
 				if ( not structKeyExists( once, tuple.key ) ) {
@@ -517,7 +491,8 @@
 				doController( tuple.controller, tuple.item );
 			}
 		}
-		for ( i = 1; i lte arrayLen( request.services ); i = i + 1 ) {
+		n = arrayLen( request.services );
+		for ( i = 1; i <= n; i = i + 1 ) {
 			tuple = request.services[i];
 			if ( tuple.key is '' ) {
 				// throw the result away:
@@ -531,7 +506,8 @@
 		}
 		request.serviceExecutionComplete = true;
 		if ( structKeyExists( request, 'controllers' ) ) {
-			for ( i = arrayLen( request.controllers ); i gte 1; i = i - 1 ) {
+			n = arrayLen( request.controllers );
+			for ( i = n; i >= 1; i = i - 1 ) {
 				tuple = request.controllers[ i ];
 				doController( tuple.controller, 'end' & tuple.item );
 				// run after once per controller:
@@ -564,7 +540,7 @@
 	 * if you do override onRequestStart(), you must call
 	 * super.onRequestStart() first
 	 */
-	function onRequestStart(targetPath) {
+	public boolean function onRequestStart( string targetPath ) {
 
 		var pathInfo = variables.cgiPathInfo;
 		var sesIx = 0;
@@ -647,12 +623,12 @@
 	 * if you do override onSessionStart(), you must call
 	 * super.onSessionStart() first
 	 */
-	function onSessionStart() {
+	public boolean function onSessionStart() {
 		setupFrameworkDefaults();
 		setupRequestDefaults();
 		setupSession();
 	}
-
+/*
 </cfscript><cfsilent>
 
 	<!---
@@ -815,14 +791,14 @@
 	</cffunction>
 
 </cfsilent><cfscript>
-
+*/
 	/*
 	 * call this from your setupApplication() method to tell the framework
 	 * about your bean factory - only assumption is that it supports:
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
 	 * - getBean(name) - returns the named bean
 	 */
-	function setBeanFactory( factory ) {
+	public void function setBeanFactory( any factory ) {
 
 		application[ variables.framework.applicationKey ].factory = factory;
 
@@ -834,7 +810,7 @@
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
 	 * - getBean(name) - returns the named bean
 	 */
-	function setSubsystemBeanFactory( subsystem, factory ) {
+	public void function setSubsystemBeanFactory( string subsystem, any factory ) {
 
 		ensureNewFrameworkStructsExist();
 		application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ] = factory;
@@ -848,19 +824,19 @@
 	 * setupApplication() method
 	 * you do not need to call super.setupApplication()
 	 */
-	function setupApplication() { }
+	public void function setupApplication() { }
 
 	/*
 	 * override this to provide request-specific initialization
 	 * you do not need to call super.setupRequest()
 	 */
-	function setupRequest() { }
+	public void function setupRequest() { }
 
 	/*
 	 * override this to provide session-specific initialization
 	 * you do not need to call super.setupSession()
 	 */
-	function setupSession() { }
+	public void function setupSession() { }
 
 	/*
 	 * override this to provide subsystem-specific initialization
@@ -870,22 +846,22 @@
 	 * in your setupSubsystem() method
 	 * you do not need to call super.setupSubsystem( subsystem )
 	 */
-	function setupSubsystem( subsystem ) { }
+	public void function setupSubsystem( string subsystem ) { }
 	
 	/*
 	 * use this to override the default view
 	 */
-	function setView( action ) {
+	public void function setView( string action ) {
 		request.overrideViewAction = validateAction( action );
 	}
 
 	/*
 	 * returns true if the application is configured to use subsystems
 	 */
-	function usingSubsystems() {
+	public boolean function usingSubsystems() {
 		return variables.framework.usingSubsystems;
 	}
-
+/*
 </cfscript><cfsilent>
 
 	<!---
@@ -903,8 +879,8 @@
 <!--- THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE --->
 
 </cfsilent><cfscript>
-
-	function buildViewAndLayoutQueue() { // "private"
+*/
+	private void function buildViewAndLayoutQueue() {
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
 		// default behavior:
@@ -961,7 +937,7 @@
 		}
 	}
 
-	function ensureNewFrameworkStructsExist() { // "private"
+	private void function ensureNewFrameworkStructsExist() {
 
 		var framework = application[variables.framework.applicationKey];
 
@@ -975,7 +951,7 @@
 
 	}
 
-	function failure( exception, event ) { // "private"
+	private void function failure( any exception, string event ) {
 
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
@@ -990,7 +966,7 @@
 
 	}
 
-	function getSubsystemDirPrefix( subsystem ) { // "private"
+	private string function getSubsystemDirPrefix( string subsystem ) {
 
 		if ( subsystem eq '' ) {
 			return '';
@@ -999,18 +975,18 @@
 		return subsystem & '/';
 	}
 
-	function isFrameworkInitialized() { // "private"
+	private boolean function isFrameworkInitialized() {
 		return structKeyExists( application, variables.framework.applicationKey );
 	}
 
-	function isFrameworkReloadRequest() { // "private"
+	private boolean function isFrameworkReloadRequest() {
 		return ( isDefined('URL') and
 					structKeyExists(URL, variables.framework.reload) and
 					URL[variables.framework.reload] is variables.framework.password ) or
 				variables.framework.reloadApplicationOnEveryRequest;
 	}
 
-	function isSubsystemInitialized( subsystem ) { // "private"
+	private boolean function isSubsystemInitialized( string subsystem ) {
 
 		ensureNewFrameworkStructsExist();
 
@@ -1018,7 +994,7 @@
 
 	}
 
-	function parseViewOrLayoutPath( path, type ) { // "private"
+	private string function parseViewOrLayoutPath( string path, string type ) {
 
 		var pathInfo = StructNew();
 		var subsystem = getSubsystem( arguments.path );
@@ -1035,7 +1011,7 @@
 
 	}
 
-	function setCfcMethodFailureInfo( cfc, method ) { // "private"
+	private void function setCfcMethodFailureInfo( any cfc, string method ) {
 		var meta = getMetadata( arguments.cfc );
 		if ( structKeyExists( meta, 'fullname' ) ) {
 			request.failedCfcName = meta.fullname;
@@ -1044,7 +1020,7 @@
 		}
 		request.failedMethod = arguments.method;
 	}
-
+/*
 </cfscript><cfsilent>
 
 	<cffunction name="setupApplicationWrapper" returntype="void" access="private" output="false">
@@ -1098,8 +1074,8 @@
 	</cffunction>
 
 </cfsilent><cfscript>
-
-	function setupFrameworkDefaults() { // "private"
+*/
+	private void function setupFrameworkDefaults() {
 
 		// default values for Application::variables.framework structure:
 		if ( not structKeyExists(variables, 'framework') ) {
@@ -1201,12 +1177,12 @@
 		variables.framework.version = '1.2';
 	}
 
-	function setupRequestDefaults() { // "private"
+	private void function setupRequestDefaults() {
 		request.base = variables.framework.base;
 		request.cfcbase = variables.framework.cfcbase;
 	}
 
-	function setupRequestWrapper( runSetup ) { // "private"
+	private void function setupRequestWrapper( boolean runSetup ) {
 
 		request.subsystem = getSubsystem( request.action );
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
@@ -1226,11 +1202,11 @@
 		}
 	}
 
-	function setupSessionWrapper() { // "private"
+	private void function setupSessionWrapper() {
 		setupSession();
 	}
 
-	function validateAction( action ) { // "private"
+	private string function validateAction( string action ) {
 		if ( findOneOf( '/\', action ) gt 0 ) {
 			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
 					detail="Actions are not allowed to embed sub-directory paths.");
@@ -1238,11 +1214,11 @@
 		return action;
 	}
 
-	function viewNotFound() { // "private"
+	private void function viewNotFound() {
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
 	}
-
+/*
 </cfscript><cfsilent>
 
 	<cffunction name="autowire" access="private" output="false"
@@ -1623,5 +1599,7 @@
 		</cflock>
 
 	</cffunction>
+*/
 
-</cfsilent></cfcomponent>
+}
+
