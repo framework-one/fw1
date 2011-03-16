@@ -69,6 +69,12 @@
 				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
 				<cfset omitIndex = true />
 			</cfif>
+		<cfelseif arguments.path eq "useSubsystemBaseURL">
+			<cfset arguments.path = variables.framework.subsystem[ getSubsystem( arguments.action ) ].baseURL />
+			<cfif variables.framework.SESOmitIndex>
+				<cfset arguments.path = getDirectoryFromPath( arguments.path ) />
+				<cfset omitIndex = true />
+			</cfif>
 		</cfif>
 		
 		<cfif find( '?', arguments.action ) and arguments.queryString is ''>
