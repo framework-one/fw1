@@ -1111,12 +1111,12 @@ component {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
 		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
-			variables.framework.suppressImplicitService = false;
+			variables.framework.suppressImplicitService = true;
 		}
 		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
-		variables.framework.version = '2.0_A';
+		variables.framework.version = '2.0_A_1';
 	}
 
 	private void function setupRequestDefaults() {
