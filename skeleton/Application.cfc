@@ -41,7 +41,7 @@
 		// location used to find controllers / services:
 		cfcbase = essentially base with / replaced by .
 		// whether FW/1 implicit service call should be suppressed:
-		suppressImplicitService = false,
+		suppressImplicitService = true,
 		// list of file extensions that FW/1 should not handle:
 		unhandledExtensions = 'cfc',
 		// list of (partial) paths that FW/1 should not handle:

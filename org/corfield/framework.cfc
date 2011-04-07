@@ -1139,7 +1139,7 @@ component {
 		}
 
 		controller( request.action );
-		if ( not variables.framework.suppressImplicitService ) {
+		if ( !variables.framework.suppressImplicitService ) {
 			service( request.action, getServiceKey( request.action ), structNew(), false );
 		}
 	}
