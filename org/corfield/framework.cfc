@@ -828,6 +828,20 @@ component {
 	
 	// THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE
 	
+	private void function autowire( any cfc, any beanFactory ) {
+		for ( var key in cfc ) {
+			if ( len( key ) > 3 && left( key, 3 ) == 'set' ) {
+				var property = right( key, len( key ) - 3 );
+				if ( beanFactory.containsBean( property ) ) {
+					var args = { };
+					args[ property ] = beanFactory.getBean( property );
+					// cfc[key](argumentCollection = args) does not work on ACF9
+					evaluate( 'cfc.#key#( argumentCollection = args )' );
+				}
+			}
+		}
+	}
+	
 	private void function buildViewAndLayoutQueue() {
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
@@ -885,6 +899,59 @@ component {
 		}
 	}
 
+	private boolean function cachedFileExists( string filePath ) {
+		var cache = application[ variables.framework.applicationKey ].cache;
+		if ( !variables.framework.cacheFileExists ) {
+			return fileExists( filePath );
+		}
+		param name="cache.fileExists" default="#structNew()#";
+		if ( !structKeyExists( cache.fileExists, filePath ) ) {
+			cache.fileExists[ filePath ] = fileExists( filePath );
+		}
+		return cache.fileExists[ filePath ];
+	}
+	
+	private string function cfcFilePath( string dottedPath ) {
+		if ( dottedPath == '' ) {
+			return '/';
+		} else {
+			return '/' & replace( dottedPath, '.', '/', 'all' ) & '/';
+		}
+	}
+	
+	private void function doController( any cfc, string method ) {
+		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
+			try {
+				evaluate( 'cfc.#method#( rc = request.context )' );
+			} catch ( any e ) {
+				setCfcMethodFailureInfo( cfc, method );
+				rethrow;
+			}
+		}
+	}
+	
+	private any function doService( any cfc, string method, struct args, boolean enforceExistence ) {
+		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
+			try {
+				structAppend( args, request.context, false );
+				var _result_fw1 = evaluate( 'cfc.#method#( argumentCollection = args )' );
+				if ( !isNull( _result_fw1 ) ) {
+					return _result_fw1;
+				}
+			} catch ( any e ) {
+				setCfcMethodFailureInfo( cfc, method );
+				rethrow;
+			}
+		} else if ( enforceExistence ) {
+			raiseException( type="FW1.serviceMethodNotFound", message="Service method '#method#' does not exist in service '#getMetadata( cfc ).fullname#'.",
+				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." );
+		}
+	}
+	
+	private void function dumpException( any exception ) {
+		writeDump( var = exception, label = 'Exception' );
+	}
+	
 	private void function ensureNewFrameworkStructsExist() {
 
 		var framework = application[variables.framework.applicationKey];
@@ -914,6 +981,109 @@ component {
 
 	}
 
+	private any function getCachedComponent( string type, string subsystem, string section ) {
+		setupSubsystemWrapper( subsystem );
+		var cache = application[variables.framework.applicationKey].cache;
+		var types = type & 's';
+		var cfc = 0;
+		var subsystemDir = getSubsystemDirPrefix( subsystem );
+		var subsystemDot = replace( subsystemDir, '/', '.', 'all' );
+		var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
+		var componentKey = subsystemUnderscore & section;
+		var beanName = section & type;
+		
+		if ( !structKeyExists( cache[ types ], componentKey ) ) {
+			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
+
+				if ( !structKeyExists( cache[ types ], componentKey ) ) {
+
+					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
+
+						cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
+						if ( type == 'controller' ) injectFramework( cfc );
+
+					} else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
+
+						cfc = getDefaultBeanFactory().getBean( beanName );
+						if ( type == 'controller' ) injectFramework( cfc );
+
+					} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
+
+						// we call createObject() rather than new so we can control initialization:
+						if ( request.cfcbase == '' ) {
+							cfc = createObject( 'component', subsystemDot & types & '.' & section );
+						} else {
+							cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
+						}
+						if ( structKeyExists( cfc, 'init' ) ) {
+							if ( type == 'controller' ) {
+								cfc.init( this );
+							} else {
+								cfc.init();
+							}
+						}
+
+						if ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) {
+								autowire( cfc, getBeanFactory( subsystem ) );
+						}
+					}
+
+					if ( isObject( cfc ) ) {
+						cache[ types ][ componentKey ] = cfc;
+					}
+				}
+
+			}
+		}
+
+		if ( structKeyExists( cache[ types ], componentKey ) ) {
+			return cache[ types ][ componentKey ];
+		}
+		// else "return null" effectively
+	}
+	
+	private any function getController( string section, string subsystem = getDefaultSubsystem() ) {
+		var _controller_fw1 = getCachedComponent( 'controller', subsystem, section );
+		if ( isDefined( '_controller_fw1' ) ) {
+			return _controller_fw1;
+		}
+	}
+	
+	private string function getNextPreserveKeyAndPurgeOld() {
+		var nextPreserveKey = '';
+		var oldKeyToPurge = '';
+		if ( variables.framework.maxNumContextsPreserved > 1 ) {
+			lock scope="session" type="exclusive" timeout="30" {
+				param name="session.__fw1NextPreserveKey" default="1";
+				nextPreserveKey = session.__fw1NextPreserveKey;
+				session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1;
+			}
+			oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
+		} else {
+			lock scope="session" type="exclusive" timeout="30" {
+				session.__fw1PreserveKey = '';
+				nextPreserveKey = session.__fw1PreserveKey;
+			}
+			oldKeyToPurge = '';
+		}
+		var key = getPreserveKeySessionKey( oldKeyToPurge );
+		if ( structKeyExists( session, key ) ) {
+			structDelete( session, key );
+		}
+		return nextPreserveKey;
+	}
+	
+	private string function getPreserveKeySessionKey( string preserveKey ) {
+		return '__f1' & preserveKey;
+	}
+	
+	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
+		var _service_fw1 = getCachedComponent( 'service', subsystem, section );
+		if ( isDefined( '_service_fw1' ) ) {
+			return _service_fw1;
+		}
+	}
+	
 	private string function getSubsystemDirPrefix( string subsystem ) {
 
 		if ( subsystem eq '' ) {
@@ -923,6 +1093,54 @@ component {
 		return subsystem & '/';
 	}
 
+	private void function injectFramework( any cfc ) {
+		var args = { };
+		if ( structKeyExists( cfc, 'setFramework' ) ) {
+			args.framework = this;
+			// allow alternative spellings
+			args.fw = this;
+			args.fw1 = this;
+			evaluate( 'cfc.setFramework( argumentCollection = args )' );
+		}
+	}
+	
+	private string function internalLayout( string layoutPath, string body ) {
+		var rc = request.context;
+		var $ = { };
+		// integration point with Mura:
+		if ( structKeyExists( rc, '$' ) ) {
+			$ = rc.$;
+		}
+		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
+			raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
+				detail="The layout method should not be called prior to the completion of the controller execution phase." );
+		}
+		var response = '';
+		savecontent variable="response" {
+			include '#layoutPath#';
+		}
+		return response;
+	}
+	
+	private string function internalView( string viewPath, struct args = structNew() ) {
+		var rc = request.context;
+		var $ = { };
+		// integration point with Mura:
+		if ( structKeyExists( rc, '$' ) ) {
+			$ = rc.$;
+		}
+		structAppend( local, args );
+		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
+			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
+				detail="The view method should not be called prior to the completion of the controller execution phase." );
+		}
+		var response = '';
+		savecontent variable="response" {
+			include '#viewPath#';
+		}
+		return response;
+	}
+	
 	private boolean function isFrameworkInitialized() {
 		return structKeyExists( application, variables.framework.applicationKey );
 	}
@@ -962,6 +1180,60 @@ component {
 	private string function processRoutes( string pathInfo ) {
 		// TODO: this is just a hook for now
 		return pathInfo;
+	}
+
+	private void function raiseException( string type, string message, string detail ) {
+		throw( type = type, message = message, detail = detail );
+	}
+	
+	private void function restoreFlashContext() {
+		if ( variables.framework.maxNumContextsPreserved > 1 ) {
+			if ( !structKeyExists( URL, variables.framework.preserveKeyURLKey ) ) {
+				return;
+			}
+			var preserveKey = URL[ variables.framework.preserveKeyURLKey ];
+			var preserveKeySessionKey = getPreserveKeySessionKey( preserveKey );
+		} else {
+			var preserveKeySessionKey = getPreserveKeySessionKey( '' );
+		}
+		try {
+			if ( structKeyExists( session, preserveKeySessionKey ) ) {
+				structAppend( request.context, session[ preserveKeySessionKey ], false );
+				if ( variables.framework.maxNumContextsPreserved == 1 ) {
+					/*
+						When multiple contexts are preserved, the oldest context is purged
+					 	within getNextPreserveKeyAndPurgeOld once the maximum is reached.
+					 	This allows for a browser refresh after the redirect to still receive
+					 	the same context.
+					*/
+					structDelete( session, preserveKeySessionKey );
+				}
+			}
+		} catch ( any e ) {
+			// session scope not enabled, do nothing
+		}
+	}
+	
+	private string function saveFlashContext( string keys ) {
+		var curPreserveKey = getNextPreserveKeyAndPurgeOld();
+		var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
+		try {
+			param name="session.#preserveKeySessionKey#" default="#structNew()#";
+			if ( keys == 'all' ) {
+				structAppend( session[ preserveKeySessionKey ], request.context );
+			} else {
+				var key = 0;
+				var keyNames = listToArray( keys );
+				for ( key in keyNames ) {
+					if ( structKeyExists( request.context, key ) ) {
+						session[ preserveKeySessionKey ][ key ] = request.context[ key ];
+					}
+				}
+			}
+		} catch ( any ex ) {
+			// session scope not enabled, do nothing
+		}
+		return curPreserveKey;
 	}
 
 	private void function setCfcMethodFailureInfo( any cfc, string method ) {
@@ -1157,6 +1429,16 @@ component {
 		setupSession();
 	}
 
+	private void function setupSubsystemWrapper( string subsystem ) {
+		if ( !usingSubsystems() ) return;
+		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
+			if ( !isSubsystemInitialized( subsystem ) ) {
+				application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
+				setupSubsystem( subsystem );
+			}
+		}
+	}
+
 	private string function validateAction( string action ) {
 		// check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
 		if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
@@ -1171,287 +1453,4 @@ component {
 				detail="'#request.missingView#' does not exist." );
 	}
 	
-	private void function autowire( any cfc, any beanFactory ) {
-		for ( var key in cfc ) {
-			if ( len( key ) > 3 && left( key, 3 ) == 'set' ) {
-				var property = right( key, len( key ) - 3 );
-				if ( beanFactory.containsBean( property ) ) {
-					var args = { };
-					args[ property ] = beanFactory.getBean( property );
-					// cfc[key](argumentCollection = args) does not work on ACF9
-					evaluate( 'cfc.#key#( argumentCollection = args )' );
-				}
-			}
-		}
-	}
-	
-	private boolean function cachedFileExists( string filePath ) {
-		var cache = application[ variables.framework.applicationKey ].cache;
-		if ( !variables.framework.cacheFileExists ) {
-			return fileExists( filePath );
-		}
-		param name="cache.fileExists" default="#structNew()#";
-		if ( !structKeyExists( cache.fileExists, filePath ) ) {
-			cache.fileExists[ filePath ] = fileExists( filePath );
-		}
-		return cache.fileExists[ filePath ];
-	}
-	
-	private string function cfcFilePath( string dottedPath ) {
-		if ( dottedPath == '' ) {
-			return '/';
-		} else {
-			return '/' & replace( dottedPath, '.', '/', 'all' ) & '/';
-		}
-	}
-	
-	private void function doController( any cfc, string method ) {
-		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
-			try {
-				evaluate( 'cfc.#method#( rc = request.context )' );
-			} catch ( any e ) {
-				setCfcMethodFailureInfo( cfc, method );
-				rethrow;
-			}
-		}
-	}
-	
-	private any function doService( any cfc, string method, struct args, boolean enforceExistence ) {
-		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
-			try {
-				structAppend( args, request.context, false );
-				var _result_fw1 = evaluate( 'cfc.#method#( argumentCollection = args )' );
-				if ( !isNull( _result_fw1 ) ) {
-					return _result_fw1;
-				}
-			} catch ( any e ) {
-				setCfcMethodFailureInfo( cfc, method );
-				rethrow;
-			}
-		} else if ( enforceExistence ) {
-			raiseException( type="FW1.serviceMethodNotFound", message="Service method '#method#' does not exist in service '#getMetadata( cfc ).fullname#'.",
-				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." );
-		}
-	}
-	
-	private void function dumpException( any exception ) {
-		writeDump( var = exception, label = 'Exception' );
-	}
-	
-	private any function getCachedComponent( string type, string subsystem, string section ) {
-		setupSubsystemWrapper( subsystem );
-		var cache = application[variables.framework.applicationKey].cache;
-		var types = type & 's';
-		var cfc = 0;
-		var subsystemDir = getSubsystemDirPrefix( subsystem );
-		var subsystemDot = replace( subsystemDir, '/', '.', 'all' );
-		var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
-		var componentKey = subsystemUnderscore & section;
-		var beanName = section & type;
-		
-		if ( !structKeyExists( cache[ types ], componentKey ) ) {
-			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
-
-				if ( !structKeyExists( cache[ types ], componentKey ) ) {
-
-					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
-
-						cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
-						if ( type == 'controller' ) injectFramework( cfc );
-
-					} else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
-
-						cfc = getDefaultBeanFactory().getBean( beanName );
-						if ( type == 'controller' ) injectFramework( cfc );
-
-					} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
-
-						// we call createObject() rather than new so we can control initialization:
-						if ( request.cfcbase == '' ) {
-							cfc = createObject( 'component', subsystemDot & types & '.' & section );
-						} else {
-							cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
-						}
-						if ( structKeyExists( cfc, 'init' ) ) {
-							if ( type == 'controller' ) {
-								cfc.init( this );
-							} else {
-								cfc.init();
-							}
-						}
-
-						if ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) {
-								autowire( cfc, getBeanFactory( subsystem ) );
-						}
-					}
-
-					if ( isObject( cfc ) ) {
-						cache[ types ][ componentKey ] = cfc;
-					}
-				}
-
-			}
-		}
-
-		if ( structKeyExists( cache[ types ], componentKey ) ) {
-			return cache[ types ][ componentKey ];
-		}
-		// else "return null" effectively
-	}
-	
-	private any function getController( string section, string subsystem = getDefaultSubsystem() ) {
-		var _controller_fw1 = getCachedComponent( 'controller', subsystem, section );
-		if ( isDefined( '_controller_fw1' ) ) {
-			return _controller_fw1;
-		}
-	}
-	
-	private string function getNextPreserveKeyAndPurgeOld() {
-		var nextPreserveKey = '';
-		var oldKeyToPurge = '';
-		if ( variables.framework.maxNumContextsPreserved > 1 ) {
-			lock scope="session" type="exclusive" timeout="30" {
-				param name="session.__fw1NextPreserveKey" default="1";
-				nextPreserveKey = session.__fw1NextPreserveKey;
-				session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1;
-			}
-			oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
-		} else {
-			lock scope="session" type="exclusive" timeout="30" {
-				session.__fw1PreserveKey = '';
-				nextPreserveKey = session.__fw1PreserveKey;
-			}
-			oldKeyToPurge = '';
-		}
-		var key = getPreserveKeySessionKey( oldKeyToPurge );
-		if ( structKeyExists( session, key ) ) {
-			structDelete( session, key );
-		}
-		return nextPreserveKey;
-	}
-	
-	private string function getPreserveKeySessionKey( string preserveKey ) {
-		return '__f1' & preserveKey;
-	}
-	
-	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
-		var _service_fw1 = getCachedComponent( 'service', subsystem, section );
-		if ( isDefined( '_service_fw1' ) ) {
-			return _service_fw1;
-		}
-	}
-	
-	private void function injectFramework( any cfc ) {
-		var args = { };
-		if ( structKeyExists( cfc, 'setFramework' ) ) {
-			args.framework = this;
-			// allow alternative spellings
-			args.fw = this;
-			args.fw1 = this;
-			evaluate( 'cfc.setFramework( argumentCollection = args )' );
-		}
-	}
-	
-	private string function internalLayout( string layoutPath, string body ) {
-		var rc = request.context;
-		var $ = { };
-		// integration point with Mura:
-		if ( structKeyExists( rc, '$' ) ) {
-			$ = rc.$;
-		}
-		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
-			raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
-				detail="The layout method should not be called prior to the completion of the controller execution phase." );
-		}
-		var response = '';
-		savecontent variable="response" {
-			include '#layoutPath#';
-		}
-		return response;
-	}
-	
-	private string function internalView( string viewPath, struct args = structNew() ) {
-		var rc = request.context;
-		var $ = { };
-		// integration point with Mura:
-		if ( structKeyExists( rc, '$' ) ) {
-			$ = rc.$;
-		}
-		structAppend( local, args );
-		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
-			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
-				detail="The view method should not be called prior to the completion of the controller execution phase." );
-		}
-		var response = '';
-		savecontent variable="response" {
-			include '#viewPath#';
-		}
-		return response;
-	}
-	
-	private void function raiseException( string type, string message, string detail ) {
-		throw( type = type, message = message, detail = detail );
-	}
-	
-	private void function restoreFlashContext() {
-		if ( variables.framework.maxNumContextsPreserved > 1 ) {
-			if ( !structKeyExists( URL, variables.framework.preserveKeyURLKey ) ) {
-				return;
-			}
-			var preserveKey = URL[ variables.framework.preserveKeyURLKey ];
-			var preserveKeySessionKey = getPreserveKeySessionKey( preserveKey );
-		} else {
-			var preserveKeySessionKey = getPreserveKeySessionKey( '' );
-		}
-		try {
-			if ( structKeyExists( session, preserveKeySessionKey ) ) {
-				structAppend( request.context, session[ preserveKeySessionKey ], false );
-				if ( variables.framework.maxNumContextsPreserved == 1 ) {
-					/*
-						When multiple contexts are preserved, the oldest context is purged
-					 	within getNextPreserveKeyAndPurgeOld once the maximum is reached.
-					 	This allows for a browser refresh after the redirect to still receive
-					 	the same context.
-					*/
-					structDelete( session, preserveKeySessionKey );
-				}
-			}
-		} catch ( any e ) {
-			// session scope not enabled, do nothing
-		}
-	}
-	
-	private string function saveFlashContext( string keys ) {
-		var curPreserveKey = getNextPreserveKeyAndPurgeOld();
-		var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
-		try {
-			param name="session.#preserveKeySessionKey#" default="#structNew()#";
-			if ( keys == 'all' ) {
-				structAppend( session[ preserveKeySessionKey ], request.context );
-			} else {
-				var key = 0;
-				var keyNames = listToArray( keys );
-				for ( key in keyNames ) {
-					if ( structKeyExists( request.context, key ) ) {
-						session[ preserveKeySessionKey ][ key ] = request.context[ key ];
-					}
-				}
-			}
-		} catch ( any ex ) {
-			// session scope not enabled, do nothing
-		}
-		return curPreserveKey;
-	}
-
-	private void function setupSubsystemWrapper( string subsystem ) {
-		if ( !usingSubsystems() ) return;
-		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
-			if ( !isSubsystemInitialized( subsystem ) ) {
-				application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
-				setupSubsystem( subsystem );
-			}
-		}
-	}
-
 }
-
