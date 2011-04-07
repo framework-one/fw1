@@ -1176,10 +1176,55 @@ component {
 		return customizeViewOrLayoutPath( pathInfo, type, '#pathInfo.base##type#s/#pathInfo.path#.cfm' );
 
 	}
+	
+	private struct function processRouteMatch( string route, string target, string path ) {
+		var routeMatch = { matched = false, redirect = false };
+		// if target has numeric prefix, strip it and set redirect:
+		var prefix = listFirst( target, ':' );
+		if ( isNumeric( prefix ) ) {
+			routeMatch.redirect = true;
+			routeMatch.statusCode = prefix;
+			target = listRest( target, ':' );
+		}
+		// add trailing / if not present (to all three):
+		if ( !len( route ) || right( route, 1) != '/' ) route &= '/';
+		if ( !len( target ) || right( target, 1) != '/' ) target &= '/';
+		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
+		// walk for :var and replace with ([^/]*) in route and back reference in target:
+		var n = 1;
+		var placeholders = rematch( ':[^/]+', route );
+		for ( var placeholder in placeholders ) {
+			route = replace( route, placeholder, '([^/]*)' );
+			target = replace( target, placeholder, chr(92) & n );
+			++n;
+		}
+		// add trailing match/back reference:
+		route &= '(.*)';
+		target &= chr(92) & n;
+		if ( reFind( route, path ) ) {
+			routeMatch.matched = true;
+			routeMatch.pattern = route;
+			routeMatch.target = target;
+			routeMatch.path = path;
+		}
+		return routeMatch;
+	}
 
-	private string function processRoutes( string pathInfo ) {
-		// TODO: this is just a hook for now
-		return pathInfo;
+	private string function processRoutes( string path ) {
+		for ( var routePack in variables.framework.routes ) {
+			for ( var route in routePack ) {
+				var routeMatch = processRouteMatch( route, routePack[ route ], path );
+				if ( routeMatch.matched ) {
+					path = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+					if ( routeMatch.redirect ) {
+						location( path, false, routeMatch.statusCode ); 
+					} else {
+						return path;
+					}
+				}
+			}
+		}
+		return path;
 	}
 
 	private void function raiseException( string type, string message, string detail ) {
@@ -1397,7 +1442,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_2';
+		variables.framework.version = '2.0_A_3';
 	}
 
 	private void function setupRequestDefaults() {
