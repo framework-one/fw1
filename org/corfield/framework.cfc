@@ -553,6 +553,7 @@ component {
 			// pathInfo is bogus so ignore it:
 			pathInfo = '';
 		}
+		pathInfo = processRoutes( pathInfo );
 		try {
 			// we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
 			// any system that doesn't support .split() just in case (empty items won't work there!)
@@ -958,6 +959,11 @@ component {
 
 	}
 
+	private string function processRoutes( string pathInfo ) {
+		// TODO: this is just a hook for now
+		return pathInfo;
+	}
+
 	private void function setCfcMethodFailureInfo( any cfc, string method ) {
 		var meta = getMetadata( cfc );
 		if ( structKeyExists( meta, 'fullname' ) ) {
@@ -1116,7 +1122,10 @@ component {
 		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
-		variables.framework.version = '2.0_A_1';
+		if ( !structKeyExists( variables.framework, 'routes' ) ) {
+			variables.framework.routes = [ ];
+		}
+		variables.framework.version = '2.0_A_2';
 	}
 
 	private void function setupRequestDefaults() {
@@ -1356,7 +1365,7 @@ component {
 		}
 		var response = '';
 		savecontent variable="response" {
-			include layoutPath;
+			include '#layoutPath#';
 		}
 		return response;
 	}
@@ -1375,7 +1384,7 @@ component {
 		}
 		var response = '';
 		savecontent variable="response" {
-			include viewPath;
+			include '#viewPath#';
 		}
 		return response;
 	}
