@@ -1149,7 +1149,8 @@ component {
 	}
 
 	private string function validateAction( string action ) {
-		if ( findOneOf( '/\', action ) gt 0 ) {
+		// check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
+		if ( findOneOf( chr(47) & chr(92), action ) gt 0 ) {
 			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
 					detail="Actions are not allowed to embed sub-directory paths.");
 		}
