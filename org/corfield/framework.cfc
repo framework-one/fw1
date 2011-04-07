@@ -1178,7 +1178,8 @@ component {
 	}
 	
 	private struct function processRouteMatch( string route, string target, string path ) {
-		var routeMatch = { matched = false, redirect = false };
+		// TODO: could cache preprocessed versions of route / target / etc
+		var routeMatch = { matched = false, redirect = false, method = '' };
 		// if target has numeric prefix, strip it and set redirect:
 		var prefix = listFirst( target, ':' );
 		if ( isNumeric( prefix ) ) {
@@ -1186,10 +1187,28 @@ component {
 			routeMatch.statusCode = prefix;
 			target = listRest( target, ':' );
 		}
-		// add trailing / if not present (to all three):
-		if ( !len( route ) || right( route, 1) != '/' ) route &= '/';
+		// special routes begin with $METHOD, * is also a wildcard
+		var routeLen = len( route );
+		if ( routeLen ) {
+			if ( left( route, 1 ) == '$' ) {
+				// check HTTP method
+				routeMatch.method = listFirst( route, '*/' );
+				var methodLen = len( routeMatch.method );
+				if ( routeLen == methodLen ) {
+					route = '*';
+				} else {
+					route = right( route, routeLen - methodLen );
+				}
+			}
+			if ( route == '*' ) {
+				route = '/';
+			} else if ( right( route, 1 ) != '/' ) {
+				route &= '/';
+			}
+		} else {
+			route = '/';
+		}
 		if ( !len( target ) || right( target, 1) != '/' ) target &= '/';
-		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
 		// walk for :var and replace with ([^/]*) in route and back reference in target:
 		var n = 1;
 		var placeholders = rematch( ':[^/]+', route );
@@ -1201,7 +1220,10 @@ component {
 		// add trailing match/back reference:
 		route &= '(.*)';
 		target &= chr(92) & n;
-		if ( reFind( route, path ) ) {
+		// end of preprocessing section
+		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
+		var matched = len( routeMatch.method ) ? ( '$' & CGI.REQUEST_METHOD == routeMatch.method ) : true;
+		if ( matched && reFind( route, path ) ) {
 			routeMatch.matched = true;
 			routeMatch.pattern = route;
 			routeMatch.target = target;
@@ -1442,7 +1464,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_3';
+		variables.framework.version = '2.0_A_4';
 	}
 
 	private void function setupRequestDefaults() {
