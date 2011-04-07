@@ -26,7 +26,7 @@ component {
 
 	public boolean function actionSpecifiesSubsystem( string action ) {
 
-		if ( not usingSubsystems() ) {
+		if ( !usingSubsystems() ) {
 			return false;
 		}
 		return listLen( action, variables.framework.subsystemDelimiter ) > 1 ||
@@ -161,7 +161,7 @@ component {
 		tuple.item = item;
 
 		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
-			if ( not structKeyExists( request, 'controllers' ) ) {
+			if ( !structKeyExists( request, 'controllers' ) ) {
 				request.controllers = arrayNew(1);
 			}
 			arrayAppend( request.controllers, tuple );
@@ -227,7 +227,7 @@ component {
 	 */
 	public string function getDefaultSubsystem() {
 
-		if ( not usingSubsystems() ) {
+		if ( !usingSubsystems() ) {
 			return '';
 		}
 
@@ -235,7 +235,7 @@ component {
 			return request.subsystem;
 		}
 
-		if ( variables.framework.defaultSubsystem eq '' ) {
+		if ( variables.framework.defaultSubsystem == '' ) {
 			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
 					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
 		}
@@ -280,7 +280,7 @@ component {
 	public string function getSectionAndItem( string action = request.action ) {
 		var sectionAndItem = '';
 
-		if ( usingSubsystems() and actionSpecifiesSubsystem( action ) ) {
+		if ( usingSubsystems() && actionSpecifiesSubsystem( action ) ) {
 			if ( listLen( action, variables.framework.subsystemDelimiter ) > 1 ) {
 				sectionAndItem = listLast( action, variables.framework.subsystemDelimiter );
 			}
@@ -474,7 +474,7 @@ component {
 			for ( i = 1; i <= n; i = i + 1 ) {
 				tuple = request.controllers[ i ];
 				// run before once per controller:
-				if ( not structKeyExists( once, tuple.key ) ) {
+				if ( !structKeyExists( once, tuple.key ) ) {
 					once[ tuple.key ] = i;
 					doController( tuple.controller, 'before' );
 				}
@@ -485,7 +485,7 @@ component {
 		n = arrayLen( request.services );
 		for ( i = 1; i <= n; i = i + 1 ) {
 			tuple = request.services[i];
-			if ( tuple.key is '' ) {
+			if ( tuple.key == '' ) {
 				// throw the result away:
 				doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
 			} else {
@@ -538,18 +538,18 @@ component {
 		setupFrameworkDefaults();
 		setupRequestDefaults();
 
-		if ( not isFrameworkInitialized() or isFrameworkReloadRequest() ) {
+		if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
 		}
 
-		if ( not structKeyExists(request, 'context') ) {
+		if ( !structKeyExists(request, 'context') ) {
 			request.context = structNew();
 		}
 		// SES URLs by popular request :)
-		if ( len( pathInfo ) gt len( variables.cgiScriptName ) and left( pathInfo, len( variables.cgiScriptName ) ) is variables.cgiScriptName ) {
+		if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
 			// canonicalize for IIS:
 			pathInfo = right( pathInfo, len( pathInfo ) - len( variables.cgiScriptName ) );
-		} else if ( len( pathInfo ) gt 0 and pathInfo is left( variables.cgiScriptName, len( pathInfo ) ) ) {
+		} else if ( len( pathInfo ) > 0 && pathInfo == left( variables.cgiScriptName, len( pathInfo ) ) ) {
 			// pathInfo is bogus so ignore it:
 			pathInfo = '';
 		}
@@ -739,7 +739,7 @@ component {
 		tuple.args = args;
 		tuple.enforceExistence = enforceExistence;
 
-		if ( structKeyExists( tuple, "service" ) and isObject( tuple.service ) ) {
+		if ( structKeyExists( tuple, "service" ) && isObject( tuple.service ) ) {
 			arrayAppend( request.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type="FW1.serviceCfcNotFound", message="Service '#action#' does not exist.",
@@ -847,7 +847,7 @@ component {
 		// view and layout setup - used to be in setupRequestWrapper():
 		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'view' );
-		if ( not cachedFileExists( expandPath( request.view ) ) ) {
+		if ( !cachedFileExists( expandPath( request.view ) ) ) {
 			request.missingView = request.view;
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
@@ -867,7 +867,7 @@ component {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
-		if ( request.section is not 'default' ) {
+		if ( request.section != 'default' ) {
 			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( expandPath( testLayout ) ) ) {
@@ -875,7 +875,7 @@ component {
 			}
 		}
 		// look for site-wide layout (only applicable if using subsystems)
-		if ( usingSubsystems() and siteWideLayoutBase is not subsystembase ) {
+		if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( expandPath( testLayout ) ) ) {
@@ -888,11 +888,11 @@ component {
 
 		var framework = application[variables.framework.applicationKey];
 
-		if ( not structKeyExists(framework, 'subsystemFactories') ) {
+		if ( !structKeyExists(framework, 'subsystemFactories') ) {
 			framework.subsystemFactories = structNew();
 		}
 
-		if ( not structKeyExists(framework, 'subsystems') ) {
+		if ( !structKeyExists(framework, 'subsystems') ) {
 			framework.subsystems = structNew();
 		}
 
@@ -903,12 +903,12 @@ component {
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutput( '<h1>Exception in #event#</h1>' );
+		writeOutput( "<h1>Exception in #event#</h1>" );
 		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutput( '<p>The action #request.failedAction# failed.</p>' );
+			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
 		}
-		writeOutput( '<h2>#exception.message#</h2>' );
-		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
+		writeOutput( "<h2>#exception.message#</h2>" );
+		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
 	}
@@ -927,9 +927,9 @@ component {
 	}
 
 	private boolean function isFrameworkReloadRequest() {
-		return ( isDefined('URL') and
-					structKeyExists(URL, variables.framework.reload) and
-					URL[variables.framework.reload] is variables.framework.password ) or
+		return ( isDefined( 'URL' ) &&
+					structKeyExists( URL, variables.framework.reload ) &&
+					URL[ variables.framework.reload ] == variables.framework.password ) ||
 				variables.framework.reloadApplicationOnEveryRequest;
 	}
 
@@ -1020,100 +1020,100 @@ component {
 	private void function setupFrameworkDefaults() {
 
 		// default values for Application::variables.framework structure:
-		if ( not structKeyExists(variables, 'framework') ) {
+		if ( !structKeyExists(variables, 'framework') ) {
 			variables.framework = structNew();
 		}
-		if ( not structKeyExists(variables.framework, 'action') ) {
+		if ( !structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
-		if ( not structKeyExists(variables.framework, 'base') ) {
+		if ( !structKeyExists(variables.framework, 'base') ) {
 			variables.framework.base = getDirectoryFromPath( variables.cgiScriptName );
-		} else if ( right( variables.framework.base, 1 ) is not '/' ) {
+		} else if ( right( variables.framework.base, 1 ) != '/' ) {
 			variables.framework.base = variables.framework.base & '/';
 		}
 		variables.framework.base = replace( variables.framework.base, chr(92), '/', 'all' );
-		if ( not structKeyExists(variables.framework, 'cfcbase') ) {
+		if ( !structKeyExists(variables.framework, 'cfcbase') ) {
 			if ( len( variables.framework.base ) eq 1 ) {
 				variables.framework.cfcbase = '';
 			} else {
 				variables.framework.cfcbase = replace( mid( variables.framework.base, 2, len(variables.framework.base)-2 ), '/', '.', 'all' );
 			}
 		}
-		if ( not structKeyExists(variables.framework, 'usingSubsystems') ) {
+		if ( !structKeyExists(variables.framework, 'usingSubsystems') ) {
 			variables.framework.usingSubsystems = false;
 		}
-		if ( not structKeyExists(variables.framework, 'defaultSubsystem') ) {
+		if ( !structKeyExists(variables.framework, 'defaultSubsystem') ) {
 			variables.framework.defaultSubsystem = 'home';
 		}
-		if ( not structKeyExists(variables.framework, 'defaultSection') ) {
+		if ( !structKeyExists(variables.framework, 'defaultSection') ) {
 			variables.framework.defaultSection = 'main';
 		}
-		if ( not structKeyExists(variables.framework, 'defaultItem') ) {
+		if ( !structKeyExists(variables.framework, 'defaultItem') ) {
 			variables.framework.defaultItem = 'default';
 		}
-		if ( not structKeyExists(variables.framework, 'subsystemDelimiter') ) {
+		if ( !structKeyExists(variables.framework, 'subsystemDelimiter') ) {
 			variables.framework.subsystemDelimiter = ':';
 		}
-		if ( not structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
+		if ( !structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
 			variables.framework.siteWideLayoutSubsystem = 'common';
 		}
-		if ( not structKeyExists(variables.framework, 'home') ) {
+		if ( !structKeyExists(variables.framework, 'home') ) {
 			if (usingSubsystems()) {
 				variables.framework.home = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 			} else {
 				variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 			}
 		}
-		if ( not structKeyExists(variables.framework, 'error') ) {
+		if ( !structKeyExists(variables.framework, 'error') ) {
 			if (usingSubsystems()) {
 				variables.framework.error = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.error';
 			} else {
 				variables.framework.error = variables.framework.defaultSection & '.error';
 			}
 		}
-		if ( not structKeyExists(variables.framework, 'reload') ) {
+		if ( !structKeyExists(variables.framework, 'reload') ) {
 			variables.framework.reload = 'reload';
 		}
-		if ( not structKeyExists(variables.framework, 'password') ) {
+		if ( !structKeyExists(variables.framework, 'password') ) {
 			variables.framework.password = 'true';
 		}
-		if ( not structKeyExists(variables.framework, 'reloadApplicationOnEveryRequest') ) {
+		if ( !structKeyExists(variables.framework, 'reloadApplicationOnEveryRequest') ) {
 			variables.framework.reloadApplicationOnEveryRequest = false;
 		}
-		if ( not structKeyExists(variables.framework, 'preserveKeyURLKey') ) {
+		if ( !structKeyExists(variables.framework, 'preserveKeyURLKey') ) {
 			variables.framework.preserveKeyURLKey = 'fw1pk';
 		}
-		if ( not structKeyExists(variables.framework, 'maxNumContextsPreserved') ) {
+		if ( !structKeyExists(variables.framework, 'maxNumContextsPreserved') ) {
 			variables.framework.maxNumContextsPreserved = 10;
 		}
-		if ( not structKeyExists(variables.framework, 'baseURL') ) {
+		if ( !structKeyExists(variables.framework, 'baseURL') ) {
 			variables.framework.baseURL = 'useCgiScriptName';
 		}
-		if ( not structKeyExists(variables.framework, 'generateSES') ) {
+		if ( !structKeyExists(variables.framework, 'generateSES') ) {
 			variables.framework.generateSES = false;
 		}
-		if ( not structKeyExists(variables.framework, 'SESOmitIndex') ) {
+		if ( !structKeyExists(variables.framework, 'SESOmitIndex') ) {
 			variables.framework.SESOmitIndex = false;
 		}
 		// NOTE: unhandledExtensions is a list of file extensions that are not handled by FW/1
-		if ( not structKeyExists(variables.framework, 'unhandledExtensions') ) {
+		if ( !structKeyExists(variables.framework, 'unhandledExtensions') ) {
 			variables.framework.unhandledExtensions = 'cfc';
 		}
 		// NOTE: you can provide a comma delimited list of paths.  Since comma is the delim, it can not be part of your path URL to exclude
-		if ( not structKeyExists(variables.framework, 'unhandledPaths') ) {
+		if ( !structKeyExists(variables.framework, 'unhandledPaths') ) {
 			variables.framework.unhandledPaths = '/flex2gateway';
 		}				
 		// convert unhandledPaths to regex:
 		variables.framework.unhandledPathRegex = replaceNoCase(
 			REReplace( variables.framework.unhandledPaths, '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)', '\\\1', 'all' ),
 			',', '|', 'all' );
-		if ( not structKeyExists(variables.framework, 'applicationKey') ) {
+		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'org.corfield.framework';
 		}
-		if ( not structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
+		if ( !structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = true;
 		}
-		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
+		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
 		variables.framework.version = '2.0_A_1';
@@ -1150,7 +1150,7 @@ component {
 
 	private string function validateAction( string action ) {
 		// check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
-		if ( findOneOf( chr(47) & chr(92), action ) gt 0 ) {
+		if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
 			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
 					detail="Actions are not allowed to embed sub-directory paths.");
 		}
@@ -1243,7 +1243,7 @@ component {
 		if ( !structKeyExists( cache[ types ], componentKey ) ) {
 			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
 
-				if ( not structKeyExists( cache[ types ], componentKey ) ) {
+				if ( !structKeyExists( cache[ types ], componentKey ) ) {
 
 					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
 
