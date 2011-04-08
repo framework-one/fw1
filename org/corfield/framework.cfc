@@ -149,7 +149,7 @@ component {
 		var subsystem = getSubsystem( action );
 		var section = getSection( action );
 		var item = getItem( action );
-		var tuple = structNew();
+		var tuple = { };
 
 		if ( structKeyExists( request, 'controllerExecutionStarted' ) ) {
 			raiseException( type="FW1.controllerExecutionStarted", message="Controller '#action#' may not be added at this point.",
@@ -465,7 +465,7 @@ component {
 		var i = 0;
 		var tuple = 0;
 		var _data_fw1 = 0;
-		var once = structNew();
+		var once = { };
 		var n = 0;
 
 		request.controllerExecutionStarted = true;
@@ -543,7 +543,7 @@ component {
 		}
 
 		if ( !structKeyExists(request, 'context') ) {
-			request.context = structNew();
+			request.context = { };
 		}
 		// SES URLs by popular request :)
 		if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
@@ -727,7 +727,7 @@ component {
 		var subsystem = getSubsystem( action );
 		var section = getSection( action );
 		var item = getItem( action );
-		var tuple = structNew();
+		var tuple = { };
 
 		if ( structKeyExists( request, "serviceExecutionComplete" ) ) {
 			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
@@ -904,7 +904,7 @@ component {
 		if ( !variables.framework.cacheFileExists ) {
 			return fileExists( filePath );
 		}
-		param name="cache.fileExists" default="#structNew()#";
+		param name="cache.fileExists" default="#{ }#";
 		if ( !structKeyExists( cache.fileExists, filePath ) ) {
 			cache.fileExists[ filePath ] = fileExists( filePath );
 		}
@@ -957,11 +957,11 @@ component {
 		var framework = application[variables.framework.applicationKey];
 
 		if ( !structKeyExists(framework, 'subsystemFactories') ) {
-			framework.subsystemFactories = structNew();
+			framework.subsystemFactories = { };
 		}
 
 		if ( !structKeyExists(framework, 'subsystems') ) {
-			framework.subsystems = structNew();
+			framework.subsystems = { };
 		}
 
 	}
@@ -1122,7 +1122,7 @@ component {
 		return response;
 	}
 	
-	private string function internalView( string viewPath, struct args = structNew() ) {
+	private string function internalView( string viewPath, struct args = { } ) {
 		var rc = request.context;
 		var $ = { };
 		// integration point with Mura:
@@ -1162,7 +1162,7 @@ component {
 
 	private string function parseViewOrLayoutPath( string path, string type ) {
 
-		var pathInfo = StructNew();
+		var pathInfo = { };
 		var subsystem = getSubsystem( path );
 
 		// allow for :section/action to simplify logic in setupRequestWrapper():
@@ -1285,7 +1285,7 @@ component {
 		var curPreserveKey = getNextPreserveKeyAndPurgeOld();
 		var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
 		try {
-			param name="session.#preserveKeySessionKey#" default="#structNew()#";
+			param name="session.#preserveKeySessionKey#" default="#{ }#";
 			if ( keys == 'all' ) {
 				structAppend( session[ preserveKeySessionKey ], request.context );
 			} else {
@@ -1320,24 +1320,24 @@ component {
 			data struct... if the application is already running, we don't blow away the factories
 			because we don't want to affect other threads that may be running at this time
 		*/
-		var frameworkCache = structNew();
-		var framework = structNew();
+		var frameworkCache = { };
+		var framework = { };
 		var isReload = true;
 		frameworkCache.lastReload = now();
-		frameworkCache.fileExists = structNew();
-		frameworkCache.controllers = structNew();
-		frameworkCache.services = structNew();
+		frameworkCache.fileExists = { };
+		frameworkCache.controllers = { };
+		frameworkCache.services = { };
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10" {
 			if ( structKeyExists( application, variables.framework.applicationKey ) ) {
 				// application is already loaded, just reset the cache and trigger re-initialization of subsystems
 				application[variables.framework.applicationKey].cache = frameworkCache;
-				application[variables.framework.applicationKey].subsystems = structNew();
+				application[variables.framework.applicationKey].subsystems = { };
 			} else {
 				// must be first request so we need to set up the entire structure
 				isReload = false;
 				framework.cache = frameworkCache;
-				framework.subsystems = structNew();
-				framework.subsystemFactories = structNew(); 
+				framework.subsystems = { };
+				framework.subsystemFactories = { }; 
 				application[variables.framework.applicationKey] = framework;
 			}
 		}
@@ -1351,13 +1351,13 @@ component {
 				and the factory getting recreated by the user code in setupApplication() so we flush the cache
 				again here to be safe / paranoid! 
 			*/
-			frameworkCache = structNew();
+			frameworkCache = { };
 			frameworkCache.lastReload = now();
-			frameworkCache.fileExists = structNew();
-			frameworkCache.controllers = structNew();
-			frameworkCache.services = structNew();
+			frameworkCache.fileExists = { };
+			frameworkCache.controllers = { };
+			frameworkCache.services = { };
 			application[variables.framework.applicationKey].cache = frameworkCache;
-			application[variables.framework.applicationKey].subsystems = structNew();
+			application[variables.framework.applicationKey].subsystems = { };
 		}
 	
 	}
@@ -1366,7 +1366,7 @@ component {
 
 		// default values for Application::variables.framework structure:
 		if ( !structKeyExists(variables, 'framework') ) {
-			variables.framework = structNew();
+			variables.framework = { };
 		}
 		if ( !structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
@@ -1464,7 +1464,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_4';
+		variables.framework.version = '2.0_A_5';
 	}
 
 	private void function setupRequestDefaults() {
@@ -1488,7 +1488,7 @@ component {
 
 		controller( request.action );
 		if ( !variables.framework.suppressImplicitService ) {
-			service( request.action, getServiceKey( request.action ), structNew(), false );
+			service( request.action, getServiceKey( request.action ), { }, false );
 		}
 	}
 
