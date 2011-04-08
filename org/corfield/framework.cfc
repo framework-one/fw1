@@ -162,7 +162,7 @@ component {
 
 		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
 			if ( !structKeyExists( request, 'controllers' ) ) {
-				request.controllers = arrayNew(1);
+				request.controllers = [ ];
 			}
 			arrayAppend( request.controllers, tuple );
 		}
@@ -868,7 +868,7 @@ component {
 			structDelete( request, 'view' );
 		}
 
-		request.layouts = arrayNew(1);
+		request.layouts = [ ];
 		// look for item-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
@@ -1478,7 +1478,7 @@ component {
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
 		request.section = getSection( request.action );
 		request.item = getItem( request.action );
-		request.services = arrayNew(1);
+		request.services = [ ];
 		
 		if ( runSetup ) {
 			rc = request.context;
