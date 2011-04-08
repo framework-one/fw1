@@ -1,11 +1,12 @@
-<cfcomponent><cfscript>
+component {
 	
-	function init( fw ) {
+	public any function init( any fw ) {
 		variables.fw = fw;
+		return this;
 	}
 	
-	function default() {
+	public void function default( struct rc ) {
 		variables.fw.setView( 'normal.index' );
 	}
 	
-</cfscript></cfcomponent>
+}
