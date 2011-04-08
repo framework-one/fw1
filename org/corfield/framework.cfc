@@ -32,8 +32,23 @@ component {
 		return listLen( action, variables.framework.subsystemDelimiter ) > 1 ||
 			right( action, 1 ) == variables.framework.subsystemDelimiter;
 	}
-
-
+	
+	public void function addRoute( any routes, string target, any methods = [ ], string statusCode = '' ) {
+		if ( !isArray( routes ) ) routes = [ routes ];
+		if ( !isArray( methods ) ) methods = [ methods ];
+		param name="variables.framework.routes" default="#[ ]#"; 
+		if ( len( statusCode ) ) target = statusCode & ':' & target;
+		for ( var route in routes ) {
+			if ( arrayLen( methods ) ) {
+				for ( var method in methods ) {
+					arrayAppend( variables.framework.routes, { '$#method##route#' = target } );
+				}
+			} else {
+				arrayAppend( variables.framework.routes, { '#route#' = target } );
+			}
+		}
+	}
+	
 	/*
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future
