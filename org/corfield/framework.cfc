@@ -918,6 +918,7 @@
 			subsystem = getSubsystem( request.overrideViewAction );
 			section = getSection( request.overrideViewAction );
 			item = getItem( request.overrideViewAction );
+			structDelete( request, 'overrideViewAction' );
 		}
 		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
 
