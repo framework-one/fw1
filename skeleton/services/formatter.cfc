@@ -1,8 +1,7 @@
-<cfcomponent output="false" hint="Example non-default service.">
+component {
 	
-	<cffunction name="longdate" output="false">
-		<cfargument name="when" hint="Named argument passed implicitly via RC from controller or user." />
-		<cfreturn dateFormat( arguments.when, 'long' ) />
-	</cffunction>
+	public string function longdate( any when ) {
+		return dateFormat( when, 'long' );
+	}
 	
-</cfcomponent>
+}

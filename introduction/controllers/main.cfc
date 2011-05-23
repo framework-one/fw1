@@ -1,14 +1,7 @@
-<cfcomponent output="false">
+component {
 
-	<cffunction name="default" output="false">
-		<cfargument name="rc" type="struct" />
-		
-		<cfset var files = 0 />
-		
-		<cfdirectory action="list" directory="#expandPath(request.base)#../examples/" name="files" />
-		
-		<cfset rc.files = files />
-		
-	</cffunction>
+	public void function default( struct rc ) {
+		rc.files = directoryList( expandPath(request.base) & "../examples/", false, "query" );
+	}
 
-</cfcomponent>
+}

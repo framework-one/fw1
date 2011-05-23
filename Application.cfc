@@ -1,15 +1,11 @@
-<cfcomponent extends="org.corfield.framework"><cfscript>
+component extends="org.corfield.framework" {
+	
 	// Either put the org folder in your webroot or create a mapping for it!
 	
-	this.name = 'fw1-root';
-	// FW/1 - configuration:
-	variables.framework = structNew();
+	// FW/1 - configuration for introduction application:
 	// controllers/layouts/services/views are in this folder (allowing for non-empty context root):
-	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' ) & 'introduction';
-	
-	// If your CFML engine supports it, you can create the framework struct like this:
-	// variables.framework = {
-	// 		base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction'
-	// }
+	variables.framework = {
+		base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' ) & 'introduction'
+	};
 
-</cfscript></cfcomponent>
+}
