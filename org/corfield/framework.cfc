@@ -775,6 +775,13 @@ component {
 	}
 
 	/*
+	 * use this to override the default layout
+	 */
+	public void function setLayout( string action ) {
+		request.overrideLayoutAction = validateAction( action );
+	}
+	
+	/*
 	 * call this from your setupSubsystem() method to tell the framework
 	 * about your subsystem-specific bean factory - only assumption is that it supports:
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
@@ -885,6 +892,16 @@ component {
 		}
 
 		request.layouts = [ ];
+		
+		// has layout been overridden?
+		if ( structKeyExists( request, 'overrideLayoutAction' ) ) {
+			subsystem = getSubsystem( request.overrideLayoutAction );
+			section = getSection( request.overrideLayoutAction );
+			item = getItem( request.overrideLayoutAction );
+			structDelete( request, 'overrideLayoutAction' );
+		}
+		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
+
 		// look for item-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
