@@ -23,6 +23,7 @@ component {
 		variables.cgiScriptName = CGI.SCRIPT_NAME;
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
+	request._fw1 = { };
 
 	public boolean function actionSpecifiesSubsystem( string action ) {
 
@@ -278,6 +279,22 @@ component {
 	 */
 	public string function getItem( string action = request.action ) {
 		return listLast( getSectionAndItem( action ), '.' );
+	}
+	
+	
+	/*
+	 * return the current route (if any)
+	 */
+	public string function getRoute() {
+		return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
+	}
+	
+	
+	/*
+	 * return the configured routes
+	 */
+	public array function getRoutes() {
+		return variables.framework.routes;
 	}
 	
 	
@@ -1268,13 +1285,16 @@ component {
 	private string function processRoutes( string path ) {
 		for ( var routePack in variables.framework.routes ) {
 			for ( var route in routePack ) {
-				var routeMatch = processRouteMatch( route, routePack[ route ], path );
-				if ( routeMatch.matched ) {
-					path = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
-					if ( routeMatch.redirect ) {
-						location( path, false, routeMatch.statusCode ); 
-					} else {
-						return path;
+				if ( route != 'hint' ) {
+					var routeMatch = processRouteMatch( route, routePack[ route ], path );
+					if ( routeMatch.matched ) {
+						path = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+						if ( routeMatch.redirect ) {
+							location( path, false, routeMatch.statusCode ); 
+						} else {
+							request._fw1.route = route;
+							return path;
+						}
 					}
 				}
 			}
@@ -1497,7 +1517,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_6';
+		variables.framework.version = '2.0_A_7';
 	}
 
 	private void function setupRequestDefaults() {
