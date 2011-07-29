@@ -24,6 +24,11 @@ component {
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
 	request._fw1 = { };
+	
+	public void function abortController() {
+		request._fw1.abortController = true;
+		throw( type="FW1.AbortControllerException", message="abortController() called" );
+	}
 
 	public boolean function actionSpecifiesSubsystem( string action ) {
 
@@ -501,43 +506,53 @@ component {
 		var n = 0;
 
 		request.controllerExecutionStarted = true;
-		if ( structKeyExists( request, 'controllers' ) ) {
-			n = arrayLen( request.controllers );
+		try {
+			if ( structKeyExists( request, 'controllers' ) ) {
+				n = arrayLen( request.controllers );
+				for ( i = 1; i <= n; i = i + 1 ) {
+					tuple = request.controllers[ i ];
+					// run before once per controller:
+					if ( !structKeyExists( once, tuple.key ) ) {
+						once[ tuple.key ] = i;
+						doController( tuple.controller, 'before' );
+						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					}
+					doController( tuple.controller, 'start' & tuple.item );
+					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					doController( tuple.controller, tuple.item );
+					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+				}
+			}
+			n = arrayLen( request.services );
 			for ( i = 1; i <= n; i = i + 1 ) {
-				tuple = request.controllers[ i ];
-				// run before once per controller:
-				if ( !structKeyExists( once, tuple.key ) ) {
-					once[ tuple.key ] = i;
-					doController( tuple.controller, 'before' );
-				}
-				doController( tuple.controller, 'start' & tuple.item );
-				doController( tuple.controller, tuple.item );
-			}
-		}
-		n = arrayLen( request.services );
-		for ( i = 1; i <= n; i = i + 1 ) {
-			tuple = request.services[i];
-			if ( tuple.key == '' ) {
-				// throw the result away:
-				doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-			} else {
-				_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-				if ( isDefined('_data_fw1') ) {
-					request.context[ tuple.key ] = _data_fw1;
+				tuple = request.services[i];
+				if ( tuple.key == '' ) {
+					// throw the result away:
+					doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
+					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+				} else {
+					_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
+					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( isDefined('_data_fw1') ) {
+						request.context[ tuple.key ] = _data_fw1;
+					}
 				}
 			}
-		}
-		request.serviceExecutionComplete = true;
-		if ( structKeyExists( request, 'controllers' ) ) {
-			n = arrayLen( request.controllers );
-			for ( i = n; i >= 1; i = i - 1 ) {
-				tuple = request.controllers[ i ];
-				doController( tuple.controller, 'end' & tuple.item );
-				// run after once per controller:
-				if ( once[ tuple.key ] eq i ) {
-					doController( tuple.controller, 'after' );
+			request.serviceExecutionComplete = true;
+			if ( structKeyExists( request, 'controllers' ) ) {
+				n = arrayLen( request.controllers );
+				for ( i = n; i >= 1; i = i - 1 ) {
+					tuple = request.controllers[ i ];
+					doController( tuple.controller, 'end' & tuple.item );
+					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( once[ tuple.key ] eq i ) {
+						doController( tuple.controller, 'after' );
+						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					}
 				}
 			}
+		} catch ( FW1.AbortControllerException e ) {
+			request.serviceExecutionComplete = true;
 		}
 		request.controllerExecutionComplete = true;
 
@@ -1526,7 +1541,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_8';
+		variables.framework.version = '2.0_A_9';
 	}
 
 	private void function setupRequestDefaults() {
