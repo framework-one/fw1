@@ -543,6 +543,8 @@ component {
 
 		buildViewAndLayoutQueue();
 
+		setupView();
+
 		if ( structKeyExists(request, 'view') ) {
 			out = internalView( request.view );
 		} else {
@@ -841,6 +843,13 @@ component {
 	 * you do not need to call super.setupSubsystem( subsystem )
 	 */
 	public void function setupSubsystem( string subsystem ) { }
+	
+	/*
+	 * override this to provide pre-rendering logic, e.g., to
+	 * populate the request context with globally required data
+	 * you do not need to call super.setupView()
+	 */
+	public void function setupView() { }
 	
 	/*
 	 * use this to override the default view
@@ -1517,7 +1526,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_7';
+		variables.framework.version = '2.0_A_8';
 	}
 
 	private void function setupRequestDefaults() {
