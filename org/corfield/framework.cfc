@@ -892,15 +892,13 @@ component {
 	// THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE
 	
 	private void function autowire( any cfc, any beanFactory ) {
-		for ( var key in cfc ) {
-			if ( len( key ) > 3 && left( key, 3 ) == 'set' ) {
-				var property = right( key, len( key ) - 3 );
-				if ( beanFactory.containsBean( property ) ) {
-					var args = { };
-					args[ property ] = beanFactory.getBean( property );
-					// cfc[key](argumentCollection = args) does not work on ACF9
-					evaluate( 'cfc.#key#( argumentCollection = args )' );
-				}
+		var setters = findImplicitAndExplicitSetters( cfc );
+		for ( var property in setters.__fw1_setters ) {
+			if ( beanFactory.containsBean( property ) ) {
+				var args = { };
+				args[ property ] = beanFactory.getBean( property );
+				// cfc['set'&property](argumentCollection = args) does not work on ACF9
+				evaluate( 'cfc.set#property#( argumentCollection = args )' );
 			}
 		}
 	}
@@ -1055,7 +1053,42 @@ component {
 
 	}
 
+	private struct function findImplicitAndExplicitSetters( any cfc ) {
+		var baseMetadata = getMetadata( cfc );
+		// is it already attached to the CFC metadata?
+		if ( structKeyExists( baseMetadata, '__fw1_setters' ) ) return baseMetadata;
+		var setters = { __fw1_setters = [ ] };
+		var md = { extends = baseMetadata };
+		do {
+			md = md.extends;
+			var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
+			if ( structKeyExists( md, 'properties' ) ) {
+				for ( var property in md.properties ) {
+					if ( implicitSetters ||
+							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+						arrayAppend( setters.__fw1_setters, property.name );
+					}
+				}
+			}
+		} while ( structKeyExists( md, 'extends' ) );
+		// gather up explicit setters as well
+		for ( var member in cfc ) {
+			var method = cfc[ member ];
+			var n = len( member );
+			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
+				var property = right( member, n - 3 );
+				arrayAppend( setters.__fw1_setters, property );
+			}
+		}
+		// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
+		// which is why we return the local setters structure - it has to be built
+		// on every controller call; fixed in Railo 3.3)
+		baseMetadata.__fw1_setters = setters;
+		return setters;
+	}
+
 	private any function getCachedComponent( string type, string subsystem, string section ) {
+
 		setupSubsystemWrapper( subsystem );
 		var cache = application[variables.framework.applicationKey].cache;
 		var types = type & 's';
@@ -1098,7 +1131,7 @@ component {
 						}
 
 						if ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) {
-								autowire( cfc, getBeanFactory( subsystem ) );
+							autowire( cfc, getBeanFactory( subsystem ) );
 						}
 					}
 
@@ -1166,7 +1199,7 @@ component {
 
 		return subsystem & '/';
 	}
-
+	
 	private void function injectFramework( any cfc ) {
 		var args = { };
 		if ( structKeyExists( cfc, 'setFramework' ) ) {
