@@ -1,0 +1,1 @@
+<cfoutput><p>Captured Output</p></cfoutput>
