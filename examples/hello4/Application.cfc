@@ -1,1 +1,8 @@
-<cfcomponent extends="org.corfield.framework"></cfcomponent>
+component extends="org.corfield.framework" {
+	
+	function setupApplication() {
+		var bf = new BF();
+		setBeanFactory( bf );
+	}
+	
+}
