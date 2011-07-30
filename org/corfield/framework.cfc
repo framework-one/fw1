@@ -1237,9 +1237,9 @@ component {
 			$ = rc.$;
 		}
 		structAppend( local, args );
-		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
+		if ( !structKeyExists( request, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
 			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
-				detail="The view method should not be called prior to the completion of the controller execution phase." );
+				detail="The view method should not be called prior to the completion of the service execution phase." );
 		}
 		var response = '';
 		savecontent variable="response" {
@@ -1574,7 +1574,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_10';
+		variables.framework.version = '2.0_A_11';
 	}
 
 	private void function setupRequestDefaults() {
