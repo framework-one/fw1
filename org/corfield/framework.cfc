@@ -674,43 +674,40 @@ component {
 			if ( trustKeys ) {
 				// assume everything in the request context can be set into the CFC
 				for ( var property in request.context ) {
-					var key = 'set' & property;
 					try {
 						var args = { };
 						args[ property ] = request.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-						// cfc[ key ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-						evaluate( 'cfc.#key#( argumentCollection = args )' );
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
+						evaluate( 'cfc.set#property#( argumentCollection = args )' );
 					} catch ( any e ) {
 						onPopulateError( cfc, property, request.context );
 					}
 				}
 			} else {
-				for ( var key in cfc ) {
-					if ( len( key ) > 3 && left( key, 3 ) == 'set' ) {
-						var property = right( key, len( key ) - 3 );
-						if ( structKeyExists( request.context, property ) ) {
-							var args = { };
-							args[ property ] = request.context[ property ];
-							if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-							// cfc[ key ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-							evaluate( 'cfc.#key#( argumentCollection = args )' );
-						}
+				var setters = findImplicitAndExplicitSetters( cfc );
+				for ( var property in setters.__fw1_setters ) {
+					if ( structKeyExists( request.context, property ) ) {
+						var args = { };
+						args[ property ] = request.context[ property ];
+						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
+						evaluate( 'cfc.set#property#( argumentCollection = args )' );
 					}
 				}
 			}
 		} else {
+			var setters = findImplicitAndExplicitSetters( cfc );
 			var keyArray = listToArray( keys );
 			for ( var property in keyArray ) {
 				var trimProperty = trim( property );
-				var key = 'set' & trimProperty;
-				if ( structKeyExists( cfc, key ) || trustKeys ) {
+				if ( structKeyExists( setters.__fw1_setters, trimProperty ) || trustKeys ) {
 					if ( structKeyExists( request.context, trimProperty ) ) {
 						var args = { };
-						args[ property ] = request.context[ property ];
-						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-						// cfc[ key ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-						evaluate( 'cfc.#key#( argumentCollection = args )' );
+						args[ trimProperty ] = request.context[ trimProperty ];
+						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
+						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
+						evaluate( 'cfc.set#trimProperty#( argumentCollection = args )' );
 					}
 				}
 			}
@@ -1574,7 +1571,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_11';
+		variables.framework.version = '2.0_A_12';
 	}
 
 	private void function setupRequestDefaults() {
