@@ -1060,7 +1060,11 @@ component {
 			md = md.extends;
 			var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
 			if ( structKeyExists( md, 'properties' ) ) {
-				for ( var property in md.properties ) {
+				// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
+				// instead we must use an explicit loop index... ugh!
+				var n = arrayLen( md.properties );
+				for ( var i = 1; i <= n; ++i ) {
+					var property = md.properties[ i ];
 					if ( implicitSetters ||
 							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
 						arrayAppend( setters.__fw1_setters, property.name );
@@ -1571,7 +1575,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_12';
+		variables.framework.version = '2.0_A_13';
 	}
 
 	private void function setupRequestDefaults() {
