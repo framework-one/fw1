@@ -1573,7 +1573,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_A_13';
+		variables.framework.version = '2.0_Alpha';
 	}
 
 	private void function setupRequestDefaults() {
