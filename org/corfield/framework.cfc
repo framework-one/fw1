@@ -24,6 +24,9 @@ component {
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
 	request._fw1 = { };
+	// do not rely on these, they are meant to be true magic...
+	variables.magicApplicationController = '[]';
+	variables.magicApplicationAction = '__';
 	
 	public void function abortController() {
 		request._fw1.abortController = true;
@@ -1102,45 +1105,40 @@ component {
 		
 		if ( !structKeyExists( cache[ types ], componentKey ) ) {
 			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
-
 				if ( !structKeyExists( cache[ types ], componentKey ) ) {
-
 					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
-
 						cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
 						if ( type == 'controller' ) injectFramework( cfc );
-
 					} else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
-
 						cfc = getDefaultBeanFactory().getBean( beanName );
 						if ( type == 'controller' ) injectFramework( cfc );
-
-					} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
-
-						// we call createObject() rather than new so we can control initialization:
-						if ( request.cfcbase == '' ) {
-							cfc = createObject( 'component', subsystemDot & types & '.' & section );
-						} else {
-							cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
-						}
-						if ( structKeyExists( cfc, 'init' ) ) {
-							if ( type == 'controller' ) {
-								cfc.init( this );
+					} else {
+						if ( type == 'controller' && section == variables.magicApplicationController ) {
+							// treat this (Application.cfc) as a controller:
+							cfc = this;
+						} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
+							// we call createObject() rather than new so we can control initialization:
+							if ( request.cfcbase == '' ) {
+								cfc = createObject( 'component', subsystemDot & types & '.' & section );
 							} else {
-								cfc.init();
+								cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
+							}
+							if ( structKeyExists( cfc, 'init' ) ) {
+								if ( type == 'controller' ) {
+									cfc.init( this );
+								} else {
+									cfc.init();
+								}
 							}
 						}
-
-						if ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) {
+						if ( isObject( cfc ) && ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) ) {
 							autowire( cfc, getBeanFactory( subsystem ) );
 						}
 					}
-
 					if ( isObject( cfc ) ) {
 						cache[ types ][ componentKey ] = cfc;
 					}
 				}
-
 			}
 		}
 
@@ -1593,6 +1591,7 @@ component {
 		
 		if ( runSetup ) {
 			rc = request.context;
+			controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
 			setupSubsystemWrapper( request.subsystem );
 			setupRequest();
 		}
