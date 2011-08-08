@@ -1058,7 +1058,7 @@ component {
 		var setters = { };
 		// is it already attached to the CFC metadata?
 		if ( structKeyExists( baseMetadata, '__fw1_setters' ) )  {
-			setters.__fw1_setters = baseMetadata.__fw1_setters;
+			setters = baseMetadata.__fw1_setters;
 		} else {
 			setters.__fw1_setters = [ ];
 			var md = { extends = baseMetadata };
