@@ -1055,26 +1055,34 @@ component {
 
 	private struct function findImplicitAndExplicitSetters( any cfc ) {
 		var baseMetadata = getMetadata( cfc );
+		var setters = { };
 		// is it already attached to the CFC metadata?
-		if ( structKeyExists( baseMetadata, '__fw1_setters' ) ) return baseMetadata.__fw1_setters;
-		var setters = { __fw1_setters = [ ] };
-		var md = { extends = baseMetadata };
-		do {
-			md = md.extends;
-			var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
-			if ( structKeyExists( md, 'properties' ) ) {
-				// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
-				// instead we must use an explicit loop index... ugh!
-				var n = arrayLen( md.properties );
-				for ( var i = 1; i <= n; ++i ) {
-					var property = md.properties[ i ];
-					if ( implicitSetters ||
-							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
-						arrayAppend( setters.__fw1_setters, property.name );
+		if ( structKeyExists( baseMetadata, '__fw1_setters' ) )  {
+			setters.__fw1_setters = baseMetadata.__fw1_setters;
+		} else {
+			setters.__fw1_setters = [ ];
+			var md = { extends = baseMetadata };
+			do {
+				md = md.extends;
+				var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
+				if ( structKeyExists( md, 'properties' ) ) {
+					// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
+					// instead we must use an explicit loop index... ugh!
+					var n = arrayLen( md.properties );
+					for ( var i = 1; i <= n; ++i ) {
+						var property = md.properties[ i ];
+						if ( implicitSetters ||
+								structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+							arrayAppend( setters.__fw1_setters, property.name );
+						}
 					}
 				}
-			}
-		} while ( structKeyExists( md, 'extends' ) );
+			} while ( structKeyExists( md, 'extends' ) );
+			// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
+			// which is why we return the local setters structure - it has to be built
+			// on every controller call; fixed in Railo 3.3)
+			baseMetadata.__fw1_setters = setters;
+		}
 		// gather up explicit setters as well
 		for ( var member in cfc ) {
 			var method = cfc[ member ];
@@ -1084,10 +1092,6 @@ component {
 				arrayAppend( setters.__fw1_setters, property );
 			}
 		}
-		// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
-		// which is why we return the local setters structure - it has to be built
-		// on every controller call; fixed in Railo 3.3)
-		baseMetadata.__fw1_setters = setters;
 		return setters;
 	}
 
@@ -1573,7 +1577,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_1';
+		variables.framework.version = '2.0_Alpha_2';
 	}
 
 	private void function setupRequestDefaults() {
