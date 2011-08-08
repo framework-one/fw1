@@ -1078,20 +1078,21 @@ component {
 					}
 				}
 			} while ( structKeyExists( md, 'extends' ) );
-			// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
-			// which is why we return the local setters structure - it has to be built
-			// on every controller call; fixed in Railo 3.3)
-			baseMetadata.__fw1_setters = setters;
-		}
-		// gather up explicit setters as well
-		for ( var member in cfc ) {
-			var method = cfc[ member ];
-			var n = len( member );
-			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
-				var property = right( member, n - 3 );
-				arrayAppend( setters.__fw1_setters, property );
+			// gather up explicit setters as well
+			for ( var member in cfc ) {
+				var method = cfc[ member ];
+				var n = len( member );
+				if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
+					var property = right( member, n - 3 );
+					arrayAppend( setters.__fw1_setters, property );
+				}
 			}
 		}
+		// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified
+		// which is why we return the local setters structure - it has to be built
+		// on every controller call; fixed in Railo 3.3)
+		baseMetadata.__fw1_setters = setters.__fw1_setters;
+		
 		return setters;
 	}
 
