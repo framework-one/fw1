@@ -1056,7 +1056,7 @@ component {
 	private struct function findImplicitAndExplicitSetters( any cfc ) {
 		var baseMetadata = getMetadata( cfc );
 		// is it already attached to the CFC metadata?
-		if ( structKeyExists( baseMetadata, '__fw1_setters' ) ) return baseMetadata;
+		if ( structKeyExists( baseMetadata, '__fw1_setters' ) ) return baseMetadata.__fw1_setters;
 		var setters = { __fw1_setters = [ ] };
 		var md = { extends = baseMetadata };
 		do {
@@ -1573,7 +1573,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha';
+		variables.framework.version = '2.0_Alpha_1';
 	}
 
 	private void function setupRequestDefaults() {
