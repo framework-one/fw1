@@ -689,7 +689,7 @@ component {
 				}
 			} else {
 				var setters = findImplicitAndExplicitSetters( cfc );
-				for ( var property in setters.__fw1_setters ) {
+				for ( var property in setters ) {
 					if ( structKeyExists( request.context, property ) ) {
 						var args = { };
 						args[ property ] = request.context[ property ];
@@ -704,7 +704,7 @@ component {
 			var keyArray = listToArray( keys );
 			for ( var property in keyArray ) {
 				var trimProperty = trim( property );
-				if ( structKeyExists( setters.__fw1_setters, trimProperty ) || trustKeys ) {
+				if ( structKeyExists( setters, trimProperty ) || trustKeys ) {
 					if ( structKeyExists( request.context, trimProperty ) ) {
 						var args = { };
 						args[ trimProperty ] = request.context[ trimProperty ];
@@ -893,7 +893,7 @@ component {
 	
 	private void function autowire( any cfc, any beanFactory ) {
 		var setters = findImplicitAndExplicitSetters( cfc );
-		for ( var property in setters.__fw1_setters ) {
+		for ( var property in setters ) {
 			if ( beanFactory.containsBean( property ) ) {
 				var args = { };
 				args[ property ] = beanFactory.getBean( property );
@@ -1060,7 +1060,6 @@ component {
 		if ( structKeyExists( baseMetadata, '__fw1_setters' ) )  {
 			setters = baseMetadata.__fw1_setters;
 		} else {
-			setters.__fw1_setters = [ ];
 			var md = { extends = baseMetadata };
 			do {
 				md = md.extends;
@@ -1073,7 +1072,7 @@ component {
 						var property = md.properties[ i ];
 						if ( implicitSetters ||
 								structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
-							arrayAppend( setters.__fw1_setters, property.name );
+							setters[ property.name ] = 'implicit';
 						}
 					}
 				}
@@ -1089,7 +1088,7 @@ component {
 			var n = len( member );
 			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
 				var property = right( member, n - 3 );
-				arrayAppend( setters.__fw1_setters, property );
+				setters[ property ] = 'explicit';
 			}
 		}
 		return setters;
@@ -1577,7 +1576,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_3';
+		variables.framework.version = '2.0_Alpha_4';
 	}
 
 	private void function setupRequestDefaults() {
