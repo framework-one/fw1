@@ -802,9 +802,9 @@ component {
 	 * - containsBean(name) - returns true if factory contains that named bean, else false
 	 * - getBean(name) - returns the named bean
 	 */
-	public void function setBeanFactory( any factory ) {
+	public void function setBeanFactory( any beanFactory ) {
 
-		application[ variables.framework.applicationKey ].factory = factory;
+		application[ variables.framework.applicationKey ].factory = beanFactory;
 
 	}
 
@@ -1576,7 +1576,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_4';
+		variables.framework.version = '2.0_Alpha_5';
 	}
 
 	private void function setupRequestDefaults() {
