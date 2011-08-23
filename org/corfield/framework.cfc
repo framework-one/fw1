@@ -1063,7 +1063,7 @@ component {
 			var md = { extends = baseMetadata };
 			do {
 				md = md.extends;
-				var implicitSetters = structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors;
+				var implicitSetters = ( structKeyExists( md, 'persistent' )  && isBoolean( md.persistent ) && md.persistent || structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) && md.accessors );
 				if ( structKeyExists( md, 'properties' ) ) {
 					// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
 					// instead we must use an explicit loop index... ugh!
