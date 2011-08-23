@@ -1,1 +1,7 @@
-<cfcomponent extends="org.corfield.framework"></cfcomponent>
+component extends="org.corfield.framework" {
+	
+	public void function setupView() {
+		arrayAppend( rc.lifecycle, "setupView() called" );
+	}
+	
+}
