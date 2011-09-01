@@ -1064,11 +1064,12 @@ component {
 			do {
 				md = md.extends;
 				var implicitSetters = false;
-				// we have implicit setters if: accessors="true" or persistent="true" (and we don't have accessors="false")
-				if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
-					implicitSetters = md.accessors;
-				} else if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
+				// we have implicit setters if: accessors="true" or persistent="true"
+				if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
 					implicitSetters = md.persistent;
+				}
+				if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
+					implicitSetters = implicitSetters || md.accessors;
 				}
 				if ( structKeyExists( md, 'properties' ) ) {
 					// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
@@ -1582,7 +1583,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_6';
+		variables.framework.version = '2.0_Alpha_7';
 	}
 
 	private void function setupRequestDefaults() {
