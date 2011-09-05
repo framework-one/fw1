@@ -77,9 +77,9 @@ component {
 				omitIndex = true;
 			}
 		}
-		
-		if ( find( '?', action ) && queryString == '' ) {
-			queryString = listRest( action, '?' );
+		var n = find( '?', action );
+		if ( n && queryString == '' ) {
+			queryString = right( action, len( action ) - n + 1 );
 			action = listFirst( action, '?##' );
 		}
 		var cosmeticAction = getFullyQualifiedAction( action );
@@ -118,11 +118,13 @@ component {
 		
 		if ( len( queryString ) ) {
 			extraArgs = listFirst( queryString, '?##' );
-			if ( find( '?', queryString ) ) {
-				queryPart = listRest( queryString, '?' );
+			n = find( '?', queryString );
+			if ( n ) {
+				queryPart = right( queryString, len( queryString ) - n + 1 );
 			}
-			if ( find( '##', queryString ) ) {
-				anchor = listRest( queryString, '##' );
+			n = find( '##', queryString );
+			if ( n ) {
+				anchor = right( queryString, len( queryString ) - n + 1 );
 			}
 			if ( ses ) {
 				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
@@ -762,8 +764,9 @@ component {
 			} else {
 				preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#';
 			}
-			if ( find( '##', targetURL ) ) {
-				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' );
+			var n = find( '##', targetURL );
+			if ( n ) {
+				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & right( targetURL, len( targetURL ) - n + 1 );
 			} else {
 				targetURL = targetURL & preserveKey;
 			}
@@ -1583,7 +1586,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_7';
+		variables.framework.version = '2.0_Alpha_8';
 	}
 
 	private void function setupRequestDefaults() {
