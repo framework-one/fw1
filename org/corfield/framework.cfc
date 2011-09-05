@@ -656,9 +656,9 @@ component {
 				REFindNoCase( '^(' & framework.unhandledPathRegex & ')', targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
+		} else {
+			setupRequestWrapper( true );
 		}
-
-		setupRequestWrapper( true );
 	}
 
 	/*
@@ -1586,7 +1586,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_8';
+		variables.framework.version = '2.0_Alpha_9';
 	}
 
 	private void function setupRequestDefaults() {
