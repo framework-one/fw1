@@ -470,7 +470,8 @@ component {
 			setupRequestWrapper( false );
 			onRequest( '' );
 		} catch ( any e ) {
-			failure( exception, event );
+			failure( e, 'onError' );
+			failure( exception, event, true );
 		}
 
 	}
@@ -656,6 +657,8 @@ component {
 				REFindNoCase( '^(' & framework.unhandledPathRegex & ')', targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
+			structDelete(this, 'onError');
+			structDelete(variables, 'onError');
 		} else {
 			setupRequestWrapper( true );
 		}
@@ -1041,16 +1044,16 @@ component {
 
 	}
 
-	private void function failure( any exception, string event ) {
-
+	private void function failure( any exception, string event, boolean indirect = false ) {
+		var h = indirect ? 3 : 1;
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutput( "<h1>Exception in #event#</h1>" );
+		writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
 		if ( structKeyExists( request, 'failedAction' ) ) {
 			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
 		}
-		writeOutput( "<h2>#exception.message#</h2>" );
+		writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
 		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
@@ -1586,7 +1589,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_9';
+		variables.framework.version = '2.0_Alpha_10';
 	}
 
 	private void function setupRequestDefaults() {
