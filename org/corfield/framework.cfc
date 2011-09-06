@@ -27,6 +27,7 @@ component {
 	// do not rely on these, they are meant to be true magic...
 	variables.magicApplicationController = '[]';
 	variables.magicApplicationAction = '__';
+	variables.magicBaseURL = '-[]-';
 	
 	public void function abortController() {
 		request._fw1.abortController = true;
@@ -62,14 +63,15 @@ component {
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future
 	 */
-	public string function buildURL( string action, string path = variables.framework.baseURL, string queryString = '' ) {
+	public string function buildURL( string action, string path = variables.magicBaseURL, string queryString = '' ) {
+		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
 		if ( path == 'useSubsystemConfig' ) {
 			var subsystemConfig = getSubsystemConfig( getSubsystem( action ) );
 			if ( structKeyExists( subsystemConfig, 'baseURL' ) ) {
 				path = subsystemConfig.baseURL;
 			} else {
-				path = variables.framework.baseURL;
+				path = getBaseURL();
 			}
 		}
 		if ( path == 'useCgiScriptName' ) {
@@ -216,6 +218,14 @@ component {
 	 */
 	public string function getAction() {
 		return variables.framework.action;
+	}
+	
+	/*
+	 * returns the base URL for redirects and links etc
+	 * can be overridden if you need to modify this per-request
+	 */
+	public string function getBaseURL() {
+		return variables.framework.baseURL;
 	}
 	
 	/*
@@ -647,7 +657,7 @@ component {
 			pathInfo = listToArray( pathInfo, '/' );
 		}
 		var sesN = arrayLen( pathInfo );
-		if ( ( sesN > 0 || variables.framework.generateSES ) && variables.framework.baseURL != 'useRequestURI' ) {
+		if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
 			request.generateSES = true;
 		}
 		for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
@@ -754,7 +764,8 @@ component {
 	}
 	
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
-	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.framework.baseURL, string queryString = '' ) {
+	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '' ) {
+		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var preserveKey = '';
 		if ( preserve != 'none' ) {
 			preserveKey = saveFlashContext( preserve );
@@ -1625,7 +1636,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0_Alpha_13';
+		variables.framework.version = '2.0_Alpha_14';
 	}
 
 	private void function setupRequestDefaults() {
