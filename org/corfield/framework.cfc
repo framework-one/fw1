@@ -644,7 +644,11 @@ component {
 		} else {
 			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
 		}
-		request.action = validateAction( lCase(request.context[variables.framework.action]) );
+		if ( variables.framework.noLowerCase ) {
+			request.action = validateAction( request.context[variables.framework.action] );
+		} else {
+			request.action = validateAction( lCase(request.context[variables.framework.action]) );
+		}
 
 		restoreFlashContext();
 		// ensure flash context cannot override request action:
@@ -1589,7 +1593,10 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
-		variables.framework.version = '2.0_Alpha_10';
+		if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
+			variables.framework.noLowerCase = false;
+		}
+		variables.framework.version = '2.0_Alpha_11';
 	}
 
 	private void function setupRequestDefaults() {
