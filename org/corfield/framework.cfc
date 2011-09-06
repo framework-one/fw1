@@ -1644,7 +1644,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0_Alpha_15';
+		variables.framework.version = '2.0_Beta';
 	}
 
 	private void function setupRequestDefaults() {
