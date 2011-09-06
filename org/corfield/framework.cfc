@@ -64,6 +64,14 @@ component {
 	 */
 	public string function buildURL( string action, string path = variables.framework.baseURL, string queryString = '' ) {
 		var omitIndex = false;
+		if ( path == 'useSubsystemConfig' ) {
+			var subsystemConfig = getSubsystemConfig( getSubsystem( action ) );
+			if ( structKeyExists( subsystemConfig, 'baseURL' ) ) {
+				path = subsystemConfig.baseURL;
+			} else {
+				path = variables.framework.baseURL;
+			}
+		}
 		if ( path == 'useCgiScriptName' ) {
 			path = CGI.SCRIPT_NAME;
 			if ( variables.framework.SESOmitIndex ) {
@@ -235,6 +243,9 @@ component {
 		return getDefaultBeanFactory();
 	}
 	
+	/*
+	 * return the framework configuration
+	 */
 	public struct function getConfig()
 	{
 		// return a copy to make it read only from outside the framework:
@@ -370,6 +381,17 @@ component {
 		return getDefaultSubsystem();
 	}
 	
+	/*
+	 * return the (optional) configuration for a subsystem
+	 */
+	public struct function getSubsystemConfig( string subsystem ) {
+		if ( structKeyExists( variables.framework.subsystems, subsystem ) ) {
+			// return a copy to make it read only from outside the framework:
+			return structCopy( variables.framework.subsystems[ subsystem ] );
+		}
+		return { };
+	}
+
 	/*
 	 * returns the bean factory set via setSubsystemBeanFactory
 	 * same effect as getBeanFactory when not using subsystems
@@ -1600,7 +1622,10 @@ component {
 		if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
 			variables.framework.noLowerCase = false;
 		}
-		variables.framework.version = '2.0_Alpha_12';
+		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
+			variables.framework.subsystems = { };
+		}
+		variables.framework.version = '2.0_Alpha_13';
 	}
 
 	private void function setupRequestDefaults() {
