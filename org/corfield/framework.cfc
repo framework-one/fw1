@@ -614,6 +614,7 @@ component {
 			out = internalLayout( request.layouts[i], out );
 		}
 		writeOutput( out );
+		setupResponseWrapper();
 	}
 
 	/*
@@ -815,6 +816,7 @@ component {
 				targetURL = targetURL & preserveKey;
 			}
 		}
+		setupResponseWrapper();
 		location( targetURL, false );
 	}
 	
@@ -889,6 +891,12 @@ component {
 	 * you do not need to call super.setupRequest()
 	 */
 	public void function setupRequest() { }
+
+	/*
+	 * override this to provide request-specific finalization
+	 * you do not need to call super.setupResponse()
+	 */
+	public void function setupResponse() { }
 
 	/*
 	 * override this to provide session-specific initialization
@@ -1636,7 +1644,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0_Alpha_14';
+		variables.framework.version = '2.0_Alpha_15';
 	}
 
 	private void function setupRequestDefaults() {
@@ -1663,6 +1671,10 @@ component {
 		if ( !variables.framework.suppressImplicitService ) {
 			service( request.action, getServiceKey( request.action ), { }, false );
 		}
+	}
+
+	private void function setupResponseWrapper() {
+		setupResponse();
 	}
 
 	private void function setupSessionWrapper() {
