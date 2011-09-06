@@ -7,8 +7,8 @@ p, h1, h2 {
 <cfoutput>
 	#body#
 	<p>Go to 
-		<a href="<cfoutput>#buildUrl( 'main' )#</cfoutput>">default page</a> |
-		<a href="<cfoutput>#buildUrl( 'main.second' )#</cfoutput>">second page</a>.</p>
+		<a href="<cfoutput>#buildUrl( '' )#</cfoutput>">default page</a> |
+		<a href="<cfoutput>#buildUrl( '.second' )#</cfoutput>">second page</a>.</p>
 	<p>Select skin:
 		<a href="#buildUrl( action = request.action, queryString = 'skin=blue' )#">blue</a> |
 		<a href="#buildUrl( action = request.action, queryString = 'skin=green' )#">green</a> |

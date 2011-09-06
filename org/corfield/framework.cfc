@@ -334,7 +334,11 @@ component {
 			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		} else if ( listLen( sectionAndItem, '.' ) == 1 ) {
 			if ( left( sectionAndItem, 1 ) == '.' ) {
-				sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
+				if ( structKeyExists( request, 'section' ) ) {
+					sectionAndItem = request.section & '.' & listLast( sectionAndItem, '.' );
+				} else {
+					sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
+				}
 			} else {
 				sectionAndItem = listFirst( sectionAndItem, '.' ) & '.' & variables.framework.defaultItem;
 			}
@@ -1596,7 +1600,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
 			variables.framework.noLowerCase = false;
 		}
-		variables.framework.version = '2.0_Alpha_11';
+		variables.framework.version = '2.0_Alpha_12';
 	}
 
 	private void function setupRequestDefaults() {
