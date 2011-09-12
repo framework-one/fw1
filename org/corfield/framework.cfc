@@ -1647,7 +1647,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'requestContextKey' ) ) {
 			variables.framework.requestContextKey = 'context';
 		}
-		variables.framework.version = '2.0_Beta';
+		variables.framework.version = '2.0_Beta_1';
 	}
 
 	private void function setupRequestDefaults() {
