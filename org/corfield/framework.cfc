@@ -576,7 +576,7 @@ component {
 					_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 					if ( isDefined('_data_fw1') ) {
-						request.context[ tuple.key ] = _data_fw1;
+						request[ variables.framework.requestContextKey ][ tuple.key ] = _data_fw1;
 					}
 				}
 			}
@@ -605,7 +605,7 @@ component {
 		if ( structKeyExists(request, 'view') ) {
 			out = internalView( request.view );
 		} else {
-			out = onMissingView( request.context );
+			out = onMissingView( request[ variables.framework.requestContextKey ] );
 		}
 		for ( i = 1; i <= arrayLen(request.layouts); i = i + 1 ) {
 			if ( structKeyExists(request, 'layout') && !request.layout ) {
@@ -634,8 +634,8 @@ component {
 			setupApplicationWrapper();
 		}
 
-		if ( !structKeyExists(request, 'context') ) {
-			request.context = { };
+		if ( !structKeyExists(request, variables.framework.requestContextKey) ) {
+			request[ variables.framework.requestContextKey ] = { };
 		}
 		// SES URLs by popular request :)
 		if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
@@ -663,33 +663,33 @@ component {
 		}
 		for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
 			if ( sesIx == 1 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx];
+				request[ variables.framework.requestContextKey ][ variables.framework.action ] = pathInfo[sesIx];
 			} else if ( sesIx == 2 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+				request[ variables.framework.requestContextKey ][ variables.framework.action ] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
 			} else if ( sesIx mod 2 == 1 ) {
-				request.context[ pathInfo[sesIx] ] = '';
+				request[ variables.framework.requestContextKey ][ pathInfo[sesIx] ] = '';
 			} else {
-				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
+				request[ variables.framework.requestContextKey ][ pathInfo[sesIx-1] ] = pathInfo[sesIx];
 			}
 		}
 		// certain remote calls do not have URL or form scope:
-		if ( isDefined('URL') ) structAppend(request.context,URL);
-		if ( isDefined('form') ) structAppend(request.context,form);
+		if ( isDefined('URL') ) structAppend(request[ variables.framework.requestContextKey ],URL);
+		if ( isDefined('form') ) structAppend(request[ variables.framework.requestContextKey ],form);
 		// figure out the request action before restoring flash context:
-		if ( !structKeyExists(request.context, variables.framework.action) ) {
-			request.context[variables.framework.action] = variables.framework.home;
+		if ( !structKeyExists(request[ variables.framework.requestContextKey ], variables.framework.action) ) {
+			request[ variables.framework.requestContextKey ][ variables.framework.action ] = variables.framework.home;
 		} else {
-			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
+			request[ variables.framework.requestContextKey ][ variables.framework.action ] = getFullyQualifiedAction( request[ variables.framework.requestContextKey ][ variables.framework.action ] );
 		}
 		if ( variables.framework.noLowerCase ) {
-			request.action = validateAction( request.context[variables.framework.action] );
+			request.action = validateAction( request[ variables.framework.requestContextKey ][ variables.framework.action ] );
 		} else {
-			request.action = validateAction( lCase(request.context[variables.framework.action]) );
+			request.action = validateAction( lCase(request[ variables.framework.requestContextKey ][ variables.framework.action ]) );
 		}
 
 		restoreFlashContext();
 		// ensure flash context cannot override request action:
-		request.context[variables.framework.action] = request.action;
+		request[ variables.framework.requestContextKey ][ variables.framework.action ] = request.action;
 
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
@@ -722,23 +722,23 @@ component {
 		if ( keys == '' ) {
 			if ( trustKeys ) {
 				// assume everything in the request context can be set into the CFC
-				for ( var property in request.context ) {
+				for ( var property in request[ variables.framework.requestContextKey ] ) {
 					try {
 						var args = { };
-						args[ property ] = request.context[ property ];
+						args[ property ] = request[ variables.framework.requestContextKey ][ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#property#( argumentCollection = args )' );
 					} catch ( any e ) {
-						onPopulateError( cfc, property, request.context );
+						onPopulateError( cfc, property, request[ variables.framework.requestContextKey ] );
 					}
 				}
 			} else {
 				var setters = findImplicitAndExplicitSetters( cfc );
 				for ( var property in setters ) {
-					if ( structKeyExists( request.context, property ) ) {
+					if ( structKeyExists( request[ variables.framework.requestContextKey ], property ) ) {
 						var args = { };
-						args[ property ] = request.context[ property ];
+						args[ property ] = request[ variables.framework.requestContextKey ][ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#property#( argumentCollection = args )' );
@@ -751,9 +751,9 @@ component {
 			for ( var property in keyArray ) {
 				var trimProperty = trim( property );
 				if ( structKeyExists( setters, trimProperty ) || trustKeys ) {
-					if ( structKeyExists( request.context, trimProperty ) ) {
+					if ( structKeyExists( request[ variables.framework.requestContextKey ], trimProperty ) ) {
 						var args = { };
-						args[ trimProperty ] = request.context[ trimProperty ];
+						args[ trimProperty ] = request[ variables.framework.requestContextKey ][ trimProperty ];
 						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#trimProperty#( argumentCollection = args )' );
@@ -774,16 +774,16 @@ component {
 		var baseQueryString = '';
 		if ( append != 'none' ) {
 			if ( append == 'all' ) {
-				for ( var key in request.context ) {
-					if ( isSimpleValue( request.context[ key ] ) ) {
-						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+				for ( var key in request[ variables.framework.requestContextKey ] ) {
+					if ( isSimpleValue( request[ variables.framework.requestContextKey ][ key ] ) ) {
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request[ variables.framework.requestContextKey ][ key ] ), '&' );
 					}
 				}
 			} else {
 				var keys = listToArray( append );
 				for ( var key in keys ) {
-					if ( structKeyExists( request.context, key ) && isSimpleValue( request.context[ key ] ) ) {
-						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+					if ( structKeyExists( request[ variables.framework.requestContextKey ], key ) && isSimpleValue( request[ variables.framework.requestContextKey ][ key ] ) ) {
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request[ variables.framework.requestContextKey ][ key ] ), '&' );
 					}
 				}
 				
@@ -1049,7 +1049,7 @@ component {
 	private void function doController( any cfc, string method ) {
 		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
-				evaluate( 'cfc.#method#( rc = request.context )' );
+				evaluate( 'cfc.#method#( rc = request[ variables.framework.requestContextKey ] )' );
 			} catch ( any e ) {
 				setCfcMethodFailureInfo( cfc, method );
 				rethrow;
@@ -1060,7 +1060,7 @@ component {
 	private any function doService( any cfc, string method, struct args, boolean enforceExistence ) {
 		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
-				structAppend( args, request.context, false );
+				structAppend( args, request[ variables.framework.requestContextKey ], false );
 				var _result_fw1 = evaluate( 'cfc.#method#( argumentCollection = args )' );
 				if ( !isNull( _result_fw1 ) ) {
 					return _result_fw1;
@@ -1276,7 +1276,7 @@ component {
 	}
 	
 	private string function internalLayout( string layoutPath, string body ) {
-		var rc = request.context;
+		var rc = request[ variables.framework.requestContextKey ];
 		var $ = { };
 		// integration point with Mura:
 		if ( structKeyExists( rc, '$' ) ) {
@@ -1294,7 +1294,7 @@ component {
 	}
 	
 	private string function internalView( string viewPath, struct args = { } ) {
-		var rc = request.context;
+		var rc = request[ variables.framework.requestContextKey ];
 		var $ = { };
 		// integration point with Mura:
 		if ( structKeyExists( rc, '$' ) ) {
@@ -1439,7 +1439,7 @@ component {
 		}
 		try {
 			if ( structKeyExists( session, preserveKeySessionKey ) ) {
-				structAppend( request.context, session[ preserveKeySessionKey ], false );
+				structAppend( request[ variables.framework.requestContextKey ], session[ preserveKeySessionKey ], false );
 				if ( variables.framework.maxNumContextsPreserved == 1 ) {
 					/*
 						When multiple contexts are preserved, the oldest context is purged
@@ -1461,13 +1461,13 @@ component {
 		try {
 			param name="session.#preserveKeySessionKey#" default="#{ }#";
 			if ( keys == 'all' ) {
-				structAppend( session[ preserveKeySessionKey ], request.context );
+				structAppend( session[ preserveKeySessionKey ], request[ variables.framework.requestContextKey ] );
 			} else {
 				var key = 0;
 				var keyNames = listToArray( keys );
 				for ( key in keyNames ) {
-					if ( structKeyExists( request.context, key ) ) {
-						session[ preserveKeySessionKey ][ key ] = request.context[ key ];
+					if ( structKeyExists( request[ variables.framework.requestContextKey ], key ) ) {
+						session[ preserveKeySessionKey ][ key ] = request[ variables.framework.requestContextKey ][ key ];
 					}
 				}
 			}
@@ -1644,6 +1644,9 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
+		if ( !structKeyExists( variables.framework, 'requestContextKey' ) ) {
+			variables.framework.requestContextKey = 'context';
+		}
 		variables.framework.version = '2.0_Beta';
 	}
 
@@ -1661,7 +1664,7 @@ component {
 		request.services = [ ];
 		
 		if ( runSetup ) {
-			rc = request.context;
+			rc = request[ variables.framework.requestContextKey ];
 			controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
 			setupSubsystemWrapper( request.subsystem );
 			setupRequest();
