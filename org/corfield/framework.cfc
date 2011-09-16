@@ -23,14 +23,14 @@ component {
 		variables.cgiScriptName = CGI.SCRIPT_NAME;
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
-	request._fw1 = { };
+	
 	// do not rely on these, they are meant to be true magic...
 	variables.magicApplicationController = '[]';
 	variables.magicApplicationAction = '__';
 	variables.magicBaseURL = '-[]-';
 	
 	public void function abortController() {
-		request._fw1.abortController = true;
+		variables.applicationRequestKey._fw1.abortController = true;
 		throw( type="FW1.AbortControllerException", message="abortController() called" );
 	}
 
@@ -110,7 +110,7 @@ component {
 			} else {
 				initialDelim = '&';
 			}
-		} else if ( structKeyExists( request, 'generateSES' ) && request.generateSES ) {
+		} else if ( structKeyExists( variables.applicationRequestKey, 'generateSES' ) && variables.applicationRequestKey.generateSES ) {
 			if ( omitIndex ) {
 				initialDelim = '';
 			} else {
@@ -187,7 +187,7 @@ component {
 		var item = getItem( action );
 		var tuple = { };
 
-		if ( structKeyExists( request, 'controllerExecutionStarted' ) ) {
+		if ( structKeyExists( variables.applicationRequestKey, 'controllerExecutionStarted' ) ) {
 			raiseException( type="FW1.controllerExecutionStarted", message="Controller '#action#' may not be added at this point.",
 				detail="The controller execution phase has already started. Controllers may not be added by other controller methods." );
 		}
@@ -197,10 +197,10 @@ component {
 		tuple.item = item;
 
 		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
-			if ( !structKeyExists( request, 'controllers' ) ) {
-				request.controllers = [ ];
+			if ( !structKeyExists( variables.applicationRequestKey, 'controllers' ) ) {
+				variables.applicationRequestKey.controllers = [ ];
 			}
-			arrayAppend( request.controllers, tuple );
+			arrayAppend( variables.applicationRequestKey.controllers, tuple );
 		}
 	}
 
@@ -244,8 +244,8 @@ component {
 		if ( !usingSubsystems() ) {
 			return getDefaultBeanFactory();
 		}
-		if ( structKeyExists( request, 'subsystem' ) && len( request.subsystem ) > 0 ) {
-			return getBeanFactory( request.subsystem );
+		if ( structKeyExists( variables.applicationRequestKey, 'subsystem' ) && len( variables.applicationRequestKey.subsystem ) > 0 ) {
+			return getBeanFactory( variables.applicationRequestKey.subsystem );
 		}
 		if ( len( variables.framework.defaultSubsystem ) > 0 ) {
 			return getBeanFactory( variables.framework.defaultSubsystem );
@@ -278,8 +278,8 @@ component {
 			return '';
 		}
 
-		if ( structKeyExists( request, 'subsystem' ) ) {
-			return request.subsystem;
+		if ( structKeyExists( variables.applicationRequestKey, 'subsystem' ) ) {
+			return variables.applicationRequestKey.subsystem;
 		}
 
 		if ( variables.framework.defaultSubsystem == '' ) {
@@ -296,7 +296,7 @@ component {
 	 * return an action with all applicable parts (subsystem, section, and item) specified
 	 * using defaults from the configuration or request where appropriate
 	 */
-	public string function getFullyQualifiedAction( string action = request.action ) {
+	public string function getFullyQualifiedAction( string action = variables.applicationRequestKey.action ) {
 		if ( usingSubsystems() ) {
 			return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
 		}
@@ -308,7 +308,7 @@ component {
 	/*
 	 * return the item part of the action
 	 */
-	public string function getItem( string action = request.action ) {
+	public string function getItem( string action = variables.applicationRequestKey.action ) {
 		return listLast( getSectionAndItem( action ), '.' );
 	}
 	
@@ -317,7 +317,7 @@ component {
 	 * return the current route (if any)
 	 */
 	public string function getRoute() {
-		return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
+		return structKeyExists( variables.applicationRequestKey._fw1, 'route' ) ? variables.applicationRequestKey._fw1.route : '';
 	}
 	
 	
@@ -332,7 +332,7 @@ component {
 	/*
 	 * return the section part of the action
 	 */
-	public string function getSection( string action = request.action ) {
+	public string function getSection( string action = variables.applicationRequestKey.action ) {
 		return listFirst( getSectionAndItem( action ), '.' );
 	}
 	
@@ -340,7 +340,7 @@ component {
 	/*
 	 * return the action without the subsystem
 	 */
-	public string function getSectionAndItem( string action = request.action ) {
+	public string function getSectionAndItem( string action = variables.applicationRequestKey.action ) {
 		var sectionAndItem = '';
 
 		if ( usingSubsystems() && actionSpecifiesSubsystem( action ) ) {
@@ -355,8 +355,8 @@ component {
 			sectionAndItem = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 		} else if ( listLen( sectionAndItem, '.' ) == 1 ) {
 			if ( left( sectionAndItem, 1 ) == '.' ) {
-				if ( structKeyExists( request, 'section' ) ) {
-					sectionAndItem = request.section & '.' & listLast( sectionAndItem, '.' );
+				if ( structKeyExists( variables.applicationRequestKey, 'section' ) ) {
+					sectionAndItem = variables.applicationRequestKey.section & '.' & listLast( sectionAndItem, '.' );
 				} else {
 					sectionAndItem = variables.framework.defaultSection & '.' & listLast( sectionAndItem, '.' );
 				}
@@ -384,7 +384,7 @@ component {
 	/*
 	 * return the subsystem part of the action
 	 */
-	public string function getSubsystem( string action = request.action ) {
+	public string function getSubsystem( string action = variables.applicationRequestKey.action ) {
 		if ( actionSpecifiesSubsystem( action ) ) {
 			return listFirst( action, variables.framework.subsystemDelimiter );
 		}
@@ -428,8 +428,8 @@ component {
 			return false;
 		}
 
-		if ( structKeyExists( request, 'subsystem' ) ) {
-			return hasSubsystemBeanFactory(request.subsystem);
+		if ( structKeyExists( variables.applicationRequestKey, 'subsystem' ) ) {
+			return hasSubsystemBeanFactory(variables.applicationRequestKey.subsystem);
 		}
 
 		if ( len(variables.framework.defaultSubsystem) > 0 ) {
@@ -487,22 +487,23 @@ component {
 	 * not seem to be passed exception or event correctly when something fails
 	 * in the code...
 	 */
+	 
 	public void function onError( any exception, string event ) {
 
 		try {
 			// record details of the exception:
-			if ( structKeyExists( request, 'action' ) ) {
-				request.failedAction = request.action;
+			if ( structKeyExists( variables.applicationRequestKey, 'action' ) ) {
+				variables.applicationRequestKey.failedAction = variables.applicationRequestKey.action;
 			}
-			request.exception = exception;
-			request.event = event;
+			variables.applicationRequestKey.exception = exception;
+			variables.applicationRequestKey.event = event;
 			// reset lifecycle flags:
-			structDelete( request, 'controllerExecutionComplete' );
-			structDelete( request, 'controllerExecutionStarted' );
-			structDelete( request, 'serviceExecutionComplete' );
+			structDelete( variables.applicationRequestKey, 'controllerExecutionComplete' );
+			structDelete( variables.applicationRequestKey, 'controllerExecutionStarted' );
+			structDelete( variables.applicationRequestKey, 'serviceExecutionComplete' );
 			// setup the new controller action, based on the error action:
-			structDelete( request, 'controllers' );
-			request.action = variables.framework.error;
+			structDelete( variables.applicationRequestKey, 'controllers' );
+			variables.applicationRequestKey.action = variables.framework.error;
 			setupRequestWrapper( false );
 			onRequest( '' );
 		} catch ( any e ) {
@@ -511,6 +512,7 @@ component {
 		}
 
 	}
+	
 
 	/*
 	 * this can be overridden if you want to change the behavior when
@@ -546,72 +548,73 @@ component {
 		var _data_fw1 = 0;
 		var once = { };
 		var n = 0;
-
-		request.controllerExecutionStarted = true;
+		
+		variables.applicationRequestKey._fw1 = { };
+		variables.applicationRequestKey.controllerExecutionStarted = true;
 		try {
-			if ( structKeyExists( request, 'controllers' ) ) {
-				n = arrayLen( request.controllers );
+			if ( structKeyExists( variables.applicationRequestKey, 'controllers' ) ) {
+				n = arrayLen( variables.applicationRequestKey.controllers );
 				for ( i = 1; i <= n; i = i + 1 ) {
-					tuple = request.controllers[ i ];
+					tuple = variables.applicationRequestKey.controllers[ i ];
 					// run before once per controller:
 					if ( !structKeyExists( once, tuple.key ) ) {
 						once[ tuple.key ] = i;
 						doController( tuple.controller, 'before' );
-						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+						if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 					}
 					doController( tuple.controller, 'start' & tuple.item );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 					doController( tuple.controller, tuple.item );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 				}
 			}
-			n = arrayLen( request.services );
+			n = arrayLen( variables.applicationRequestKey.services );
 			for ( i = 1; i <= n; i = i + 1 ) {
-				tuple = request.services[i];
+				tuple = variables.applicationRequestKey.services[i];
 				if ( tuple.key == '' ) {
 					// throw the result away:
 					doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 				} else {
 					_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 					if ( isDefined('_data_fw1') ) {
-						request[ variables.framework.requestContextKey ][ tuple.key ] = _data_fw1;
+						variables.applicationRequestKey.context[ tuple.key ] = _data_fw1;
 					}
 				}
 			}
-			request.serviceExecutionComplete = true;
-			if ( structKeyExists( request, 'controllers' ) ) {
-				n = arrayLen( request.controllers );
+			variables.applicationRequestKey.serviceExecutionComplete = true;
+			if ( structKeyExists( variables.applicationRequestKey, 'controllers' ) ) {
+				n = arrayLen( variables.applicationRequestKey.controllers );
 				for ( i = n; i >= 1; i = i - 1 ) {
-					tuple = request.controllers[ i ];
+					tuple = variables.applicationRequestKey.controllers[ i ];
 					doController( tuple.controller, 'end' & tuple.item );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 					if ( once[ tuple.key ] eq i ) {
 						doController( tuple.controller, 'after' );
-						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+						if ( structKeyExists( variables.applicationRequestKey._fw1, "abortController" ) ) abortController();
 					}
 				}
 			}
 		} catch ( FW1.AbortControllerException e ) {
-			request.serviceExecutionComplete = true;
+			variables.applicationRequestKey.serviceExecutionComplete = true;
 		}
-		request.controllerExecutionComplete = true;
+		variables.applicationRequestKey.controllerExecutionComplete = true;
 
 		buildViewAndLayoutQueue();
 
 		setupView();
 
-		if ( structKeyExists(request, 'view') ) {
-			out = internalView( request.view );
+		if ( structKeyExists(variables.applicationRequestKey, 'view') ) {
+			out = internalView( variables.applicationRequestKey.view );
 		} else {
-			out = onMissingView( request[ variables.framework.requestContextKey ] );
+			out = onMissingView( variables.applicationRequestKey.context );
 		}
-		for ( i = 1; i <= arrayLen(request.layouts); i = i + 1 ) {
-			if ( structKeyExists(request, 'layout') && !request.layout ) {
+		for ( i = 1; i <= arrayLen(variables.applicationRequestKey.layouts); i = i + 1 ) {
+			if ( structKeyExists(variables.applicationRequestKey, 'layout') && !request.layout ) {
 				break;
 			}
-			out = internalLayout( request.layouts[i], out );
+			out = internalLayout( variables.applicationRequestKey.layouts[i], out );
 		}
 		writeOutput( out );
 		setupResponseWrapper();
@@ -634,8 +637,8 @@ component {
 			setupApplicationWrapper();
 		}
 
-		if ( !structKeyExists(request, variables.framework.requestContextKey) ) {
-			request[ variables.framework.requestContextKey ] = { };
+		if ( !structKeyExists(variables.applicationRequestKey, 'context') ) {
+			variables.applicationRequestKey.context = { };
 		}
 		// SES URLs by popular request :)
 		if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
@@ -659,37 +662,37 @@ component {
 		}
 		var sesN = arrayLen( pathInfo );
 		if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
-			request.generateSES = true;
+			variables.applicationRequestKey.generateSES = true;
 		}
 		for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
 			if ( sesIx == 1 ) {
-				request[ variables.framework.requestContextKey ][ variables.framework.action ] = pathInfo[sesIx];
+				variables.applicationRequestKey.context[ variables.framework.action ] = pathInfo[sesIx];
 			} else if ( sesIx == 2 ) {
-				request[ variables.framework.requestContextKey ][ variables.framework.action ] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+				variables.applicationRequestKey.context[ variables.framework.action ] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
 			} else if ( sesIx mod 2 == 1 ) {
-				request[ variables.framework.requestContextKey ][ pathInfo[sesIx] ] = '';
+				variables.applicationRequestKey.context[ pathInfo[sesIx] ] = '';
 			} else {
-				request[ variables.framework.requestContextKey ][ pathInfo[sesIx-1] ] = pathInfo[sesIx];
+				variables.applicationRequestKey.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
 			}
 		}
 		// certain remote calls do not have URL or form scope:
-		if ( isDefined('URL') ) structAppend(request[ variables.framework.requestContextKey ],URL);
-		if ( isDefined('form') ) structAppend(request[ variables.framework.requestContextKey ],form);
+		if ( isDefined('URL') ) structAppend(variables.applicationRequestKey.context,URL);
+		if ( isDefined('form') ) structAppend(variables.applicationRequestKey.context,form);
 		// figure out the request action before restoring flash context:
-		if ( !structKeyExists(request[ variables.framework.requestContextKey ], variables.framework.action) ) {
-			request[ variables.framework.requestContextKey ][ variables.framework.action ] = variables.framework.home;
+		if ( !structKeyExists(variables.applicationRequestKey.context, variables.framework.action) ) {
+			variables.applicationRequestKey.context[ variables.framework.action ] = variables.framework.home;
 		} else {
-			request[ variables.framework.requestContextKey ][ variables.framework.action ] = getFullyQualifiedAction( request[ variables.framework.requestContextKey ][ variables.framework.action ] );
+			variables.applicationRequestKey.context[ variables.framework.action ] = getFullyQualifiedAction( variables.applicationRequestKey.context[ variables.framework.action ] );
 		}
 		if ( variables.framework.noLowerCase ) {
-			request.action = validateAction( request[ variables.framework.requestContextKey ][ variables.framework.action ] );
+			variables.applicationRequestKey.action = validateAction( variables.applicationRequestKey.context[ variables.framework.action ] );
 		} else {
-			request.action = validateAction( lCase(request[ variables.framework.requestContextKey ][ variables.framework.action ]) );
+			variables.applicationRequestKey.action = validateAction( lCase(variables.applicationRequestKey.context[ variables.framework.action ]) );
 		}
 
 		restoreFlashContext();
 		// ensure flash context cannot override request action:
-		request[ variables.framework.requestContextKey ][ variables.framework.action ] = request.action;
+		variables.applicationRequestKey.context[ variables.framework.action ] = variables.applicationRequestKey.action;
 
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
@@ -722,23 +725,23 @@ component {
 		if ( keys == '' ) {
 			if ( trustKeys ) {
 				// assume everything in the request context can be set into the CFC
-				for ( var property in request[ variables.framework.requestContextKey ] ) {
+				for ( var property in variables.applicationRequestKey.context ) {
 					try {
 						var args = { };
-						args[ property ] = request[ variables.framework.requestContextKey ][ property ];
+						args[ property ] = variables.applicationRequestKey.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#property#( argumentCollection = args )' );
 					} catch ( any e ) {
-						onPopulateError( cfc, property, request[ variables.framework.requestContextKey ] );
+						onPopulateError( cfc, property, variables.applicationRequestKey.context );
 					}
 				}
 			} else {
 				var setters = findImplicitAndExplicitSetters( cfc );
 				for ( var property in setters ) {
-					if ( structKeyExists( request[ variables.framework.requestContextKey ], property ) ) {
+					if ( structKeyExists( variables.applicationRequestKey.context, property ) ) {
 						var args = { };
-						args[ property ] = request[ variables.framework.requestContextKey ][ property ];
+						args[ property ] = variables.applicationRequestKey.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#property#( argumentCollection = args )' );
@@ -751,9 +754,9 @@ component {
 			for ( var property in keyArray ) {
 				var trimProperty = trim( property );
 				if ( structKeyExists( setters, trimProperty ) || trustKeys ) {
-					if ( structKeyExists( request[ variables.framework.requestContextKey ], trimProperty ) ) {
+					if ( structKeyExists( variables.applicationRequestKey.context, trimProperty ) ) {
 						var args = { };
-						args[ trimProperty ] = request[ variables.framework.requestContextKey ][ trimProperty ];
+						args[ trimProperty ] = variables.applicationRequestKey.context[ trimProperty ];
 						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						evaluate( 'cfc.set#trimProperty#( argumentCollection = args )' );
@@ -774,16 +777,16 @@ component {
 		var baseQueryString = '';
 		if ( append != 'none' ) {
 			if ( append == 'all' ) {
-				for ( var key in request[ variables.framework.requestContextKey ] ) {
-					if ( isSimpleValue( request[ variables.framework.requestContextKey ][ key ] ) ) {
-						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request[ variables.framework.requestContextKey ][ key ] ), '&' );
+				for ( var key in variables.applicationRequestKey.context ) {
+					if ( isSimpleValue( variables.applicationRequestKey.context[ key ] ) ) {
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( variables.applicationRequestKey.context[ key ] ), '&' );
 					}
 				}
 			} else {
 				var keys = listToArray( append );
 				for ( var key in keys ) {
-					if ( structKeyExists( request[ variables.framework.requestContextKey ], key ) && isSimpleValue( request[ variables.framework.requestContextKey ][ key ] ) ) {
-						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request[ variables.framework.requestContextKey ][ key ] ), '&' );
+					if ( structKeyExists( variables.applicationRequestKey.context, key ) && isSimpleValue( variables.applicationRequestKey.context[ key ] ) ) {
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( variables.applicationRequestKey.context[ key ] ), '&' );
 					}
 				}
 				
@@ -827,7 +830,7 @@ component {
 		var item = getItem( action );
 		var tuple = { };
 
-		if ( structKeyExists( request, "serviceExecutionComplete" ) ) {
+		if ( structKeyExists( variables.applicationRequestKey, "serviceExecutionComplete" ) ) {
 			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
 				detail="The service execution phase is complete. Services may not be added by end*() or after() controller methods." );
 		}
@@ -839,7 +842,7 @@ component {
 		tuple.enforceExistence = enforceExistence;
 
 		if ( structKeyExists( tuple, "service" ) && isObject( tuple.service ) ) {
-			arrayAppend( request.services, tuple );
+			arrayAppend( variables.applicationRequestKey.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type="FW1.serviceCfcNotFound", message="Service '#action#' does not exist.",
 				detail="To have the execution of this service be conditional based upon its existence, pass in a third parameter of 'false'." );
@@ -861,7 +864,7 @@ component {
 	 * use this to override the default layout
 	 */
 	public void function setLayout( string action ) {
-		request.overrideLayoutAction = validateAction( action );
+		variables.applicationRequestKey.overrideLayoutAction = validateAction( action );
 	}
 	
 	/*
@@ -925,7 +928,7 @@ component {
 	 * use this to override the default view
 	 */
 	public void function setView( string action ) {
-		request.overrideViewAction = validateAction( action );
+		variables.applicationRequestKey.overrideViewAction = validateAction( action );
 	}
 
 	/*
@@ -959,61 +962,61 @@ component {
 	}
 	
 	private void function buildViewAndLayoutQueue() {
-		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
+		var siteWideLayoutBase = variables.applicationRequestKey.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
 		// default behavior:
-		var subsystem = request.subsystem;
-		var section = request.section;
-		var item = request.item;
+		var subsystem = variables.applicationRequestKey.subsystem;
+		var section = variables.applicationRequestKey.section;
+		var item = variables.applicationRequestKey.item;
 		var subsystembase = '';
 		
 		// has view been overridden?
-		if ( structKeyExists( request, 'overrideViewAction' ) ) {
-			subsystem = getSubsystem( request.overrideViewAction );
-			section = getSection( request.overrideViewAction );
-			item = getItem( request.overrideViewAction );
-			structDelete( request, 'overrideViewAction' );
+		if ( structKeyExists( variables.applicationRequestKey, 'overrideViewAction' ) ) {
+			subsystem = getSubsystem( variables.applicationRequestKey.overrideViewAction );
+			section = getSection( variables.applicationRequestKey.overrideViewAction );
+			item = getItem( variables.applicationRequestKey.overrideViewAction );
+			structDelete( variables.applicationRequestKey, 'overrideViewAction' );
 		}
-		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
+		subsystembase = variables.applicationRequestKey.base & getSubsystemDirPrefix( subsystem );
 
 		// view and layout setup - used to be in setupRequestWrapper():
-		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+		variables.applicationRequestKey.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'view' );
-		if ( !cachedFileExists( expandPath( request.view ) ) ) {
-			request.missingView = request.view;
+		if ( !cachedFileExists( expandPath( variables.applicationRequestKey.view ) ) ) {
+			variables.applicationRequestKey.missingView = variables.applicationRequestKey.view;
 			// ensures original view not re-invoked for onError() case:
-			structDelete( request, 'view' );
+			structDelete( variables.applicationRequestKey, 'view' );
 		}
 
-		request.layouts = [ ];
+		variables.applicationRequestKey.layouts = [ ];
 		
 		// has layout been overridden?
-		if ( structKeyExists( request, 'overrideLayoutAction' ) ) {
-			subsystem = getSubsystem( request.overrideLayoutAction );
-			section = getSection( request.overrideLayoutAction );
-			item = getItem( request.overrideLayoutAction );
-			structDelete( request, 'overrideLayoutAction' );
+		if ( structKeyExists( variables.applicationRequestKey, 'overrideLayoutAction' ) ) {
+			subsystem = getSubsystem( variables.applicationRequestKey.overrideLayoutAction );
+			section = getSection( variables.applicationRequestKey.overrideLayoutAction );
+			item = getItem( variables.applicationRequestKey.overrideLayoutAction );
+			structDelete( variables.applicationRequestKey, 'overrideLayoutAction' );
 		}
-		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
+		subsystembase = variables.applicationRequestKey.base & getSubsystemDirPrefix( subsystem );
 
 		// look for item-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
 		if ( cachedFileExists( expandPath( testLayout ) ) ) {
-			arrayAppend( request.layouts, testLayout );
+			arrayAppend( variables.applicationRequestKey.layouts, testLayout );
 		}
 		// look for section-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section, 'layout' );
 		if ( cachedFileExists( expandPath( testLayout ) ) ) {
-			arrayAppend( request.layouts, testLayout );
+			arrayAppend( variables.applicationRequestKey.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
-		if ( request.section != 'default' ) {
+		if ( variables.applicationRequestKey.section != 'default' ) {
 			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( expandPath( testLayout ) ) ) {
-				arrayAppend( request.layouts, testLayout );
+				arrayAppend( variables.applicationRequestKey.layouts, testLayout );
 			}
 		}
 		// look for site-wide layout (only applicable if using subsystems)
@@ -1021,7 +1024,7 @@ component {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( expandPath( testLayout ) ) ) {
-				arrayAppend( request.layouts, testLayout );
+				arrayAppend( variables.applicationRequestKey.layouts, testLayout );
 			}
 		}
 	}
@@ -1049,7 +1052,7 @@ component {
 	private void function doController( any cfc, string method ) {
 		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
-				evaluate( 'cfc.#method#( rc = request[ variables.framework.requestContextKey ] )' );
+				evaluate( 'cfc.#method#( rc = variables.applicationRequestKey.context )' );
 			} catch ( any e ) {
 				setCfcMethodFailureInfo( cfc, method );
 				rethrow;
@@ -1060,7 +1063,7 @@ component {
 	private any function doService( any cfc, string method, struct args, boolean enforceExistence ) {
 		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
-				structAppend( args, request[ variables.framework.requestContextKey ], false );
+				structAppend( args, variables.applicationRequestKey.context, false );
 				var _result_fw1 = evaluate( 'cfc.#method#( argumentCollection = args )' );
 				if ( !isNull( _result_fw1 ) ) {
 					return _result_fw1;
@@ -1099,8 +1102,8 @@ component {
 			exception = exception.rootCause;
 		}
 		writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
-		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+		if ( structKeyExists( variables.applicationRequestKey, 'failedAction' ) ) {
+			writeOutput( "<p>The action #variables.applicationRequestKey.failedAction# failed.</p>" );
 		}
 		writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
 		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
@@ -1181,12 +1184,12 @@ component {
 						if ( type == 'controller' && section == variables.magicApplicationController ) {
 							// treat this (Application.cfc) as a controller:
 							cfc = this;
-						} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
+						} else if ( cachedFileExists( expandPath( cfcFilePath( variables.applicationRequestKey.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
 							// we call createObject() rather than new so we can control initialization:
-							if ( request.cfcbase == '' ) {
+							if ( variables.applicationRequestKey.cfcbase == '' ) {
 								cfc = createObject( 'component', subsystemDot & types & '.' & section );
 							} else {
-								cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
+								cfc = createObject( 'component', variables.applicationRequestKey.cfcbase & '.' & subsystemDot & types & '.' & section );
 							}
 							if ( structKeyExists( cfc, 'init' ) ) {
 								if ( type == 'controller' ) {
@@ -1276,13 +1279,13 @@ component {
 	}
 	
 	private string function internalLayout( string layoutPath, string body ) {
-		var rc = request[ variables.framework.requestContextKey ];
+		var rc = variables.applicationRequestKey.context;
 		var $ = { };
 		// integration point with Mura:
 		if ( structKeyExists( rc, '$' ) ) {
 			$ = rc.$;
 		}
-		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
+		if ( !structKeyExists( variables.applicationRequestKey, 'controllerExecutionComplete' ) ) {
 			raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
 				detail="The layout method should not be called prior to the completion of the controller execution phase." );
 		}
@@ -1294,14 +1297,14 @@ component {
 	}
 	
 	private string function internalView( string viewPath, struct args = { } ) {
-		var rc = request[ variables.framework.requestContextKey ];
+		var rc = variables.applicationRequestKey.context;
 		var $ = { };
 		// integration point with Mura:
 		if ( structKeyExists( rc, '$' ) ) {
 			$ = rc.$;
 		}
 		structAppend( local, args );
-		if ( !structKeyExists( request, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
+		if ( !structKeyExists( variables.applicationRequestKey, 'serviceExecutionComplete') && arrayLen( variables.applicationRequestKey.services ) != 0 ) {
 			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
 				detail="The view method should not be called prior to the completion of the service execution phase." );
 		}
@@ -1338,7 +1341,7 @@ component {
 
 		// allow for :section/action to simplify logic in setupRequestWrapper():
 		pathInfo.path = listLast( path, variables.framework.subsystemDelimiter );
-		pathInfo.base = request.base;
+		pathInfo.base = variables.applicationRequestKey.base;
 		pathInfo.subsystem = subsystem;
 		if ( usingSubsystems() ) {
 			pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
@@ -1413,7 +1416,7 @@ component {
 						if ( routeMatch.redirect ) {
 							location( path, false, routeMatch.statusCode ); 
 						} else {
-							request._fw1.route = route;
+							variables.applicationRequestKey._fw1.route = route;
 							return path;
 						}
 					}
@@ -1439,7 +1442,7 @@ component {
 		}
 		try {
 			if ( structKeyExists( session, preserveKeySessionKey ) ) {
-				structAppend( request[ variables.framework.requestContextKey ], session[ preserveKeySessionKey ], false );
+				structAppend( variables.applicationRequestKey.context, session[ preserveKeySessionKey ], false );
 				if ( variables.framework.maxNumContextsPreserved == 1 ) {
 					/*
 						When multiple contexts are preserved, the oldest context is purged
@@ -1461,13 +1464,13 @@ component {
 		try {
 			param name="session.#preserveKeySessionKey#" default="#{ }#";
 			if ( keys == 'all' ) {
-				structAppend( session[ preserveKeySessionKey ], request[ variables.framework.requestContextKey ] );
+				structAppend( session[ preserveKeySessionKey ], variables.applicationRequestKey.context );
 			} else {
 				var key = 0;
 				var keyNames = listToArray( keys );
 				for ( key in keyNames ) {
-					if ( structKeyExists( request[ variables.framework.requestContextKey ], key ) ) {
-						session[ preserveKeySessionKey ][ key ] = request[ variables.framework.requestContextKey ][ key ];
+					if ( structKeyExists( variables.applicationRequestKey.context, key ) ) {
+						session[ preserveKeySessionKey ][ key ] = variables.applicationRequestKey.context[ key ];
 					}
 				}
 			}
@@ -1480,11 +1483,11 @@ component {
 	private void function setCfcMethodFailureInfo( any cfc, string method ) {
 		var meta = getMetadata( cfc );
 		if ( structKeyExists( meta, 'fullname' ) ) {
-			request.failedCfcName = meta.fullname;
+			variables.applicationRequestKey.failedCfcName = meta.fullname;
 		} else {
-			request.failedCfcName = meta.name;
+			variables.applicationRequestKey.failedCfcName = meta.name;
 		}
-		request.failedMethod = method;
+		variables.applicationRequestKey.failedMethod = method;
 	}
 	
 	private void function setupApplicationWrapper() {
@@ -1537,10 +1540,18 @@ component {
 	}
 	
 	private void function setupFrameworkDefaults() {
-
+		
 		// default values for Application::variables.framework structure:
 		if ( !structKeyExists(variables, 'framework') ) {
 			variables.framework = { };
+		}
+		if ( structKeyExists(variables.framework, 'applicationRequestKey') ){
+			if( !structKeyExists(request, variables.framework.applicationRequestKey) ) {
+				request[ variables.framework.applicationRequestKey ] = { };
+			}
+			variables.applicationRequestKey = request[ variables.framework.applicationRequestKey ];
+		} else {
+			variables.applicationRequestKey = request;
 		}
 		if ( !structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
@@ -1644,35 +1655,32 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		if ( !structKeyExists( variables.framework, 'requestContextKey' ) ) {
-			variables.framework.requestContextKey = 'context';
-		}
 		variables.framework.version = '2.0_Beta_1';
 	}
 
 	private void function setupRequestDefaults() {
-		request.base = variables.framework.base;
-		request.cfcbase = variables.framework.cfcbase;
+		variables.applicationRequestKey.base = variables.framework.base;
+		variables.applicationRequestKey.cfcbase = variables.framework.cfcbase;
 	}
 
 	private void function setupRequestWrapper( boolean runSetup ) {
 
-		request.subsystem = getSubsystem( request.action );
-		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
-		request.section = getSection( request.action );
-		request.item = getItem( request.action );
-		request.services = [ ];
+		variables.applicationRequestKey.subsystem = getSubsystem( variables.applicationRequestKey.action );
+		variables.applicationRequestKey.subsystembase = variables.applicationRequestKey.base & getSubsystemDirPrefix( variables.applicationRequestKey.subsystem );
+		variables.applicationRequestKey.section = getSection( variables.applicationRequestKey.action );
+		variables.applicationRequestKey.item = getItem( variables.applicationRequestKey.action );
+		variables.applicationRequestKey.services = [ ];
 		
 		if ( runSetup ) {
-			rc = request[ variables.framework.requestContextKey ];
+			rc = variables.applicationRequestKey.context;
 			controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
-			setupSubsystemWrapper( request.subsystem );
+			setupSubsystemWrapper( variables.applicationRequestKey.subsystem );
 			setupRequest();
 		}
 
-		controller( request.action );
+		controller( variables.applicationRequestKey.action );
 		if ( !variables.framework.suppressImplicitService ) {
-			service( request.action, getServiceKey( request.action ), { }, false );
+			service( variables.applicationRequestKey.action, getServiceKey( variables.applicationRequestKey.action ), { }, false );
 		}
 	}
 
@@ -1704,8 +1712,8 @@ component {
 	}
 
 	private void function viewNotFound() {
-		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
-				detail="'#request.missingView#' does not exist." );
+		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#variables.applicationRequestKey.action#' action.",
+				detail="'#variables.applicationRequestKey.missingView#' does not exist." );
 	}
 	
 }
