@@ -89,7 +89,7 @@ component {
 		}
 		var n = find( '?', action );
 		if ( n && queryString == '' ) {
-			queryString = right( action, len( action ) - n + 1 );
+			queryString = right( action, len( action ) - n);
 			action = listFirst( action, '?##' );
 		}
 		var cosmeticAction = getFullyQualifiedAction( action );
@@ -160,15 +160,15 @@ component {
 			}
 		}
 		
-		if ( extraArgs != '' ) {
+		if ( extraArgs != '' and !find('?', queryPart)) {
 			basePath = basePath & curDelim & extraArgs;
 			curDelim = varDelim;
 		}
 		if ( queryPart != '' ) {
 			if ( ses ) {
-				basePath = basePath & '?' & queryPart;
+				basePath = basePath & queryPart;
 			} else {
-				basePath = basePath & curDelim & queryPart;
+				basePath = basePath & curDelim & right(queryPart,len(querypart) - 1;
 			}
 		}
 		if ( anchor != '' ) {
