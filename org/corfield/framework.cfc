@@ -89,7 +89,7 @@ component {
 		}
 		var n = find( '?', action );
 		if ( n && queryString == '' ) {
-			queryString = right( action, len( action ) - n);
+			queryString = right( action, len( action ) - n );
 			action = listFirst( action, '?##' );
 		}
 		var cosmeticAction = getFullyQualifiedAction( action );
@@ -104,6 +104,8 @@ component {
 		var queryPart = '';
 		var anchor = '';
 		var ses = false;
+		var straightThruQueryString = false;
+		
 		if ( find( '?', path ) > 0 ) {
 			if ( right( path, 1 ) == '?' || right( path, 1 ) == '&' ) {
 				initialDelim = '';
@@ -130,11 +132,12 @@ component {
 			extraArgs = listFirst( queryString, '?##' );
 			n = find( '?', queryString );
 			if ( n ) {
-				queryPart = right( queryString, len( queryString ) - n + 1 );
+				straightThruQueryString = true;
+				queryPart = right( queryString, len( queryString ) - n);
 			}
 			n = find( '##', queryString );
 			if ( n ) {
-				anchor = right( queryString, len( queryString ) - n + 1 );
+				anchor = right( queryString, len( queryString ) - n);
 			}
 			if ( ses ) {
 				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
@@ -160,18 +163,19 @@ component {
 			}
 		}
 		
-		if ( extraArgs != '' and !find('?', queryPart)) {
+		
+		if ( extraArgs != '' and !straightThruQueryString) {
 			basePath = basePath & curDelim & extraArgs;
 			curDelim = varDelim;
 		}
 		if ( queryPart != '' ) {
 			if ( ses ) {
-				basePath = basePath & queryPart;
+				basePath = basePath & '?' & querypart;
 			} else {
-				basePath = basePath & curDelim & right(queryPart,len(querypart) - 1;
+				basePath = basePath & curDelim & querypart;
 			}
 		}
-		if ( anchor != '' ) {
+		if ( anchor != '' and !straightThruQueryString) {
 			basePath = basePath & '##' & anchor;
 		}
 		return basePath;
