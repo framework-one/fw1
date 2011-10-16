@@ -87,10 +87,25 @@ component {
 				omitIndex = true;
 			}
 		}
-		
-		if ( find( '?', action ) && queryString == '' ) {
-			queryString = listRest( action, '?' );
-			action = listFirst( action, '?##' );
+		if ( queryString == '' ) {
+			// extract query string from action section:
+			var q = find( '?', action );
+			var a = find( '##', action );
+			if ( q > 0 ) {
+				queryString = right( action, len( action ) - q );
+				if ( q == 1 ) {
+					action = '';
+				} else {
+					action = left( action, q - 1 );
+				}
+			} else if ( a > 0 ) {
+				queryString = right( action, len( action ) - a + 1 );
+				if ( a == 1 ) {
+					action = '';
+				} else {
+					action = left( action, a - 1 );
+				}
+			}
 		}
 		var cosmeticAction = getFullyQualifiedAction( action );
 		var isHomeAction = cosmeticAction == getFullyQualifiedAction( variables.framework.home );
@@ -127,12 +142,33 @@ component {
 		}
 		
 		if ( len( queryString ) ) {
-			extraArgs = listFirst( queryString, '?##' );
-			if ( find( '?', queryString ) ) {
-				queryPart = listRest( queryString, '?' );
-			}
-			if ( find( '##', queryString ) ) {
-				anchor = listRest( queryString, '##' );
+			// extract query part and anchor from query string:
+			q = find( '?', queryString );
+			if ( q > 0 ) {
+				queryPart = right( queryString, len( queryString ) - q );
+				if ( q > 1 ) {
+					extraArgs = left( queryString, q - 1 );
+				}
+				a = find( '##', queryPart );
+				if ( a > 0 ) {
+					anchor = right( queryPart, len( queryPart ) - a );
+					if ( a == 1 ) {
+						queryPart = '';
+					} else {
+						queryPart = left( queryPart, a - 1 );
+					}
+				}
+			} else {
+				extraArgs = queryString;
+				a = find( '##', extraArgs );
+				if ( a > 0 ) {
+					anchor = right( extraArgs, len( extraArgs ) - a );
+					if ( a == 1 ) {
+						extraArgs = '';
+					} else {
+						extraArgs = left( extraArgs, a - 1 );
+					}
+				}
 			}
 			if ( ses ) {
 				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
@@ -1641,7 +1677,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0_RC';
+		variables.framework.version = '2.0_RC1';
 	}
 
 	private void function setupRequestDefaults() {
