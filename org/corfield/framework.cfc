@@ -87,9 +87,9 @@ component {
 				omitIndex = true;
 			}
 		}
-		var n = find( '?', action );
-		if ( n && queryString == '' ) {
-			queryString = right( action, len( action ) - n + 1 );
+		
+		if ( find( '?', action ) && queryString == '' ) {
+			queryString = listRest( action, '?' );
 			action = listFirst( action, '?##' );
 		}
 		var cosmeticAction = getFullyQualifiedAction( action );
@@ -128,13 +128,11 @@ component {
 		
 		if ( len( queryString ) ) {
 			extraArgs = listFirst( queryString, '?##' );
-			n = find( '?', queryString );
-			if ( n ) {
-				queryPart = right( queryString, len( queryString ) - n + 1 );
+			if ( find( '?', queryString ) ) {
+				queryPart = listRest( queryString, '?' );
 			}
-			n = find( '##', queryString );
-			if ( n ) {
-				anchor = right( queryString, len( queryString ) - n + 1 );
+			if ( find( '##', queryString ) ) {
+				anchor = listRest( queryString, '##' );
 			}
 			if ( ses ) {
 				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
@@ -809,9 +807,8 @@ component {
 			} else {
 				preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#';
 			}
-			var n = find( '##', targetURL );
-			if ( n ) {
-				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & right( targetURL, len( targetURL ) - n + 1 );
+			if ( find( '##', targetURL ) ) {
+				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' );
 			} else {
 				targetURL = targetURL & preserveKey;
 			}
