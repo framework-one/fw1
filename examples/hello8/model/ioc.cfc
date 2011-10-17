@@ -29,7 +29,7 @@ component {
 	
 	// PUBLIC METHODS
 	
-	// programmatically register new beans with the factory
+	// programmatically register new beans with the factory (add a singleton name/value pair)
 	public void function addBean( string beanName, any beanValue ) {
 		variables.beanInfo[ beanName ] = { value = beanValue, isSingleton = true };
 	}
@@ -43,23 +43,74 @@ component {
 	}
 	
 	
+	// programmatically register new beans with the factory (add an actual CFC)
+	public void function declareBean( string beanName, string dottedPath, boolean isSingleton = true ) {
+		var singleDir = '';
+		if ( listLen( dottedPath, '.' ) > 1 ) {
+			var cfc = listLast( dottedPath, '.' );
+			var dottedPart = left( dottedPath, len( dottedPath ) - len( cfc ) - 1 );
+			singleDir = singular( listLast( dottedPart, '.' ) );
+		}
+		var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), '\', '/', 'all' );
+		var metadata = { 
+			name = beanName, qualifier = singleDir, isSingleton = isSingleton, 
+			path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
+		};
+		variables.beanInfo[ beanName ] = metadata;
+	}
+	
+	
 	// return the requested bean, fully populated
 	public any function getBean( string beanName ) {
 		discoverBeans( variables.folders );
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
-			if ( structKeyExists( variables.beanCache, beanName ) ) {
-				return variables.beanCache[ beanName ];
-			} else {
-				var bean = resolveBean( beanName );
-				if ( variables.beanInfo[ beanName ].isSingleton ) {
-					variables.beanCache[ beanName ] = bean;
+			var info = variables.beanInfo[ beanName ];
+			if ( info.isSingleton ) {
+				// cache on the qualified bean name:
+				var qualifiedName = beanName;
+				if ( structKeyExists( info, 'name' ) && structKeyExists( info, 'qualifier' ) ) {
+					qualifiedName = info.name & info.qualifier;
 				}
-				return bean;
+				if ( !structKeyExists( variables.beanCache, qualifiedName ) ) {
+					variables.beanCache[ qualifiedName ] = resolveBean( beanName );
+				}
+				return variables.beanCache[ qualifiedName ];
+			} else {
+				return resolveBean( beanName );
 			}
 		} else if ( structKeyExists( variables, 'parent' ) ) {
 			return variables.parent.getBean( beanName );
 		} else {
 			throw 'bean not found: #beanName#';
+		}
+	}
+	
+	// convenience API for metaprogramming perhaps?
+	public any function getBeanInfo( string beanName = '' ) {
+		if ( len( beanName ) ) {
+			if ( structKeyExists( variables.beanInfo, beanName ) ) {
+				return variables.beanInfo[ beanName ];
+			} else if ( structKeyExists( variables, 'parent' ) ) {
+				return variables.parent.getBeanInfo( beanName );
+			} else {
+				throw 'bean not found: #beanName#';
+			}
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			return { beanInfo = variables.beanInfo, parent = variables.parent.getBeanInfo() };
+		} else {
+			return { beanInfo = variables.beanInfo };
+		}
+	}
+	
+	
+	// return true iff bean is known to be a singleton
+	public boolean function isSingleton( string beanName ) {
+		if ( structKeyExists( variables.beanInfo, beanName ) ) {
+			return variables.beanInfo[ beanName ].isSingleton;
+		} else if ( structKeyExists( variables, 'parent' ) ) {
+			return variables.parent.isSingleton( beanName );
+		} else {
+			return false; // we don't know the bean therefore it is not a managed singleton
 		}
 	}
 	
@@ -77,6 +128,10 @@ component {
 	
 	
 	// empty the cache and reload all the singleton beans
+	// note: this does not reload the parent - if you have parent/child factories you
+	// are responsible for dealing with that logic (it's safe to reload a child but
+	// if you reload the parent, you must reload *all* child factories to ensure
+	// things stay consistent!)
 	public void function load() {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
@@ -100,17 +155,18 @@ component {
 	
 	private struct function cleanMetadata( string cfc ) {
 		var baseMetadata = getComponentMetadata( cfc );
-		var iocMeta = { setters = { } };
+		var iocMeta = { setters = { }, pruned = false };
 		var md = { extends = baseMetadata };
 		do {
 			md = md.extends;
 			// gather up setters based on metadata:
 			var implicitSetters = false;
-			// we have implicit setters if: accessors="true" or persistent="true" (and we don't have accessors="false")
-			if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
-				implicitSetters = md.accessors;
-			} else if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
+			// we have implicit setters if: accessors="true" or persistent="true"
+			if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
 				implicitSetters = md.persistent;
+			}
+			if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
+				implicitSetters = implicitSetters || md.accessors;
 			}
 			if ( structKeyExists( md, 'properties' ) ) {
 				// due to a bug in ACF9.0.1, we cannot use var property in md.properties,
@@ -120,6 +176,10 @@ component {
 					var property = md.properties[ i ];
 					if ( implicitSetters ||
 							structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+						if ( !isSingleton( property.name ) ) {
+							// ignore properties that we know to be transients...
+							continue;
+						}
 						iocMeta.setters[ property.name ] = 'implicit';
 					}
 				}
@@ -243,12 +303,25 @@ component {
 	
 	private struct function findSetters( any cfc, struct iocMeta ) {
 		var liveMeta = { setters = iocMeta.setters };
+		if ( !iocMeta.pruned ) {
+			// need to prune known setters of transients:
+			for ( var known in iocMeta.setters ) {
+				if ( !isSingleton( known ) ) {
+					structDelete( iocMeta.setters, known );
+				}
+			}
+			iocMeta.pruned = true;
+		}
 		// gather up explicit setters:
 		for ( var member in cfc ) {
 			var method = cfc[ member ];
 			var n = len( member );
 			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
 				var property = right( member, n - 3 );
+				if ( !isSingleton( property ) ) {
+					// ignore properties that we know to be transients...
+					continue;
+				}
 				liveMeta.setters[ property ] = 'explicit';
 			}
 		}
@@ -377,7 +450,7 @@ component {
 			}
 		}
 		
-		variables.config.version = '0.1.2';
+		variables.config.version = '0.1.6';
 	}
 	
 	
