@@ -537,6 +537,12 @@ component {
 			// setup the new controller action, based on the error action:
 			structDelete( request, 'controllers' );
 			request.action = variables.framework.error;
+			
+			// ensure request.context is available
+			if ( ! structKeyExists ( request, 'context' ) ) {
+			    request.context = { };
+			}
+			
 			setupRequestWrapper( false );
 			onRequest( '' );
 		} catch ( any e ) {
