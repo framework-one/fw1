@@ -536,10 +536,17 @@ component {
 			structDelete( request, 'serviceExecutionComplete' );
 			// setup the new controller action, based on the error action:
 			structDelete( request, 'controllers' );
-			request.action = variables.framework.error;
 			
+			if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
+				request.action = variables.framework.error;
+			} else {
+				// this is an edge case so we don't bother with subsystems etc
+				// (because if part of the framework defaults are not present,
+				// we'd have to do a lot of conditional logic here!)
+				request.action = 'main.error';
+			}
 			// ensure request.context is available
-			if ( ! structKeyExists ( request, 'context' ) ) {
+			if ( !structKeyExists( request, 'context' ) ) {
 			    request.context = { };
 			}
 			
@@ -1683,7 +1690,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0_RC1';
+		variables.framework.version = '2.0_RC2';
 	}
 
 	private void function setupRequestDefaults() {
