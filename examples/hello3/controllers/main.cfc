@@ -4,9 +4,8 @@ component {
 		variables.fw = fw;
 	}
 	
-	function startDefault( rc ) {
-		param name="rc.name" default="anonymous";
-		variables.fw.service("main.default","data");
+	function default( rc ) {
+		variables.fw.service("name.default","name");
 	}
 	
 	function endDefault( rc ) {
