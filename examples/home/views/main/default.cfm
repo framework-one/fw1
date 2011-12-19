@@ -11,5 +11,7 @@
 	<li><a href="#buildURL('hello4:')#">hello4 subsystem</a></li>
 	<li>hello5 - uses a custom base/cfcbase location so it cannot be reused as-is</li>
 	<li><a href="#buildURL('hello6:')#">hello6 subsystem</a></li>
+	<li><a href="#buildURL('hello7:')#">hello7 subsystem</a></li>
+	<li><a href="#buildURL('hello8:')#">hello8 subsystem</a></li>
 </ul>
 </cfoutput>

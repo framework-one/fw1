@@ -6,7 +6,8 @@
 	
 	// FW/1 - configuration:
 	variables.framework = {
-		home = "user.default"
+		home = "user.default",
+		suppressImplicitService = false
 	};
 	
 	function setupApplication() 

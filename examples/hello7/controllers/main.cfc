@@ -1,11 +1,24 @@
-<cfcomponent><cfscript>
+component {
 	
-	function init( fw ) {
+	public any function init( any fw ) {
 		variables.fw = fw;
+		return this;
 	}
 	
-	function default() {
+	public void function startDefault( struct rc ) {
+		rc.lifecycle = [ "startDefault() called" ];
 		variables.fw.setView( 'normal.index' );
+		if ( structKeyExists( rc, "donotcatchexception" ) ) variables.fw.abortController();
+		try {
+			variables.fw.abortController();
+		} catch ( any e ) {
+			arrayAppend( rc.lifecycle, "caught " & e.type & ":" & e.message );
+		}
+		arrayAppend( rc.lifecycle, "should not execute unless we catch the exception" );
 	}
 	
-</cfscript></cfcomponent>
+	public void function endDefault( struct rc ) {
+		arrayAppend( rc.lifecycle, "endDefault() should not be called" );
+	}
+	
+}

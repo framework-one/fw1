@@ -1,6 +1,14 @@
-<cfcomponent output="false">
-	<cffunction name="default" output="false">
-		<cfargument name="rc">
-		<cfparam name="rc.name" default="anonymous">
-	</cffunction>
-</cfcomponent>
+component {
+	
+	function init( fw ) {
+		variables.fw = fw;
+	}
+	
+	function default( rc ) {
+		variables.fw.service("name.default","name");
+	}
+	
+	function endDefault( rc ) {
+		rc.captured = variables.fw.view("main/capture");
+	}
+}

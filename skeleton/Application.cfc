@@ -1,6 +1,8 @@
-<cfcomponent extends="org.corfield.framework" output="false">
+component extends="org.corfield.framework" {
 	
-	<!--- framework defaults (as struct literal):
+	/*
+		This is provided for illustration only - you should not use this in
+		a real program! Only override the defaults you need to change!
 	variables.framework = {
 		// the name of the URL variable:
 		action = 'action',
@@ -39,9 +41,9 @@
 		// either CGI.SCRIPT_NAME or a specified base URL path:
 		baseURL = 'useCgiScriptName',
 		// location used to find controllers / services:
-		cfcbase = essentially base with / replaced by .
+		// cfcbase = essentially base with / replaced by .
 		// whether FW/1 implicit service call should be suppressed:
-		suppressImplicitService = false,
+		suppressImplicitService = true,
 		// list of file extensions that FW/1 should not handle:
 		unhandledExtensions = 'cfc',
 		// list of (partial) paths that FW/1 should not handle:
@@ -54,11 +56,11 @@
 		// change this if you need multiple FW/1 applications in a single CFML application:
 		applicationKey = 'org.corfield.framework'
 	};
-	--->
+	*/
 	
-	<cffunction name="setupRequest">
-		<!--- use setupRequest to do initialization per request --->
-		<cfset request.context.startTime = getTickCount() />
-	</cffunction>
+	function setupRequest() {
+		// use setupRequest to do initialization per request
+		request.context.startTime = getTickCount();
+	}
 	
-</cfcomponent>
+}
