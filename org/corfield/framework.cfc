@@ -1702,7 +1702,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0';
+		variables.framework.version = '2.1_pre_0';
 	}
 
 	private void function setupRequestDefaults() {
