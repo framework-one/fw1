@@ -1037,7 +1037,7 @@ component {
 		// view and layout setup - used to be in setupRequestWrapper():
 		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'view' );
-		if ( !cachedExpandedFileExists( request.view ) ) {
+		if ( !cachedFileExists( expandPath( request.view ) ) ) {
 			request.missingView = request.view;
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
@@ -1057,20 +1057,20 @@ component {
 		// look for item-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
-		if ( cachedExpandedFileExists( testLayout ) ) {
+		if ( cachedFileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for section-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section, 'layout' );
-		if ( cachedExpandedFileExists( testLayout ) ) {
+		if ( cachedFileExists( expandPath( testLayout ) ) ) {
 			arrayAppend( request.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
 		if ( request.section != 'default' ) {
 			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
-			if ( cachedExpandedFileExists( testLayout ) ) {
+			if ( cachedFileExists( expandPath( testLayout ) ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
 		}
@@ -1078,7 +1078,7 @@ component {
 		if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
-			if ( cachedExpandedFileExists( testLayout ) ) {
+			if ( cachedFileExists( expandPath( testLayout ) ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
 		}
@@ -1095,19 +1095,6 @@ component {
 		}
 		return cache.fileExists[ filePath ];
 	}
-	
-	private boolean function cachedExpandedFileExists( required string filePath) {
-		var cache = application[variables.framework.applicationKey].cache;
-		if( !variables.framework.cacheFileExists ) {
-			return fileExists( ExpandPath(arguments.filePath) );
-		}
-		param name="cache.expandedFileExists" default="#structNew()#";
-		if(!structKeyExists( cache.expandedFileExists, arguments.filePath )) {
-			cache.expandedFileExists[arguments.filePath] = fileExists( ExpandPath(arguments.filePath) );
-		}
-		return cache.expandedFileExists[arguments.filePath];
-	}
-	
 	
 	private string function cfcFilePath( string dottedPath ) {
 		if ( dottedPath == '' ) {
@@ -1252,7 +1239,7 @@ component {
 						if ( type == 'controller' && section == variables.magicApplicationController ) {
 							// treat this (Application.cfc) as a controller:
 							cfc = this;
-						} else if ( cachedExpandedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) {
+						} else if ( cachedFileExists( expandPath( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) ) {
 							// we call createObject() rather than new so we can control initialization:
 							if ( request.cfcbase == '' ) {
 								cfc = createObject( 'component', subsystemDot & types & '.' & section );
