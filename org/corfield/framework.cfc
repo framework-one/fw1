@@ -63,8 +63,8 @@ component {
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future
 	 */
-	public string function buildURL( string action = '', string path = variables.magicBaseURL, any queryString = '' ) {
-		if ( action == '' ) action = getFullyQualifiedAction();
+	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
+		if ( action == '.' ) action = getFullyQualifiedAction();
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
 		if ( path == 'useSubsystemConfig' ) {
@@ -1702,7 +1702,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.0';
+		variables.framework.version = '2.0.1';
 	}
 
 	private void function setupRequestDefaults() {
