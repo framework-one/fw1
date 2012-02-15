@@ -5,7 +5,9 @@
 	// FW/1 - configuration:
 	variables.framework = structNew();
 	// controllers/layouts/services/views are in this folder (allowing for non-empty context root):
-	variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ).replace( getContextRoot(), '' ) & 'introduction';
+    variables.framework.base = getDirectoryFromPath( CGI.SCRIPT_NAME ) & 'introduction';
+    if ( len( getContextRoot() ) )
+	    variables.framework.base = replace( getDirectoryFromPath( CGI.SCRIPT_NAME ), getContextRoot(), '' ) & 'introduction';
 	
 	// If your CFML engine supports it, you can create the framework struct like this:
 	// variables.framework = {
