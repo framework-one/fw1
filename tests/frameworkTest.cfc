@@ -34,9 +34,9 @@ component extends="mxunit.framework.TestCase"{
 		variables.fw.populate(user);
 
 		assertEquals(request.context.username,user.getUserName());
-		assertEquals(request.context.firstName,user.getContact().getFirstName());
-		assertEquals(request.context.lastName,user.getContact().getLastName());
-		assertEquals(request.context.isActive,user.getContact().getIsActive());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
+		assertEquals(request.context["contact.dateCreated"],user.getContact().getIsActive());
 	}
 
 	public void function testComponentWithManyChildren(){
@@ -46,12 +46,12 @@ component extends="mxunit.framework.TestCase"{
 		variables.fw.populate(user);
 
 		assertEquals(request.context.username,user.getUserName());
-		assertEquals(request.context.firstName,user.getContact().getFirstName());
-		assertEquals(request.context.lastName,user.getContact().getLastName());
-		assertEquals(request.context.isActive,user.getContact().getIsActive());
-		assertEquals(request.context.line1,user.getContact().getAddress().getFirstName());
-		assertEquals(request.context.line2,user.getContact().getAddress().getLastName());
-		assertEquals(request.context.zip,user.getContact().getAddress().getIsActive());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
+		assertEquals(request.context.isActive,user.getIsActive());
+		assertEquals(request.context["contact.address.line1"],user.getContact().getAddress().getFirstName());
+		assertEquals(request.context["contact.address.line2"],user.getContact().getAddress().getLastName());
+		assertEquals(request.context["contact.address.zip"],user.getContact().getAddress().getIsActive());
 	}
 	
 	private Struct function getOneLevelRC()
@@ -61,20 +61,20 @@ component extends="mxunit.framework.TestCase"{
 
 	private Struct function getTwoLevelRC()
 	output=false {
-		return {username = "foobar", contact.firstName="Homer", contact.lastName="Simpson", isActive=true, contact.dateCreated="02/29/2012"};
+		return {username = "foobar", "contact.firstName"="Homer", "contact.lastName"="Simpson", isActive=true, "contact.dateCreated"="02/29/2012"};
 	}
 
 	private Struct function getThreeLevelRC()
 	output=false {
 		return {
 				username = "foobar", 
-				contact.firstName="Homer", 
-				contact.lastName="Simpson", 
-				contact.dateCreated="02/29/2012",
+				"contact.firstName"="Homer", 
+				"contact.lastName"="Simpson", 
+				"contact.dateCreated"="02/29/2012",
 				isActive=true,
-				contact.address.line1 = "123 Fake Street",
-				contact.address.line2 = "Apt 12",
-				contact.address.zip = "54232"
+				"contact.address.line1" = "123 Fake Street",
+				"contact.address.line2" = "Apt 12",
+				"contact.address.zip" = "54232"
 		};
 	}
 }
