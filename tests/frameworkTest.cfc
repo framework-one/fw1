@@ -5,15 +5,53 @@ component extends="mxunit.framework.TestCase"{
 
 	public void function testPopulateFlatComponent(){
 		var user = new stubs.userOneLevel();
-		fail("no test written yet.");
+		request.context = getOneLevelRC();
+
+		variables.fw.populate(user);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context.firstName,user.getFirstName());
+		assertEquals(request.context.lastName,user.getLastName());
+		assertEquals(request.context.isActive,user.getIsActive());
+	}
+
+	public void function testPopulateFlatComponentWithKeys(){
+		var user = new stubs.userOneLevel();
+		request.context = getOneLevelRC();
+
+		variables.fw.populate(user,"username,firstname");
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context.firstName,user.getFirstName());
+		assertEquals("",user.getLastName());
+		assertEquals(false,user.getIsActive());
 	}
 
 	public void function testComponentWithSingleChild(){
-		fail("no test written yet.");
+		var user = new stubs.userTwoLevel();
+		request.context = getTwoLevelRC();
+
+		variables.fw.populate(user);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context.firstName,user.getContact().getFirstName());
+		assertEquals(request.context.lastName,user.getContact().getLastName());
+		assertEquals(request.context.isActive,user.getContact().getIsActive());
 	}
 
 	public void function testComponentWithManyChildren(){
-		fail("no test written yet.");
+		var user = new stubs.userThreeLevel();
+		request.context = getThreeLevelRC();
+
+		variables.fw.populate(user);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context.firstName,user.getContact().getFirstName());
+		assertEquals(request.context.lastName,user.getContact().getLastName());
+		assertEquals(request.context.isActive,user.getContact().getIsActive());
+		assertEquals(request.context.line1,user.getContact().getAddress().getFirstName());
+		assertEquals(request.context.line2,user.getContact().getAddress().getLastName());
+		assertEquals(request.context.zip,user.getContact().getAddress().getIsActive());
 	}
 	
 	private Struct function getOneLevelRC()

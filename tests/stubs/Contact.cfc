@@ -30,7 +30,7 @@ component {
 	*/
 	property Address;
 
-	public void function ()
+	public void function init()
 	output=false hint="constructor"{
 		variables.firstName = "";
 		variables.lastName = "";
