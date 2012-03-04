@@ -27,6 +27,17 @@ component extends="mxunit.framework.TestCase"{
 		assertEquals(false,user.getIsActive());
 	}
 
+	public void function testPopulateChildComponentWithKeys(){
+		var user = new stubs.userTwoLevel();
+		request.context = getTwoLevelRC();
+
+		variables.fw.populate(user,"contact.firstName,username");
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals(request.context["contact.lastName"],"");
+	}
+
 	public void function testComponentWithSingleChild(){
 		var user = new stubs.userTwoLevel();
 		request.context = getTwoLevelRC();
