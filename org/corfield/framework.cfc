@@ -561,6 +561,20 @@ component {
 			if ( !structKeyExists( request, 'context' ) ) {
 			    request.context = { };
 			}
+			if ( !structKeyExists( request, 'base' ) ) {
+				if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'base' ) ) {
+					request.base = variables.framework.base;
+				} else {
+					request.base = '';
+				}
+			}
+			if ( !structKeyExists( request, 'cfcbase' ) ) {
+				if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'cfcbase' ) ) {
+					request.cfcbase = variables.framework.cfcbase;
+				} else {
+					request.cfcbase = '';
+				}
+			}
 			
 			setupRequestWrapper( false );
 			onRequest( '' );
