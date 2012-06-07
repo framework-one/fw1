@@ -3,3 +3,7 @@ litepost/*
 .project
 settings.xml
 .settings/org.eclipse.core.resources.prefs
+# Intellij IDEA files
+*.iml
+*.ipr
+*.idea
