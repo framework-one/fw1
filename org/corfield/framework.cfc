@@ -838,7 +838,7 @@ component {
 	}
 	
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
-	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '' ) {
+	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '', string statusCode = '302' ) {
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var preserveKey = '';
 		if ( preserve != 'none' ) {
@@ -889,7 +889,7 @@ component {
 			}
 		}
 		setupResponseWrapper();
-		location( targetURL, false );
+		location( targetURL, false, statusCode );
 	}
 	
 	// call this from your controller to queue up additional services
