@@ -636,9 +636,11 @@
 				REFindNoCase( "^(" & framework.unhandledPathRegex & ")", arguments.targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
+			structDelete(this, 'onError');
+			structDelete(variables, 'onError');
+		} else {
+			setupRequestWrapper( true );
 		}
-
-		setupRequestWrapper( true );
 	}
 
 	/*
