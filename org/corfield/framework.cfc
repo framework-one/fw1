@@ -1185,6 +1185,7 @@ component {
 	private struct function findImplicitAndExplicitSetters( any cfc ) {
 		var baseMetadata = getMetadata( cfc );
 		var setters = { };
+
 		// is it already attached to the CFC metadata?
 		if ( structKeyExists( baseMetadata, '__fw1_setters' ) )  {
 			setters = baseMetadata.__fw1_setters;
@@ -1192,6 +1193,7 @@ component {
 			var md = { extends = baseMetadata };
 			do {
 				md = md.extends;
+
 				var implicitSetters = false;
 				// we have implicit setters if: accessors="true" or persistent="true"
 				if ( structKeyExists( md, 'persistent' ) && isBoolean( md.persistent ) ) {
@@ -1210,6 +1212,9 @@ component {
 								structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
 							setters[ property.name ] = 'implicit';
 						}
+						writedump(var="PROPERTY *********",output="console");
+						writedump(var=property,output="console");
+//@ryan testing if the property is an object, if so cache the getter as well						
 					}
 				}
 			} while ( structKeyExists( md, 'extends' ) );
