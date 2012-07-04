@@ -791,7 +791,7 @@ component {
 	}
 	
 	// populate() may be invoked inside controllers
-	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false ) {
+	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
 		if ( keys == '' ) {
 			if ( trustKeys ) {
 				// assume everything in the request context can be set into the CFC
@@ -801,20 +801,36 @@ component {
 						args[ property ] = request.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-						evaluate( 'cfc.set#property#( argumentCollection = args )' );
+						
+						setProperty( cfc, property, args );
 					} catch ( any e ) {
 						onPopulateError( cfc, property, request.context );
 					}
 				}
-			} else {
+			} else { //trustkeys false
 				var setters = findImplicitAndExplicitSetters( cfc );
 				for ( var property in setters ) {
+
 					if ( structKeyExists( request.context, property ) ) {
 						var args = { };
 						args[ property ] = request.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-						evaluate( 'cfc.set#property#( argumentCollection = args )' );
+						setProperty( cfc, property, args );
+					}
+//start here, you are tryign to traverse backwards through a cfc to see if request context has a property
+					else if( deep && structKeyExists( cfc, "get#property#" ) ){
+						//look for a context property that starts with the property
+						for( key in request.context ){
+							if( listContainsNoCase( key, property, '.') ){
+								try{
+									setProperty( cfc, key, { "#key#" = request.context[ key ] } );
+								}
+								catch( any e ){
+									onPopulateError( cfc, key, request.context);
+								}
+							}
+						}
 					}
 				}
 			}
@@ -829,14 +845,63 @@ component {
 						args[ trimProperty ] = request.context[ trimProperty ];
 						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
-						evaluate( 'cfc.set#trimProperty#( argumentCollection = args )' );
+						setProperty( cfc, trimProperty, args );
+					}
+				}
+				else if( deep ){
+					if( listLen( trimProperty,"." ) > 1 ){
+						var prop = listGetAt( trimProperty, 1, "." );
+
+						if( structKeyExists( cfc, "get#prop#" ) ){
+							setProperty( cfc, trimProperty, { "#trimProperty#" = request.context[ trimProperty ] } );
+						}
 					}
 				}
 			}
 		}
 		return cfc;
 	}
+
+	private void function setPropertyOnChildComponent( Struct cfc, String property, Struct requestContext)
+	output=false hint=""{
+		
+	}
+
+	private void function setProperty( Struct cfc, String property, Struct args )
+	output=false hint="I set a property on a CFC"{
+		
+		var obj = {};
+		var firstObjName = "";
+		var newProperty = "";
+
+		if(listLen(property,".") > 1){
+			firstObjName = listGetAt( property, 1, "." );
+			newProperty = listDeleteAt( property, 1, "." );
+
+			args[newProperty] = args[property];
+			structDelete( args, property );
+
+			if(structKeyExists( cfc , "get" & firstObjName )){
+				obj = getProperty( cfc, firstObjName );
+
+				if( !isNull( obj ) ){
+					setProperty( obj, newProperty, args );
+				}	
+			}	
+		}
+		else{
+			evaluate( 'cfc.set#property#( argumentCollection = args )' );
+		}
+	}
 	
+	private any function getProperty(Struct cfc, String property)
+	output=false hint="I get a property from a cfc"{
+
+		if(structKeyExists(cfc, "get#property#")){
+			return evaluate('cfc.get#property#()');
+		}
+	}
+
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
 	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '', string statusCode = '302' ) {
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
@@ -1190,6 +1255,7 @@ component {
 		if ( structKeyExists( baseMetadata, '__fw1_setters' ) )  {
 			setters = baseMetadata.__fw1_setters;
 		} else {
+
 			var md = { extends = baseMetadata };
 			do {
 				md = md.extends;
@@ -1212,10 +1278,8 @@ component {
 								structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
 							setters[ property.name ] = 'implicit';
 						}
-						writedump(var="PROPERTY *********",output="console");
-						writedump(var=property,output="console");
-//@ryan testing if the property is an object, if so cache the getter as well						
 					}
+
 				}
 			} while ( structKeyExists( md, 'extends' ) );
 			// cache it in the metadata (note: in Railo 3.2 metadata cannot be modified

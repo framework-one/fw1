@@ -1,6 +1,10 @@
 component extends="mxunit.framework.TestCase"{
 	public void function setUp(){
 		variables.fw = new org.corfield.framework();
+
+		var meta = {};
+
+		clearFW1MetaData();
 	}
 
 	public void function testPopulateFlatComponent(){
@@ -19,7 +23,7 @@ component extends="mxunit.framework.TestCase"{
 		var user = new stubs.userOneLevel();
 		request.context = getOneLevelRC();
 
-		variables.fw.populate(user,"username,firstname");
+		variables.fw.populate(cfc=user,keys="username,firstname",deep=true);
 
 		assertEquals(request.context.username,user.getUserName());
 		assertEquals(request.context.firstName,user.getFirstName());
@@ -31,38 +35,61 @@ component extends="mxunit.framework.TestCase"{
 		var user = new stubs.userTwoLevel();
 		request.context = getTwoLevelRC();
 
-		variables.fw.populate(user,"contact.firstName,username");
+		variables.fw.populate(cfc=user,keys="contact.firstName,username",deep=true);
 
 		assertEquals(request.context.username,user.getUserName());
 		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
-		assertEquals(request.context["contact.lastName"],"");
+		assertEquals("",user.getContact().getLastName());
+	}
+
+	public void function testPopulateChildComponentWithTrustKeys(){
+		var user = new stubs.userTwoLevel();
+		request.context = getTwoLevelRC();
+
+		variables.fw.populate(cfc=user,trustKeys=true);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
 	}
 
 	public void function testComponentWithSingleChild(){
 		var user = new stubs.userTwoLevel();
 		request.context = getTwoLevelRC();
 
-		variables.fw.populate(user);
+		variables.fw.populate(cfc=user,deep=true);
 
 		assertEquals(request.context.username,user.getUserName());
 		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
 		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
-		assertEquals(request.context["contact.dateCreated"],user.getContact().getIsActive());
+		assertEquals(request.context["contact.dateCreated"],user.getContact().getDateCreated());
+	}
+
+	public void function testComponentWithSingleChildAndDeepFalse(){
+		var user = new stubs.userTwoLevel();
+		request.context = getTwoLevelRC();
+
+		variables.fw.populate(cfc=user);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals("",user.getContact().getFirstName());
+		assertEquals("",user.getContact().getLastName());
+		assertEquals(true,user.getIsActive());
 	}
 
 	public void function testComponentWithManyChildren(){
 		var user = new stubs.userThreeLevel();
 		request.context = getThreeLevelRC();
 
-		variables.fw.populate(user);
+		variables.fw.populate(cfc=user,deep=true);
 
 		assertEquals(request.context.username,user.getUserName());
 		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
 		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
 		assertEquals(request.context.isActive,user.getIsActive());
-		assertEquals(request.context["contact.address.line1"],user.getContact().getAddress().getFirstName());
-		assertEquals(request.context["contact.address.line2"],user.getContact().getAddress().getLastName());
-		assertEquals(request.context["contact.address.zip"],user.getContact().getAddress().getIsActive());
+		assertEquals(request.context["contact.address.line1"],user.getContact().getAddress().GetLine1());
+		assertEquals(request.context["contact.address.line2"],user.getContact().getAddress().GetLine2());
+		assertEquals(request.context["contact.address.zipCode"],user.getContact().getAddress().GetZipCode());
 	}
 	
 	private Struct function getOneLevelRC()
@@ -85,7 +112,25 @@ component extends="mxunit.framework.TestCase"{
 				isActive=true,
 				"contact.address.line1" = "123 Fake Street",
 				"contact.address.line2" = "Apt 12",
-				"contact.address.zip" = "54232"
+				"contact.address.zipCode" = "54232"
 		};
+	}
+
+	private void function clearFW1MetaData()
+	output=false hint=""{
+		var cfcs = {};
+
+		cfcs["stubs.Address"] =  getMetaData( new stubs.Address() );
+
+		cfcs["stubs.Contact"] =  getMetaData( new stubs.Contact() );
+		cfcs["stubs.UserOneLevel"] =  getMetaData( new stubs.UserOneLevel() );
+		cfcs["stubs.UserTwoLevel"] =  getMetaData(new stubs.UserTwoLevel() );
+		cfcs["stubs.UserThreeLevel"] =  getMetaData(new stubs.UserThreeLevel() );
+		
+		for(cfc in cfcs){
+			if ( structKeyExists(cfcs[cfc], '__fw1_setters' ) ) {
+				structDelete(cfcs[cfc], "__fw1_setters");
+			}
+		}
 	}
 }
