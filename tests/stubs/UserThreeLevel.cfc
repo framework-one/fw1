@@ -29,5 +29,6 @@ component {
 	output=false hint="constructor"{
 		variables.username = "";
 		variables.Contact = new stubs.Contact();
+		variables.isActive = false;
 	}
 }

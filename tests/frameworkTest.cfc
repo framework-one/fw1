@@ -91,7 +91,37 @@ component extends="mxunit.framework.TestCase"{
 		assertEquals(request.context["contact.address.line2"],user.getContact().getAddress().GetLine2());
 		assertEquals(request.context["contact.address.zipCode"],user.getContact().getAddress().GetZipCode());
 	}
-	
+
+	public void function testComponentWithManyChildrenAndTrustKeys(){
+		var user = new stubs.userThreeLevel();
+		request.context = getThreeLevelRC();
+
+		variables.fw.populate(cfc=user,deep=true,trustKeys=true);
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals(request.context["contact.lastName"],user.getContact().getLastName());
+		assertEquals(request.context.isActive,user.getIsActive());
+		assertEquals(request.context["contact.address.line1"],user.getContact().getAddress().GetLine1());
+		assertEquals(request.context["contact.address.line2"],user.getContact().getAddress().GetLine2());
+		assertEquals(request.context["contact.address.zipCode"],user.getContact().getAddress().GetZipCode());
+	}
+
+	public void function testComponentWithManyChildrenPassInKeys(){
+		var user = new stubs.userThreeLevel();
+		request.context = getThreeLevelRC();
+
+		variables.fw.populate(cfc=user,deep=true,keys="contact.firstName,contact.address.line1,username");
+
+		assertEquals(request.context.username,user.getUserName());
+		assertEquals(request.context["contact.firstName"],user.getContact().getFirstName());
+		assertEquals("",user.getContact().getLastName());
+		assertEquals(false,user.getIsActive());
+		assertEquals(request.context["contact.address.line1"],user.getContact().getAddress().GetLine1());
+		assertEquals("",user.getContact().getAddress().GetLine2());
+		assertEquals("",user.getContact().getAddress().GetZipCode());
+	}
+
 	private Struct function getOneLevelRC()
 	output=false {
 		return {username = "foobar", firstName="Homer", lastName="Simpson", isActive=true};
