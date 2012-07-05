@@ -817,12 +817,10 @@ component {
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, property, args );
-					}
-//start here, you are tryign to traverse backwards through a cfc to see if request context has a property
-					else if( deep && structKeyExists( cfc, "get#property#" ) ){
+					} else if ( deep && structKeyExists( cfc, "get#property#" ) ) {
 						//look for a context property that starts with the property
 						for( key in request.context ){
-							if( listContainsNoCase( key, property, '.') ){
+							if( listContainsNoCase( key, property, '.') ) {
 								try{
 									setProperty( cfc, key, { "#key#" = request.context[ key ] } );
 								}
@@ -847,8 +845,7 @@ component {
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, trimProperty, args );
 					}
-				}
-				else if( deep ){
+				} else if( deep ) {
 					if( listLen( trimProperty,"." ) > 1 ){
 						var prop = listGetAt( trimProperty, 1, "." );
 
@@ -862,26 +859,20 @@ component {
 		return cfc;
 	}
 
-	private void function setPropertyOnChildComponent( Struct cfc, String property, Struct requestContext)
-	output=false hint=""{
-		
-	}
-
-	private void function setProperty( Struct cfc, String property, Struct args )
-	output=false hint="I set a property on a CFC"{
+	private void function setProperty( Struct cfc, String property, Struct args ){
 		
 		var obj = {};
 		var firstObjName = "";
 		var newProperty = "";
 
-		if(listLen(property,".") > 1){
+		if( listLen( property, "." ) > 1 ) {
 			firstObjName = listGetAt( property, 1, "." );
 			newProperty = listDeleteAt( property, 1, "." );
 
 			args[newProperty] = args[property];
 			structDelete( args, property );
 
-			if(structKeyExists( cfc , "get" & firstObjName )){
+			if( structKeyExists( cfc , "get" & firstObjName ) ){
 				obj = getProperty( cfc, firstObjName );
 
 				if( !isNull( obj ) ){
@@ -894,11 +885,10 @@ component {
 		}
 	}
 	
-	private any function getProperty(Struct cfc, String property)
-	output=false hint="I get a property from a cfc"{
+	private any function getProperty( Struct cfc, String property ){
 
-		if(structKeyExists(cfc, "get#property#")){
-			return evaluate('cfc.get#property#()');
+		if( structKeyExists( cfc, "get#property#" ) ){
+			return evaluate( 'cfc.get#property#()' );
 		}
 	}
 
