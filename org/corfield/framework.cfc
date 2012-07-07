@@ -63,7 +63,7 @@ component {
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future
 	 */
-	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any querystring = '' ) {
+	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
 		if ( action == '.' ) action = getFullyQualifiedAction();
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
@@ -88,30 +88,30 @@ component {
 				omitIndex = true;
 			}
 		}
-		// if querystring is a struct, massage it into a string
-		if ( isstruct( querystring ) && structCount( querystring ) ) {
+		// if queryString is a struct, massage it into a string
+		if ( isstruct( queryString ) && structCount( queryString ) ) {
 			var q = '';
-			for( var key in querystring ) {
-				q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( querystring[ key ] )#&';
+			for( var key in queryString ) {
+				q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
 			}
-			querystring = q;
+			queryString = q;
 		}
-		else if ( !isSimpleValue( querystring ) ) {
-			querystring = '';
+		else if ( !isSimpleValue( queryString ) ) {
+			queryString = '';
 		}
-		if ( querystring == '' ) {
+		if ( queryString == '' ) {
 			// extract query string from action section:
 			var q = find( '?', action );
 			var a = find( '##', action );
 			if ( q > 0 ) {
-				querystring = right( action, len( action ) - q );
+				queryString = right( action, len( action ) - q );
 				if ( q == 1 ) {
 					action = '';
 				} else {
 					action = left( action, q - 1 );
 				}
 			} else if ( a > 0 ) {
-				querystring = right( action, len( action ) - a + 1 );
+				queryString = right( action, len( action ) - a + 1 );
 				if ( a == 1 ) {
 					action = '';
 				} else {
@@ -153,13 +153,13 @@ component {
 			cosmeticAction = getSectionAndItem( cosmeticAction );
 		}
 		
-		if ( len( querystring ) ) {
+		if ( len( queryString ) ) {
 			// extract query part and anchor from query string:
-			q = find( '?', querystring );
+			q = find( '?', queryString );
 			if ( q > 0 ) {
-				queryPart = right( querystring, len( querystring ) - q );
+				queryPart = right( queryString, len( queryString ) - q );
 				if ( q > 1 ) {
-					extraArgs = left( querystring, q - 1 );
+					extraArgs = left( queryString, q - 1 );
 				}
 				a = find( '##', queryPart );
 				if ( a > 0 ) {
@@ -171,7 +171,7 @@ component {
 					}
 				}
 			} else {
-				extraArgs = querystring;
+				extraArgs = queryString;
 				a = find( '##', extraArgs );
 				if ( a > 0 ) {
 					anchor = right( extraArgs, len( extraArgs ) - a );
@@ -498,7 +498,7 @@ component {
 	 */
 	public boolean function hasSubsystemBeanFactory( string subsystem ) {
 
-		ensureNewFrameworkstructsExist();
+		ensureNewFrameworkStructsExist();
 
 		return structKeyExists( application[ variables.framework.applicationKey ].subsystemFactories, subsystem );
 
@@ -880,7 +880,7 @@ component {
 	}
 
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
-	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string querystring = '', string statusCode = '302' ) {
+	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '', string statusCode = '302' ) {
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var preserveKey = '';
 		if ( preserve != 'none' ) {
@@ -906,15 +906,15 @@ component {
 		}
 		
 		if ( baseQuerystring != '' ) {
-			if ( querystring != '' ) {
-				if ( left( querystring, 1 ) == '?' || left( querystring, 1 ) == '##' ) {
-					baseQuerystring = baseQuerystring & querystring;
+			if ( queryString != '' ) {
+				if ( left( queryString, 1 ) == '?' || left( queryString, 1 ) == '##' ) {
+					baseQuerystring = baseQuerystring & queryString;
 				} else {
-					baseQuerystring = baseQuerystring & '&' & querystring;
+					baseQuerystring = baseQuerystring & '&' & queryString;
 				}
 			}
 		} else {
-			baseQuerystring = querystring;
+			baseQuerystring = queryString;
 		}
 		
 		var targetURL = buildURL( action, path, baseQuerystring );
@@ -986,7 +986,7 @@ component {
 	 */
 	public void function setSubsystemBeanFactory( string subsystem, any factory ) {
 
-		ensureNewFrameworkstructsExist();
+		ensureNewFrameworkStructsExist();
 		application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ] = factory;
 
 	}
@@ -1195,7 +1195,7 @@ component {
 		writeDump( var = exception, label = 'Exception' );
 	}
 	
-	private void function ensureNewFrameworkstructsExist() {
+	private void function ensureNewFrameworkStructsExist() {
 
 		var framework = application[variables.framework.applicationKey];
 
@@ -1441,7 +1441,7 @@ component {
 
 	private boolean function isSubsystemInitialized( string subsystem ) {
 
-		ensureNewFrameworkstructsExist();
+		ensureNewFrameworkStructsExist();
 
 		return structKeyExists( application[ variables.framework.applicationKey ].subsystems, subsystem );
 
