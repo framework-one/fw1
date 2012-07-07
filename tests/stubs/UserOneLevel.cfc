@@ -1,38 +1,13 @@
-/**
-* @accessors true
-*/
-component {
+component accessors = true {
 
-	/**
-	* @getters true
-	* @setters true
-	* @type String
-	*/
-	property username;
 
-	/**
-	* @getters true
-	* @setters true
-	* @type String
-	*/
-	property firstName;
-
-	/**
-	* @getters true
-	* @setters true
-	* @type String
-	*/
-	property lastName;
-
-	/**
-	* @getters true
-	* @setters true
-	* @type Boolean
-	*/
-	property isActive;
+	property name = username getters = true setters = true type = string;
+	property name = firstName getters = true setters = true type = string;
+	property name = lastName getters = true setters = true type = string;
+	property name = isActive getters = true setters = true type = boolean;
 
 	public void function init()
-	output=false hint="constructor"{
+	output = false hint = "constructor" {
 		variables.username = "";
 		variables.firstName = "";
 		variables.lastName = "";

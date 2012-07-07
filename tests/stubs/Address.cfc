@@ -1,27 +1,10 @@
-/**
-* @accessors true
-*/
-component {
-	/**
-	* @getters true
-	* @setters true
-	* @type String
-	*/
-	property line1;
+component accessors = true{
+	
+	property name = line1 getters = true setters = true type = string;
 
-	/**
-	* @getters true
-	* @setters true
-	* @type String
-	*/
-	property line2;
+	property name = line2 getters = true setters = true type = string;
 
-	/**
-	* @getters true
-	* @setters true
-	* @type Numeric
-	*/
-	property zipCode;	
+	property name = zipCode getters = true setters = true type = string;	
 
 	public void function init()
 	output=false hint="constructor"{
