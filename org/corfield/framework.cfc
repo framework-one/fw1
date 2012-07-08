@@ -89,7 +89,7 @@ component {
 			}
 		}
 		// if queryString is a struct, massage it into a string
-		if ( isstruct( queryString ) && structCount( queryString ) ) {
+		if ( isStruct( queryString ) && structCount( queryString ) ) {
 			var q = '';
 			for( var key in queryString ) {
 				q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
@@ -886,38 +886,38 @@ component {
 		if ( preserve != 'none' ) {
 			preserveKey = saveFlashContext( preserve );
 		}
-		var baseQuerystring = '';
+		var baseQueryString = '';
 		if ( append != 'none' ) {
 			if ( append == 'all' ) {
 				for ( var key in request.context ) {
 					if ( isSimpleValue( request.context[ key ] ) ) {
-						baseQuerystring = listAppend( baseQuerystring, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
 					}
 				}
 			} else {
 				var keys = listToArray( append );
 				for ( var key in keys ) {
 					if ( structKeyExists( request.context, key ) && isSimpleValue( request.context[ key ] ) ) {
-						baseQuerystring = listAppend( baseQuerystring, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
 					}
 				}
 				
 			}
 		}
 		
-		if ( baseQuerystring != '' ) {
+		if ( baseQueryString != '' ) {
 			if ( queryString != '' ) {
 				if ( left( queryString, 1 ) == '?' || left( queryString, 1 ) == '##' ) {
-					baseQuerystring = baseQuerystring & queryString;
+					baseQueryString = baseQueryString & queryString;
 				} else {
-					baseQuerystring = baseQuerystring & '&' & queryString;
+					baseQueryString = baseQueryString & '&' & queryString;
 				}
 			}
 		} else {
-			baseQuerystring = queryString;
+			baseQueryString = queryString;
 		}
 		
-		var targetURL = buildURL( action, path, baseQuerystring );
+		var targetURL = buildURL( action, path, baseQueryString );
 		if ( preserveKey != '' && variables.framework.maxNumContextsPreserved > 1 ) {
 			if ( find( '?', targetURL ) ) {
 				preserveKey = '&#variables.framework.preserveKeyURLKey#=#preserveKey#';
