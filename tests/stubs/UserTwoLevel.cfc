@@ -8,6 +8,6 @@ component accessors = true {
 	public void function init()
 	output = false hint = "constructor" {
 		variables.username = "";
-		variables.Contact = new stubs.Contact();
+		variables.Contact = new Contact();
 	}
 }

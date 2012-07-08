@@ -10,7 +10,7 @@ component accessors = true {
 		variables.firstName = "";
 		variables.lastName = "";
 
-		variables.Address = new stubs.Address();
+		variables.Address = new Address();
 		//intentionally not initing date created
 	}
 }
