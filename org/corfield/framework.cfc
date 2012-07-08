@@ -23,6 +23,19 @@ component {
 		variables.cgiScriptName = CGI.SCRIPT_NAME;
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
+	
+	// ColdFusion 10 Update due to cgi.path_info coming back empty
+	if (!len(variables.cgiPathInfo)){
+		if (structKeyExists(cgi,"http_x_rewrite_url") && len(cgi.http_x_rewrite_url))   	// iis6 1/ IIRF (Ionics Isapi Rewrite Filter)
+			variables.cgiPathInfo = listFirst(cgi.http_x_rewrite_url,'?'); 
+		else if (structKeyExists(cgi,"http_x_original_url") && len(cgi.http_x_original_url)) // iis7 rewrite default
+			variables.cgiPathInfo = listFirst(cgi.http_x_original_url,"?");
+		else if (structKeyExists(cgi,"request_uri") && len(cgi.request_uri)) 				// apache default
+			variables.cgiPathInfo = listFirst(cgi.request_uri,'?'); 
+		else if (structKeyExists(cgi,"redirect_url") && len(cgi.redirect_url))      		// apache fallback
+			variables.cgiPathInfo = listFirst(cgi.redirect_url,'?');
+	}
+	
 	request._fw1 = { };
 	// do not rely on these, they are meant to be true magic...
 	variables.magicApplicationController = '[]';
@@ -1447,7 +1460,8 @@ component {
 			}
 			if ( route == '*' ) {
 				route = '/';
-			} else if ( right( route, 1 ) != '/' ) {
+			} else if ( right( route, 1 ) != '/'  && right( route, 1 ) != '$' ) {
+				// only add the trailing slash if the last character is not a slash or $ (end of string)
 				route &= '/';
 			}
 		} else {
@@ -1462,8 +1476,9 @@ component {
 			target = replace( target, placeholder, chr(92) & n );
 			++n;
 		}
-		// add trailing match/back reference:
-		route &= '(.*)';
+		// add trailing match/back reference: if the last character is not a $ (end of string)
+		if (right( route, 1 ) != '$')
+			route &= '(.*)';
 		target &= chr(92) & n;
 		// end of preprocessing section
 		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
