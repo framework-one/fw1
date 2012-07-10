@@ -1,5 +1,6 @@
 WEB-INF/*
 litepost/*
+mxunit/*
 .project
 settings.xml
 .settings/org.eclipse.core.resources.prefs

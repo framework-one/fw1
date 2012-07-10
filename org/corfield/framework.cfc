@@ -806,7 +806,7 @@ component {
 						onPopulateError( cfc, property, request.context );
 					}
 				}
-			} else { //trustkeys false
+			} else {
 				var setters = findImplicitAndExplicitSetters( cfc );
 				for ( var property in setters ) {
 					if ( structKeyExists( request.context, property ) ) {
@@ -815,14 +815,13 @@ component {
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, property, args );
-					} else if ( deep && structKeyExists( cfc, "get#property#" ) ) {
+					} else if ( deep && structKeyExists( cfc, "get" & property ) ) {
 						//look for a context property that starts with the property
-						for( key in request.context ){
-							if( listFindNoCase( key, property, '.') ) {
-								try{
+						for ( var key in request.context ) {
+							if ( listFindNoCase( key, property, ".") ) {
+								try {
 									setProperty( cfc, key, { "#key#" = request.context[ key ] } );
-								}
-								catch( any e ){
+								} catch ( any e ) {
 									onPopulateError( cfc, key, request.context);
 								}
 							}
@@ -843,11 +842,12 @@ component {
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, trimProperty, args );
 					}
-				} else if( deep ) {
-					if( listLen( trimProperty,"." ) > 1 ){
+				} else if ( deep ) {
+					if ( listLen( trimProperty, "." ) > 1 ) {
 						var prop = listFirst( trimProperty, "." );
-
-						if( structKeyExists( cfc, "get#prop#" ) ) setProperty( cfc, trimProperty, { "#trimProperty#" = request.context[ trimProperty ] } );
+						if ( structKeyExists( cfc, "get" & prop ) ) {
+                            setProperty( cfc, trimProperty, { "#trimProperty#" = request.context[ trimProperty ] } );
+                        }
 					}
 				}
 			}
@@ -856,27 +856,24 @@ component {
 	}
 
 	private void function setProperty( struct cfc, string property, struct args ) {
-
-		if( listLen( property, "." ) > 1 ) {
+		if ( listLen( property, "." ) > 1 ) {
 			var firstObjName = listFirst( property, "." );
 			var newProperty = listRest( property,  "." );
 
 			args[ newProperty ] = args[ property ];
 			structDelete( args, property );
 
-			if( structKeyExists( cfc , "get" & firstObjName ) ){
+			if ( structKeyExists( cfc , "get" & firstObjName ) ) {
 				var obj = getProperty( cfc, firstObjName );
-
-				if( !isNull( obj ) ) setProperty( obj, newProperty, args );
-			}	
+				if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
+			}
 		} else {
 			evaluate( 'cfc.set#property#( argumentCollection = args )' );
 		}
 	}
 	
 	private any function getProperty( struct cfc, string property ) {
-
-		if( structKeyExists( cfc, "get#property#" ) ) return evaluate( 'cfc.get#property#()' );
+		if ( structKeyExists( cfc, "get#property#" ) ) return evaluate( 'cfc.get#property#()' );
 	}
 
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
@@ -1760,7 +1757,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_2';
+		variables.framework.version = '2.1_pre_3';
 	}
 
 	private void function setupRequestDefaults() {
