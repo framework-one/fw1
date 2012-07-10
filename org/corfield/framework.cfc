@@ -23,17 +23,6 @@ component {
 		variables.cgiScriptName = CGI.SCRIPT_NAME;
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
-	// ColdFusion 10 Update due to cgi.path_info coming back empty
-	if (!len(variables.cgiPathInfo)){
-		if (structKeyExists(cgi,"http_x_rewrite_url") && len(cgi.http_x_rewrite_url))   	// iis6 1/ IIRF (Ionics Isapi Rewrite Filter)
-			variables.cgiPathInfo = listFirst(cgi.http_x_rewrite_url,'?'); 
-		else if (structKeyExists(cgi,"http_x_original_url") && len(cgi.http_x_original_url)) // iis7 rewrite default
-			variables.cgiPathInfo = listFirst(cgi.http_x_original_url,"?");
-		else if (structKeyExists(cgi,"request_uri") && len(cgi.request_uri)) 				// apache default
-			variables.cgiPathInfo = listFirst(cgi.request_uri,'?'); 
-		else if (structKeyExists(cgi,"redirect_url") && len(cgi.redirect_url))      		// apache fallback
-			variables.cgiPathInfo = listFirst(cgi.redirect_url,'?');
-	}
 	request._fw1 = { };
 	// do not rely on these, they are meant to be true magic...
 	variables.magicApplicationController = '[]';
