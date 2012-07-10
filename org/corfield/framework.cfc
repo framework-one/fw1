@@ -1486,7 +1486,8 @@ component {
 			}
 			if ( route == '*' ) {
 				route = '/';
-			} else if ( right( route, 1 ) != '/' ) {
+			} else if ( right( route, 1 ) != '/' && right( route, 1 ) != '$' ) {
+				// only add the closing backslash if last position is not already a "/" or a "$" to respect regex end of string
 				route &= '/';
 			}
 		} else {
@@ -1501,8 +1502,9 @@ component {
 			target = replace( target, placeholder, chr(92) & n );
 			++n;
 		}
-		// add trailing match/back reference:
-		route &= '(.*)';
+		// add trailing match/back reference: if last character is not "$" to respect regex end of string
+		if (right( route, 1 ) != '$')
+			route &= '(.*)';
 		target &= chr(92) & n;
 		// end of preprocessing section
 		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
