@@ -1498,7 +1498,7 @@ component {
 		var n = 1;
 		var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', route );
 		for ( var placeholder in placeholders ) {
-			if(left(placeholder,1) == ":"){
+			if ( left( placeholder, 1 ) == ":") {
 				route = replace( route, placeholder, '([^/]*)' );
 				target = replace( target, placeholder, chr(92) & n );
 			}
@@ -1761,7 +1761,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_3';
+		variables.framework.version = '2.1_pre_4';
 	}
 
 	private void function setupRequestDefaults() {
