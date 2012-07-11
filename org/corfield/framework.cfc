@@ -1494,12 +1494,14 @@ component {
 			route = '/';
 		}
 		if ( !len( target ) || right( target, 1) != '/' ) target &= '/';
-		// walk for :var and replace with ([^/]*) in route and back reference in target:
+		// walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
 		var n = 1;
-		var placeholders = rematch( ':[^/]+', route );
+		var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', route );
 		for ( var placeholder in placeholders ) {
-			route = replace( route, placeholder, '([^/]*)' );
-			target = replace( target, placeholder, chr(92) & n );
+			if(left(placeholder,1) == ":"){
+				route = replace( route, placeholder, '([^/]*)' );
+				target = replace( target, placeholder, chr(92) & n );
+			}
 			++n;
 		}
 		// add trailing match/back reference: if last character is not "$" to respect regex end of string
