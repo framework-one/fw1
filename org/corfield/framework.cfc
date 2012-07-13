@@ -1134,7 +1134,7 @@ component {
 	}
 	
 	private void function dumpException( any exception ) {
-		writeDump( var = exception, label = 'Exception' );
+		writeDump( var = exception, label = 'Exception', top = 2 );
 	}
 	
 	private void function ensureNewFrameworkStructsExist() {
