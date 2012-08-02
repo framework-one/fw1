@@ -25,6 +25,7 @@ component {
 	}
 	request._fw1 = { };
 	// do not rely on these, they are meant to be true magic...
+    variables.magicApplicationSubsystem = '][';
 	variables.magicApplicationController = '[]';
 	variables.magicApplicationAction = '__';
 	variables.magicBaseURL = '-[]-';
@@ -1761,7 +1762,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_4';
+		variables.framework.version = '2.1_pre_5';
 	}
 
 	private void function setupRequestDefaults() {
@@ -1779,7 +1780,12 @@ component {
 		
 		if ( runSetup ) {
 			rc = request.context;
-			controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
+            if ( usingSubsystems() ) {
+			    controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
+                            variables.magicApplicationController & '.' & variables.magicApplicationAction );
+            } else {
+			    controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
+            }
 			setupSubsystemWrapper( request.subsystem );
 			setupRequest();
 		}
