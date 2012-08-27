@@ -687,7 +687,7 @@ component {
 			}
 			out = internalLayout( request.layouts[i], out );
 		}
-		writeOutput( out );
+		writeOutputInternal( out );
 		setupResponseWrapper();
 	}
 
@@ -1212,12 +1212,12 @@ component {
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+		writeOutputInternal( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
 		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+			writeOutputInternal( "<p>The action #request.failedAction# failed.</p>" );
 		}
-		writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
-		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
+		writeOutputInternal( "<h#1+h#>#exception.message#</h#1+h#>" );
+		writeOutputInternal( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
 	}
@@ -1826,6 +1826,10 @@ component {
 	private void function viewNotFound() {
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
+	}
+	
+	private void function writeOutputInternal(content) {
+	   writeOutput(arguments.content);
 	}
 	
 }
