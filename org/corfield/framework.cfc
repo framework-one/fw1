@@ -535,8 +535,13 @@ component {
 	 * in the code...
 	 */
 	public void function onError( any exception, string event ) {
-
 		try {
+		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "usingSubsystems") ) {
+		      // error occurred before framework was initialized
+		      failure(arguments.exception, arguments.event, false, true);
+		      return;
+		    }
+		    
 			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
@@ -1207,16 +1212,22 @@ component {
 
 	}
 
-	private void function failure( any exception, string event, boolean indirect = false ) {
+	private void function failure( any exception, string event, boolean indirect = false, boolean early = false ) {
 		var h = indirect ? 3 : 1;
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutputInternal( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
-		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutputInternal( "<p>The action #request.failedAction# failed.</p>" );
+		
+		if ( arguments.early ) {
+		    writeOutputInternal( "<h1>Exception occured before FW/1 was initialized</h1>");
+		} else {
+			writeOutputInternal( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+			if ( structKeyExists( request, 'failedAction' ) ) {
+				writeOutputInternal( "<p>The action #request.failedAction# failed.</p>" );
+			}
+			writeOutputInternal( "<h#1+h#>#exception.message#</h#1+h#>" );
 		}
-		writeOutputInternal( "<h#1+h#>#exception.message#</h#1+h#>" );
+		
 		writeOutputInternal( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
