@@ -37,7 +37,8 @@
         };
         var event = "";       
         variables.fw.onError(exception, event);
-        assertFalse(request.outputContent CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Expected message");        
+        assertFalse(request.outputContent CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Didn't expect failure in early exception");
+        assertTrue(request.outputContent CONTAINS "Exception occured before FW/1 was initialised", "Excepted message about early exception");        
     }
         
     private void function outputCapture( any content )
