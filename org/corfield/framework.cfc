@@ -535,8 +535,13 @@ component {
 	 * in the code...
 	 */
 	public void function onError( any exception, string event ) {
-
 		try {
+		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "usingSubsystems") ) {
+		      // error occurred before framework was initialized
+		      failure(arguments.exception, arguments.event, false, true);
+		      return;
+		    }
+		    
 			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
@@ -687,7 +692,7 @@ component {
 			}
 			out = internalLayout( request.layouts[i], out );
 		}
-		writeOutput( out );
+		writeOutputInternal( out );
 		setupResponseWrapper();
 	}
 
@@ -1207,17 +1212,23 @@ component {
 
 	}
 
-	private void function failure( any exception, string event, boolean indirect = false ) {
+	private void function failure( any exception, string event, boolean indirect = false, boolean early = false ) {
 		var h = indirect ? 3 : 1;
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
-		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+		
+		if ( arguments.early ) {
+		    writeOutputInternal( "<h1>Exception occured before FW/1 was initialized</h1>");
+		} else {
+			writeOutputInternal( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+			if ( structKeyExists( request, 'failedAction' ) ) {
+				writeOutputInternal( "<p>The action #request.failedAction# failed.</p>" );
+			}
+			writeOutputInternal( "<h#1+h#>#exception.message#</h#1+h#>" );
 		}
-		writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
-		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
+		
+		writeOutputInternal( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
 	}
@@ -1826,6 +1837,10 @@ component {
 	private void function viewNotFound() {
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
+	}
+	
+	private void function writeOutputInternal(content) {
+	   writeOutput(arguments.content);
 	}
 	
 }
