@@ -692,7 +692,7 @@ component {
 			}
 			out = internalLayout( request.layouts[i], out );
 		}
-		writeOutputInternal( out );
+		writeOutput( out );
 		setupResponseWrapper();
 	}
 
@@ -1219,16 +1219,16 @@ component {
 		}
 		
 		if ( arguments.early ) {
-		    writeOutputInternal( "<h1>Exception occured before FW/1 was initialized</h1>");
+		    writeOutput( "<h1>Exception occured before FW/1 was initialized</h1>");
 		} else {
-			writeOutputInternal( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+			writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
 			if ( structKeyExists( request, 'failedAction' ) ) {
-				writeOutputInternal( "<p>The action #request.failedAction# failed.</p>" );
+				writeOutput( "<p>The action #request.failedAction# failed.</p>" );
 			}
-			writeOutputInternal( "<h#1+h#>#exception.message#</h#1+h#>" );
+			writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
 		}
 		
-		writeOutputInternal( "<p>#exception.detail# (#exception.type#)</p>" );
+		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
 	}
@@ -1837,10 +1837,6 @@ component {
 	private void function viewNotFound() {
 		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
-	}
-	
-	private void function writeOutputInternal(content) {
-	   writeOutput(arguments.content);
 	}
 	
 }
