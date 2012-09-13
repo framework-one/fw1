@@ -535,8 +535,13 @@ component {
 	 * in the code...
 	 */
 	public void function onError( any exception, string event ) {
-
 		try {
+		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "version") ) {
+		      // error occurred before framework was initialized
+		      failure(arguments.exception, arguments.event, false, true);
+		      return;
+		    }
+		    
 			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
@@ -1207,16 +1212,22 @@ component {
 
 	}
 
-	private void function failure( any exception, string event, boolean indirect = false ) {
+	private void function failure( any exception, string event, boolean indirect = false, boolean early = false ) {
 		var h = indirect ? 3 : 1;
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
-		if ( structKeyExists( request, 'failedAction' ) ) {
-			writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+		
+		if ( arguments.early ) {
+		    writeOutput( "<h1>Exception occured before FW/1 was initialized</h1>");
+		} else {
+			writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+			if ( structKeyExists( request, 'failedAction' ) ) {
+				writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+			}
+			writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
 		}
-		writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
+		
 		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
 		dumpException(exception);
 
