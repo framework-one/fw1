@@ -4,7 +4,6 @@
         variables.fw = new org.corfield.framework();
         request.failureCount = 0;
         request.outputContent = "";
-        injectMethod(variables.fw, this, "outputCapture", "writeOutputInternal");
         injectMethod(variables.fw, this, "exceptionCapture", "dumpException");
     }
     
@@ -20,9 +19,11 @@
         };
         var event = "Test Event";
         variables.fw.onApplicationStart();
-        variables.fw.onError(exception, event);   
+        savecontent variable="output" {
+            variables.fw.onError(exception, event);
+        };          
         assertEquals(request.action, "main.error");
-        assertTrue(request.outputContent contains "Unable to find a view for 'main.error' action.");
+        assertTrue(output contains "Unable to find a view for 'main.error' action.");
     }
 
     /**
@@ -36,17 +37,13 @@
             detail = "Detail"
         };
         var event = "";       
-        variables.fw.onError(exception, event);
-        assertFalse(request.outputContent CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Didn't expect failure in early exception");
-        assertTrue(request.outputContent CONTAINS "Exception occured before FW/1 was initialized", "Expected message about early exception");
+        savecontent variable="output" {
+	        variables.fw.onError(exception, event);            
+        }
+        assertFalse(output CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Didn't expect failure in early exception");
+        assertTrue(output CONTAINS "Exception occured before FW/1 was initialized", "Expected message about early exception");
     }
         
-    private void function outputCapture( any content )
-    {
-        writeLog(text="Output #content#");
-        request.outputContent &= arguments.content; 
-    }      
-    
     private void function exceptionCapture( any exception)
     {
         writeLog(text="Exception: #exception.message#");
