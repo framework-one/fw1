@@ -536,7 +536,7 @@ component {
 	 */
 	public void function onError( any exception, string event ) {
 		try {
-		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "usingSubsystems") ) {
+		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "version") ) {
 		      // error occurred before framework was initialized
 		      failure(arguments.exception, arguments.event, false, true);
 		      return;
