@@ -536,7 +536,8 @@ component {
 	 */
 	public void function onError( any exception, string event ) {
 		try {
-		    if ( ! structKeyExists(variables, "framework") || ! structKeyExists(variables.framework, "version") ) {
+		    if ( !structKeyExists( variables, 'framework' ) ||
+                 !structKeyExists( variables.framework, 'version' ) ) {
 		      // error occurred before framework was initialized
 		      failure(arguments.exception, arguments.event, false, true);
 		      return;
@@ -1773,7 +1774,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_5';
+		variables.framework.version = '2.1_pre_6';
 	}
 
 	private void function setupRequestDefaults() {
