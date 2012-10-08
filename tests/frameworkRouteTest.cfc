@@ -48,16 +48,7 @@
         assertTrue(match.matched);
         
         match = variables.fw.processRouteMatch("$POST/test/:id", "default.main?id=:id", "/test/5");
-        assertFalse(match.matched);
-        
-        // Nasty, but works for testing!
-        var oldCGI = structCopy(CGI);
-        CGI = {REQUEST_METHOD:  'POST'};
-        match = variables.fw.processRouteMatch("$POST/test/:id", "default.main?id=:id", "/test/5");
-        assertFalse(match.matched);
-        
-        CGI = oldCGI;
-        assertEquals("GET", CGI.REQUEST_METHOD);           
+        assertFalse(match.matched);           
     }
     
     public void function testRouteMatchRedirect()
