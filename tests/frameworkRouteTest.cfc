@@ -39,7 +39,24 @@
         assertTrue(match.matched, "/test2/:id should match /test2/5/people");
         
         match = variables.fw.processRouteMatch("/test2/:id/$", "default.main?id=:id", "/test2/5/people");
-        assertFalse(match.matched, "/test2/:id/$ shouldn't match /test2/5/people");        
+        assertFalse(match.matched, "/test2/:id/$ shouldn't match /test2/5/people");
+        
+        match = variables.fw.processRouteMatch("/test2/(\d+)/$", "default.main/id/\1/", "/test2/5");
+        assertTrue(match.matched);
+        assertEquals("default.main/id/5/", rereplace(match.path, match.pattern, match.target));
+        
+        match = variables.fw.processRouteMatch("/test2/(\d+)/$", "default.main/id/\1/", "/test2/zz/");
+        assertFalse(match.matched);
+        
+        var route = "/test/(\d+)/something(\.)?(\w+)?/$";
+        var target = "default.main/id/\1/type/\3/";
+        match = variables.fw.processRouteMatch(route, target, "/test/5/something/");
+        assertTrue(match.matched, "/test/5/something/ should match");
+        assertEquals("default.main/id/5/type//", rereplace(match.path, match.pattern, match.target));
+        
+        match = variables.fw.processRouteMatch(route, target, "/test/5/something.html/");
+        assertTrue(match.matched);
+        assertEquals("default.main/id/5/type/html/", rereplace(match.path, match.pattern, match.target));
     }
     
     public void function testRouteMatchMethod()
