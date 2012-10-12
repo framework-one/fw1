@@ -553,6 +553,7 @@ component {
 			structDelete( request, 'controllerExecutionComplete' );
 			structDelete( request, 'controllerExecutionStarted' );
 			structDelete( request, 'serviceExecutionComplete' );
+			structDelete( request, 'overrideViewAction' );
 			// setup the new controller action, based on the error action:
 			structDelete( request, 'controllers' );
 			
@@ -1774,7 +1775,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_6';
+		variables.framework.version = '2.1_pre_7';
 	}
 
 	private void function setupRequestDefaults() {
