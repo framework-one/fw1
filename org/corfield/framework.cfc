@@ -338,6 +338,12 @@ component {
 
 	}
 	
+    /*
+     * override this to provide your environment selector
+     */
+    public string function getEnvironment() {
+        return "";
+    }
 	
 	/*
 	 * return an action with all applicable parts (subsystem, section, and item) specified
@@ -1775,8 +1781,13 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_7';
+		variables.framework.version = '2.1_pre_8';
+        setupFrameworkEnvironments();
 	}
+
+    private void function setupFrameworkEnvironments() {
+        var env = getEnvironment();
+    }
 
 	private void function setupRequestDefaults() {
 		request.base = variables.framework.base;
