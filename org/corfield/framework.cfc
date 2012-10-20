@@ -1793,6 +1793,16 @@ component {
 
     private void function setupFrameworkEnvironments() {
         var env = getEnvironment();
+        if ( structKeyExists( variables.framework, 'environments' ) ) {
+            var envs = variables.framework.environments;
+            var tier = listFirst( env, '-' );
+            if ( structKeyExists( envs, tier ) ) {
+                structAppend( variables.framework, envs[ tier ] );
+            }
+            if ( structKeyExists( envs, env ) ) {
+                structAppend( variables.framework, envs[ env ] );
+            }
+        }
         setupEnvironment( env );
     }
 

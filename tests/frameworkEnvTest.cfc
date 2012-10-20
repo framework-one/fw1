@@ -74,4 +74,84 @@ component extends="tests.InjectableTest" {
         return "I do not match any tier";
     }
 
+    public void function testTierOnlyDev() {
+        variables.fw.getEnvironment = returnTierDev;
+        variables.fwvars.getEnvironment = returnTierDev;
+        variables.fw.onRequestStart( "" );
+        assertTrue( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be dev: true" );
+        assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
+        assertFalse( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should not have been added" );
+    }
+
+    private string function returnTierDev() {
+        return "dev";
+    }
+
+    public void function testTierDevOne() {
+        variables.fw.getEnvironment = returnTierDevOne;
+        variables.fwvars.getEnvironment = returnTierDevOne;
+        variables.fw.onRequestStart( "" );
+        assertTrue( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be dev: true" );
+        assertTrue( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should be present" );
+        assertFalse( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should not have been added" );
+    }
+
+    private string function returnTierDevOne() {
+        return "dev-one";
+    }
+
+    public void function testTierDevTwo() {
+        variables.fw.getEnvironment = returnTierDevTwo;
+        variables.fwvars.getEnvironment = returnTierDevTwo;
+        variables.fw.onRequestStart( "" );
+        assertFalse( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be dev-one: false (dev-two overrides dev)" );
+        assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
+        assertFalse( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should not have been added" );
+    }
+
+    private string function returnTierDevTwo() {
+        return "dev-two";
+    }
+
+    public void function testTierDevNone() {
+        variables.fw.getEnvironment = returnTierDevNone;
+        variables.fwvars.getEnvironment = returnTierDevNone;
+        variables.fw.onRequestStart( "" );
+        assertTrue( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be dev: true (dev-none introduces no override)" );
+        assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
+        assertFalse( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should not have been added" );
+    }
+
+    private string function returnTierDevNone() {
+        return "dev-none";
+    }
+
+    public void function testTierProdOnly() {
+        variables.fw.getEnvironment = returnTierProd;
+        variables.fwvars.getEnvironment = returnTierProd;
+        variables.fw.onRequestStart( "" );
+        assertFalse( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be prod: false" );
+        assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
+        assertTrue( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should be present" );
+        assertTrue( variables.fwcfg.useSSL, "UseSSL should be true" );
+    }
+
+    private string function returnTierProd() {
+        return "prod";
+    }
+
+    public void function testTierProdPlus() {
+        variables.fw.getEnvironment = returnTierProdPlus;
+        variables.fwvars.getEnvironment = returnTierProdPlus;
+        variables.fw.onRequestStart( "" );
+        assertFalse( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be prod: false" );
+        assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
+        assertTrue( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should be present" );
+        assertTrue( variables.fwcfg.useSSL, "UseSSL should be true" );
+    }
+
+    private string function returnTierProdPlus() {
+        return "prod-plus";
+    }
+
 }
