@@ -27,6 +27,33 @@ component extends="tests.InjectableTest" {
         return "";
     }
 
+    public void function testSetupEnvironmentIsCalled() {
+        variables.fw.setupEnvironment = recordCallsWithArg;
+        variables.fwvars.setupEnvironment = recordCallsWithArg;
+        variables.fw.__setupEnvCalls = 0;
+        variables.fw.__setupEnvArgs = [ ];
+        variables.fw.onRequestStart( "" );
+        assertEquals( 1, variables.fw.__setupEnvCalls );
+        assertEquals( "", variables.fw.__setupEnvArgs[ 1 ] );
+    }
+
+    public void function testSetupEnvironmentIsCalledWithEnv() {
+        variables.fw.getEnvironment = returnTierNoMatch;
+        variables.fwvars.getEnvironment = returnTierNoMatch;
+        variables.fw.setupEnvironment = recordCallsWithArg;
+        variables.fwvars.setupEnvironment = recordCallsWithArg;
+        variables.fw.__setupEnvCalls = 0;
+        variables.fw.__setupEnvArgs = [ ];
+        variables.fw.onRequestStart( "" );
+        assertEquals( 1, variables.fw.__setupEnvCalls );
+        assertEquals( "I do not match any tier", variables.fw.__setupEnvArgs[ 1 ] );
+    }
+
+    private void function recordCallsWithArg( string env ) {
+        this.__setupEnvCalls += 1;
+        arrayAppend( this.__setupEnvArgs, env );
+    }
+
     public void function testDefault() {
         variables.fw.onRequestStart( "" );
         assertFalse( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be default: false" );

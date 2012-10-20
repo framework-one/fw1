@@ -1012,6 +1012,12 @@ component {
 	public void function setupApplication() { }
 
 	/*
+	 * override this to provide environment-specific initialization
+	 * you do not need to call super.setupEnvironment()
+	 */
+	public void function setupEnvironment( string env ) { }
+
+	/*
 	 * override this to provide request-specific initialization
 	 * you do not need to call super.setupRequest()
 	 */
@@ -1787,6 +1793,7 @@ component {
 
     private void function setupFrameworkEnvironments() {
         var env = getEnvironment();
+        setupEnvironment( env );
     }
 
 	private void function setupRequestDefaults() {
