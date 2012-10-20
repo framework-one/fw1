@@ -2,7 +2,21 @@
 
     public void function setUp() {
         variables.fw = new org.corfield.framework();
-        makePublic(variables.fw, "processRouteMatch");
+        // doesn't work on Railo:
+        // makePublic(variables.fw, "processRouteMatch");
+        // this works on both Railo and ACF:
+        variables.fw.processRouteMatch = fetchVariables(variables.fw).processRouteMatch;
+    }
+
+    private any function fetchVariables( any cfc ) {
+        cfc.__$$fetchVariables = returnVariables;
+        var vars = cfc.__$$fetchVariables();
+        structDelete( cfc, "__$$fetchVariables" );
+        return vars;
+    }
+
+    private any function returnVariables() {
+        return variables;
     }
     
     public void function testRouteMatchBasics()
