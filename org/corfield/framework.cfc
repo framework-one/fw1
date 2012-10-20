@@ -356,7 +356,13 @@ component {
 
 		return getSectionAndItem( action );
 	}
-	
+
+    /*
+     * return the local hostname of the server
+     */
+    public string function getHostname() {
+        return createObject( "java", "java.net.InetAddress" ).getLocalHost().getHostName();
+    }
 	
 	/*
 	 * return the item part of the action

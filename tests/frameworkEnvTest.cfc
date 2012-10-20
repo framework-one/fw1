@@ -154,4 +154,9 @@ component extends="tests.InjectableTest" {
         return "prod-plus";
     }
 
+    public void function testHostname() {
+        // just tests we get a non-empty string
+        assertNotEquals( "", variables.fw.getHostname() );
+    }
+
 }
