@@ -10,7 +10,7 @@ component extends="tests.InjectableTest" {
             "dev" = { reloadApplicationOnEveryRequest = true },
             "dev-one" = { oneNewOption = 1 },
             "dev-two" = { reloadApplicationOnEveryRequest = false },
-            "prod" = { useSSL = true },
+            "prod" = { useSSL = true }
         };
     }
 
