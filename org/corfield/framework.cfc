@@ -652,12 +652,12 @@ component {
 					// run before once per controller:
 					if ( !structKeyExists( once, tuple.key ) ) {
 						once[ tuple.key ] = i;
-						doController( tuple.controller, 'before' );
+						doController( tuple.controller, 'before', 'before' );
 						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 					}
-					doController( tuple.controller, 'start' & tuple.item );
+					doController( tuple.controller, 'start' & tuple.item, 'start' );
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
-					doController( tuple.controller, tuple.item );
+					doController( tuple.controller, tuple.item, 'item' );
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 				}
 			}
@@ -681,10 +681,10 @@ component {
 				n = arrayLen( request.controllers );
 				for ( i = n; i >= 1; i = i - 1 ) {
 					tuple = request.controllers[ i ];
-					doController( tuple.controller, 'end' & tuple.item );
+					doController( tuple.controller, 'end' & tuple.item, 'end' );
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 					if ( once[ tuple.key ] eq i ) {
-						doController( tuple.controller, 'after' );
+						doController( tuple.controller, 'after', 'after' );
 						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 					}
 				}
@@ -1199,7 +1199,7 @@ component {
 		}
 	}
 	
-	private void function doController( any cfc, string method ) {
+	private void function doController( any cfc, string method, string lifecycle ) {
 		if ( structKeyExists( cfc, method ) ) {
 			try {
 				evaluate( 'cfc.#method#( rc = request.context )' );
@@ -1210,7 +1210,7 @@ component {
 		}
 		else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
-				evaluate( 'cfc.#method#( rc = request.context, method = method )' );
+				evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
 			} catch ( any e ) {
 				setCfcMethodFailureInfo( cfc, method );
 				rethrow;
