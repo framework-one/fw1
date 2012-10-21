@@ -787,12 +787,14 @@ component {
 		// allow configured extensions and paths to pass through to the requested template.
 		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
 		// Meaning /myexcludepath will match '/myexcludepath' and all subdirectories  
-		if ( listFindNoCase( framework.unhandledExtensions, listLast( targetPath, '.' ) ) || 
-				REFindNoCase( '^(' & framework.unhandledPathRegex & ')', targetPath ) ) {		
+		if ( listFindNoCase( variables.framework.unhandledExtensions, listLast( targetPath, '.' ) ) || 
+				REFindNoCase( '^(' & variables.framework.unhandledPathRegex & ')', targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
-			structDelete(this, 'onError');
-			structDelete(variables, 'onError');
+            if ( !variables.framework.unhandledErrorCaught ) {
+			    structDelete(this, 'onError');
+			    structDelete(variables, 'onError');
+            }
 		} else {
 			setupRequestWrapper( true );
 		}
@@ -1780,6 +1782,9 @@ component {
 		if ( !structKeyExists(variables.framework, 'unhandledPaths') ) {
 			variables.framework.unhandledPaths = '/flex2gateway';
 		}				
+        if ( !structKeyExists( variables.framework, 'unhandledErrorCaught' ) ) {
+            variables.framework.unhandledErrorCaught = false;
+        }
 		// convert unhandledPaths to regex:
 		variables.framework.unhandledPathRegex = replaceNoCase(
 			REReplace( variables.framework.unhandledPaths, '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)', '\\\1', 'all' ),
