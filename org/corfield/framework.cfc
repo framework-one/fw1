@@ -23,7 +23,10 @@ component {
 		variables.cgiScriptName = CGI.SCRIPT_NAME;
 		variables.cgiPathInfo = CGI.PATH_INFO;
 	}
-	request._fw1 = { };
+	request._fw1 = {
+        cgiScriptName = CGI.SCRIPT_NAME,
+        cgiRequestMethod = CGI.REQUEST_METHOD
+    };
 	// do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
 	variables.magicApplicationController = '[]';
@@ -77,7 +80,7 @@ component {
 			}
 		}
 		if ( path == 'useCgiScriptName' ) {
-			path = CGI.SCRIPT_NAME;
+			path = request._fw1.cgiScriptName;
 			if ( variables.framework.SESOmitIndex ) {
 				path = getDirectoryFromPath( path );
 				omitIndex = true;
@@ -1553,7 +1556,7 @@ component {
 		target &= chr(92) & n;
 		// end of preprocessing section
 		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
-		var matched = len( routeMatch.method ) ? ( '$' & CGI.REQUEST_METHOD == routeMatch.method ) : true;
+		var matched = len( routeMatch.method ) ? ( '$' & request._fw1.cgiRequestMethod == routeMatch.method ) : true;
 		if ( matched && reFind( route, path ) ) {
 			routeMatch.matched = true;
 			routeMatch.pattern = route;
