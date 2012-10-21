@@ -1200,9 +1200,17 @@ component {
 	}
 	
 	private void function doController( any cfc, string method ) {
-		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
+		if ( structKeyExists( cfc, method ) ) {
 			try {
 				evaluate( 'cfc.#method#( rc = request.context )' );
+			} catch ( any e ) {
+				setCfcMethodFailureInfo( cfc, method );
+				rethrow;
+			}
+		}
+		else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
+			try {
+				evaluate( 'cfc.#method#( rc = request.context, method = method )' );
 			} catch ( any e ) {
 				setCfcMethodFailureInfo( cfc, method );
 				rethrow;
