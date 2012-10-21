@@ -1095,33 +1095,6 @@ component {
 		}
 	}
 	
-	private void function buildViewQueue() {
-		// default behavior:
-		var subsystem = request.subsystem;
-		var section = request.section;
-		var item = request.item;
-		var subsystembase = '';
-		
-		// has view been overridden?
-		if ( structKeyExists( request, 'overrideViewAction' ) ) {
-			subsystem = getSubsystem( request.overrideViewAction );
-			section = getSection( request.overrideViewAction );
-			item = getItem( request.overrideViewAction );
-			structDelete( request, 'overrideViewAction' );
-		}
-		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
-
-		// view and layout setup - used to be in setupRequestWrapper():
-		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
-													section & '/' & item, 'view' );
-		if ( !cachedFileExists( request.view ) ) {
-			request.missingView = request.view;
-			// ensures original view not re-invoked for onError() case:
-			structDelete( request, 'view' );
-		}
-	}
-
-
 	private void function buildLayoutQueue() {
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
@@ -1169,6 +1142,33 @@ component {
 			if ( cachedFileExists( testLayout ) ) {
 				arrayAppend( request.layouts, testLayout );
 			}
+		}
+	}
+
+
+	private void function buildViewQueue() {
+		// default behavior:
+		var subsystem = request.subsystem;
+		var section = request.section;
+		var item = request.item;
+		var subsystembase = '';
+		
+		// has view been overridden?
+		if ( structKeyExists( request, 'overrideViewAction' ) ) {
+			subsystem = getSubsystem( request.overrideViewAction );
+			section = getSection( request.overrideViewAction );
+			item = getItem( request.overrideViewAction );
+			structDelete( request, 'overrideViewAction' );
+		}
+		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
+
+		// view and layout setup - used to be in setupRequestWrapper():
+		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+													section & '/' & item, 'view' );
+		if ( !cachedFileExists( request.view ) ) {
+			request.missingView = request.view;
+			// ensures original view not re-invoked for onError() case:
+			structDelete( request, 'view' );
 		}
 	}
 
