@@ -691,15 +691,15 @@ component {
 		}
 		request.controllerExecutionComplete = true;
 
-		buildViewAndLayoutQueue();
-
+		buildViewQueue();
 		setupView();
-
 		if ( structKeyExists(request, 'view') ) {
 			out = internalView( request.view );
 		} else {
 			out = onMissingView( request.context );
 		}
+
+        buildLayoutQueue();
 		for ( i = 1; i <= arrayLen(request.layouts); i = i + 1 ) {
 			if ( structKeyExists(request, 'layout') && !request.layout ) {
 				break;
@@ -1095,9 +1095,7 @@ component {
 		}
 	}
 	
-	private void function buildViewAndLayoutQueue() {
-		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
-		var testLayout = 0;
+	private void function buildViewQueue() {
 		// default behavior:
 		var subsystem = request.subsystem;
 		var section = request.section;
@@ -1121,7 +1119,18 @@ component {
 			// ensures original view not re-invoked for onError() case:
 			structDelete( request, 'view' );
 		}
+	}
 
+
+	private void function buildLayoutQueue() {
+		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
+		var testLayout = 0;
+		// default behavior:
+		var subsystem = request.subsystem;
+		var section = request.section;
+		var item = request.item;
+		var subsystembase = '';
+		
 		request.layouts = [ ];
 		
 		// has layout been overridden?
