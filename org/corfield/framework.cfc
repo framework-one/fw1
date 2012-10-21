@@ -1810,7 +1810,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_8';
+		variables.framework.version = '2.1_pre_9';
         setupFrameworkEnvironments();
 	}
 
