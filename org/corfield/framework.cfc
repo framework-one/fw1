@@ -25,7 +25,8 @@ component {
 	}
 	request._fw1 = {
         cgiScriptName = CGI.SCRIPT_NAME,
-        cgiRequestMethod = CGI.REQUEST_METHOD
+        cgiRequestMethod = CGI.REQUEST_METHOD,
+        requestDefaultsInitialized = false
     };
 	// do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
@@ -720,67 +721,11 @@ component {
 	 * super.onRequestStart() first
 	 */
 	public any function onRequestStart( string targetPath ) {
-
-		var pathInfo = variables.cgiPathInfo;
-
 		setupFrameworkDefaults();
 		setupRequestDefaults();
 
 		if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
 			setupApplicationWrapper();
-		}
-
-		if ( !structKeyExists(request, 'context') ) {
-			request.context = { };
-		}
-		// SES URLs by popular request :)
-		if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
-			// canonicalize for IIS:
-			pathInfo = right( pathInfo, len( pathInfo ) - len( variables.cgiScriptName ) );
-		} else if ( len( pathInfo ) > 0 && pathInfo == left( variables.cgiScriptName, len( pathInfo ) ) ) {
-			// pathInfo is bogus so ignore it:
-			pathInfo = '';
-		}
-		pathInfo = processRoutes( pathInfo );
-		try {
-			// we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
-			// any system that doesn't support .split() just in case (empty items won't work there!)
-			if ( len( pathInfo ) > 1 ) {
-				pathInfo = right( pathInfo, len( pathInfo ) - 1 ).split( '/' );
-			} else {
-				pathInfo = arrayNew( 1 );
-			}
-		} catch ( any exception ) {
-			pathInfo = listToArray( pathInfo, '/' );
-		}
-		var sesN = arrayLen( pathInfo );
-		if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
-			request.generateSES = true;
-		}
-		for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
-			if ( sesIx == 1 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx];
-			} else if ( sesIx == 2 ) {
-				request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
-			} else if ( sesIx mod 2 == 1 ) {
-				request.context[ pathInfo[sesIx] ] = '';
-			} else {
-				request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
-			}
-		}
-		// certain remote calls do not have URL or form scope:
-		if ( isDefined('URL') ) structAppend(request.context,URL);
-		if ( isDefined('form') ) structAppend(request.context,form);
-		// figure out the request action before restoring flash context:
-		if ( !structKeyExists(request.context, variables.framework.action) ) {
-			request.context[variables.framework.action] = variables.framework.home;
-		} else {
-			request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
-		}
-		if ( variables.framework.noLowerCase ) {
-			request.action = validateAction( request.context[variables.framework.action] );
-		} else {
-			request.action = validateAction( lCase(request.context[variables.framework.action]) );
 		}
 
 		restoreFlashContext();
@@ -1818,7 +1763,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
 			variables.framework.subsystems = { };
 		}
-		variables.framework.version = '2.1_pre_9';
+		variables.framework.version = '2.1Alpha1';
         setupFrameworkEnvironments();
 	}
 
@@ -1838,8 +1783,65 @@ component {
     }
 
 	private void function setupRequestDefaults() {
-		request.base = variables.framework.base;
-		request.cfcbase = variables.framework.cfcbase;
+        if ( !request._fw1.requestDefaultsInitialized ) {
+            var pathInfo = variables.cgiPathInfo;
+            request.base = variables.framework.base;
+            request.cfcbase = variables.framework.cfcbase;
+
+            if ( !structKeyExists(request, 'context') ) {
+                request.context = { };
+            }
+            // SES URLs by popular request :)
+            if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
+                // canonicalize for IIS:
+                pathInfo = right( pathInfo, len( pathInfo ) - len( variables.cgiScriptName ) );
+            } else if ( len( pathInfo ) > 0 && pathInfo == left( variables.cgiScriptName, len( pathInfo ) ) ) {
+                // pathInfo is bogus so ignore it:
+                pathInfo = '';
+            }
+            pathInfo = processRoutes( pathInfo );
+            try {
+                // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
+                // any system that doesn't support .split() just in case (empty items won't work there!)
+                if ( len( pathInfo ) > 1 ) {
+                    pathInfo = right( pathInfo, len( pathInfo ) - 1 ).split( '/' );
+                } else {
+                    pathInfo = arrayNew( 1 );
+                }
+            } catch ( any exception ) {
+                pathInfo = listToArray( pathInfo, '/' );
+            }
+            var sesN = arrayLen( pathInfo );
+            if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
+                request.generateSES = true;
+            }
+            for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
+                if ( sesIx == 1 ) {
+                    request.context[variables.framework.action] = pathInfo[sesIx];
+                } else if ( sesIx == 2 ) {
+                    request.context[variables.framework.action] = pathInfo[sesIx-1] & '.' & pathInfo[sesIx];
+                } else if ( sesIx mod 2 == 1 ) {
+                    request.context[ pathInfo[sesIx] ] = '';
+                } else {
+                    request.context[ pathInfo[sesIx-1] ] = pathInfo[sesIx];
+                }
+            }
+            // certain remote calls do not have URL or form scope:
+            if ( isDefined('URL') ) structAppend(request.context,URL);
+            if ( isDefined('form') ) structAppend(request.context,form);
+            // figure out the request action before restoring flash context:
+            if ( !structKeyExists(request.context, variables.framework.action) ) {
+                request.context[variables.framework.action] = variables.framework.home;
+            } else {
+                request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
+            }
+            if ( variables.framework.noLowerCase ) {
+                request.action = validateAction( request.context[variables.framework.action] );
+            } else {
+                request.action = validateAction( lCase(request.context[variables.framework.action]) );
+            }
+            request._fw1.requestDefaultsInitialized = true;
+        }
 	}
 
 	private void function setupRequestWrapper( boolean runSetup ) {
