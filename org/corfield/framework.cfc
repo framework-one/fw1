@@ -142,7 +142,7 @@ component {
 			} else {
 				initialDelim = '&';
 			}
-		} else if ( structKeyExists( request, 'generateSES' ) && request.generateSES ) {
+		} else if ( structKeyExists( request._fw1, 'generateSES' ) && request._fw1.generateSES ) {
 			if ( omitIndex ) {
 				initialDelim = '';
 			} else {
@@ -238,7 +238,7 @@ component {
 		var item = getItem( action );
 		var tuple = { };
 
-		if ( structKeyExists( request, 'controllerExecutionStarted' ) ) {
+		if ( structKeyExists( request._fw1, 'controllerExecutionStarted' ) ) {
 			raiseException( type="FW1.controllerExecutionStarted", message="Controller '#action#' may not be added at this point.",
 				detail="The controller execution phase has already started. Controllers may not be added by other controller methods." );
 		}
@@ -248,10 +248,10 @@ component {
 		tuple.item = item;
 
 		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
-			if ( !structKeyExists( request, 'controllers' ) ) {
-				request.controllers = [ ];
+			if ( !structKeyExists( request._fw1, 'controllers' ) ) {
+				request._fw1.controllers = [ ];
 			}
-			arrayAppend( request.controllers, tuple );
+			arrayAppend( request._fw1.controllers, tuple );
 		}
 	}
 
@@ -566,12 +566,12 @@ component {
 			request.exception = exception;
 			request.event = event;
 			// reset lifecycle flags:
-			structDelete( request, 'controllerExecutionComplete' );
-			structDelete( request, 'controllerExecutionStarted' );
-			structDelete( request, 'serviceExecutionComplete' );
-			structDelete( request, 'overrideViewAction' );
+			structDelete( request._fw1, 'controllerExecutionComplete' );
+			structDelete( request._fw1, 'controllerExecutionStarted' );
+			structDelete( request._fw1, 'serviceExecutionComplete' );
+			structDelete( request._fw1, 'overrideViewAction' );
 			// setup the new controller action, based on the error action:
-			structDelete( request, 'controllers' );
+			structDelete( request._fw1, 'controllers' );
 			
 			if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
 				request.action = variables.framework.error;
@@ -644,12 +644,12 @@ component {
 		var once = { };
 		var n = 0;
 
-		request.controllerExecutionStarted = true;
+		request._fw1.controllerExecutionStarted = true;
 		try {
-			if ( structKeyExists( request, 'controllers' ) ) {
-				n = arrayLen( request.controllers );
+			if ( structKeyExists( request._fw1, 'controllers' ) ) {
+				n = arrayLen( request._fw1.controllers );
 				for ( i = 1; i <= n; i = i + 1 ) {
-					tuple = request.controllers[ i ];
+					tuple = request._fw1.controllers[ i ];
 					// run before once per controller:
 					if ( !structKeyExists( once, tuple.key ) ) {
 						once[ tuple.key ] = i;
@@ -662,9 +662,9 @@ component {
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 				}
 			}
-			n = arrayLen( request.services );
+			n = arrayLen( request._fw1.services );
 			for ( i = 1; i <= n; i = i + 1 ) {
-				tuple = request.services[i];
+				tuple = request._fw1.services[i];
 				if ( tuple.key == '' ) {
 					// throw the result away:
 					doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
@@ -677,11 +677,11 @@ component {
 					}
 				}
 			}
-			request.serviceExecutionComplete = true;
-			if ( structKeyExists( request, 'controllers' ) ) {
-				n = arrayLen( request.controllers );
+			request._fw1.serviceExecutionComplete = true;
+			if ( structKeyExists( request._fw1, 'controllers' ) ) {
+				n = arrayLen( request._fw1.controllers );
 				for ( i = n; i >= 1; i = i - 1 ) {
-					tuple = request.controllers[ i ];
+					tuple = request._fw1.controllers[ i ];
 					doController( tuple.controller, 'end' & tuple.item, 'end' );
 					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
 					if ( once[ tuple.key ] eq i ) {
@@ -691,24 +691,24 @@ component {
 				}
 			}
 		} catch ( FW1.AbortControllerException e ) {
-			request.serviceExecutionComplete = true;
+			request._fw1.serviceExecutionComplete = true;
 		}
-		request.controllerExecutionComplete = true;
+		request._fw1.controllerExecutionComplete = true;
 
 		buildViewQueue();
 		setupView();
-		if ( structKeyExists(request, 'view') ) {
-			out = internalView( request.view );
+		if ( structKeyExists(request._fw1, 'view') ) {
+			out = internalView( request._fw1.view );
 		} else {
 			out = onMissingView( request.context );
 		}
 
         buildLayoutQueue();
-		for ( i = 1; i <= arrayLen(request.layouts); i = i + 1 ) {
+		for ( i = 1; i <= arrayLen(request._fw1.layouts); i = i + 1 ) {
 			if ( structKeyExists(request, 'layout') && !request.layout ) {
 				break;
 			}
-			out = internalLayout( request.layouts[i], out );
+			out = internalLayout( request._fw1.layouts[i], out );
 		}
 		writeOutput( out );
 		setupResponseWrapper();
@@ -908,7 +908,7 @@ component {
 		var item = getItem( action );
 		var tuple = { };
 
-		if ( structKeyExists( request, "serviceExecutionComplete" ) ) {
+		if ( structKeyExists( request._fw1, "serviceExecutionComplete" ) ) {
 			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
 				detail="The service execution phase is complete. Services may not be added by end*() or after() controller methods." );
 		}
@@ -920,7 +920,7 @@ component {
 		tuple.enforceExistence = enforceExistence;
 
 		if ( structKeyExists( tuple, "service" ) && isObject( tuple.service ) ) {
-			arrayAppend( request.services, tuple );
+			arrayAppend( request._fw1.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type="FW1.serviceCfcNotFound", message="Service '#action#' does not exist.",
 				detail="To have the execution of this service be conditional based upon its existence, pass in a third parameter of 'false'." );
@@ -942,7 +942,7 @@ component {
 	 * use this to override the default layout
 	 */
 	public void function setLayout( string action ) {
-		request.overrideLayoutAction = validateAction( action );
+		request._fw1.overrideLayoutAction = validateAction( action );
 	}
 	
 	/*
@@ -1012,7 +1012,7 @@ component {
 	 * use this to override the default view
 	 */
 	public void function setView( string action ) {
-		request.overrideViewAction = validateAction( action );
+		request._fw1.overrideViewAction = validateAction( action );
 	}
 
 	/*
@@ -1054,14 +1054,14 @@ component {
 		var item = request.item;
 		var subsystembase = '';
 		
-		request.layouts = [ ];
+		request._fw1.layouts = [ ];
 		
 		// has layout been overridden?
-		if ( structKeyExists( request, 'overrideLayoutAction' ) ) {
-			subsystem = getSubsystem( request.overrideLayoutAction );
-			section = getSection( request.overrideLayoutAction );
-			item = getItem( request.overrideLayoutAction );
-			structDelete( request, 'overrideLayoutAction' );
+		if ( structKeyExists( request._fw1, 'overrideLayoutAction' ) ) {
+			subsystem = getSubsystem( request._fw1.overrideLayoutAction );
+			section = getSection( request._fw1.overrideLayoutAction );
+			item = getItem( request._fw1.overrideLayoutAction );
+			structDelete( request._fw1, 'overrideLayoutAction' );
 		}
 		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
 
@@ -1069,20 +1069,20 @@ component {
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'layout' );
 		if ( cachedFileExists( testLayout ) ) {
-			arrayAppend( request.layouts, testLayout );
+			arrayAppend( request._fw1.layouts, testLayout );
 		}
 		// look for section-specific layout:
 		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section, 'layout' );
 		if ( cachedFileExists( testLayout ) ) {
-			arrayAppend( request.layouts, testLayout );
+			arrayAppend( request._fw1.layouts, testLayout );
 		}
 		// look for subsystem-specific layout (site-wide layout if not using subsystems):
 		if ( request.section != 'default' ) {
 			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( testLayout ) ) {
-				arrayAppend( request.layouts, testLayout );
+				arrayAppend( request._fw1.layouts, testLayout );
 			}
 		}
 		// look for site-wide layout (only applicable if using subsystems)
@@ -1090,7 +1090,7 @@ component {
 			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
 														'default', 'layout' );
 			if ( cachedFileExists( testLayout ) ) {
-				arrayAppend( request.layouts, testLayout );
+				arrayAppend( request._fw1.layouts, testLayout );
 			}
 		}
 	}
@@ -1104,21 +1104,21 @@ component {
 		var subsystembase = '';
 		
 		// has view been overridden?
-		if ( structKeyExists( request, 'overrideViewAction' ) ) {
-			subsystem = getSubsystem( request.overrideViewAction );
-			section = getSection( request.overrideViewAction );
-			item = getItem( request.overrideViewAction );
-			structDelete( request, 'overrideViewAction' );
+		if ( structKeyExists( request._fw1, 'overrideViewAction' ) ) {
+			subsystem = getSubsystem( request._fw1.overrideViewAction );
+			section = getSection( request._fw1.overrideViewAction );
+			item = getItem( request._fw1.overrideViewAction );
+			structDelete( request._fw1, 'overrideViewAction' );
 		}
 		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
 
 		// view and layout setup - used to be in setupRequestWrapper():
-		request.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
+		request._fw1.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
 													section & '/' & item, 'view' );
-		if ( !cachedFileExists( request.view ) ) {
-			request.missingView = request.view;
+		if ( !cachedFileExists( request._fw1.view ) ) {
+			request.missingView = request._fw1.view;
 			// ensures original view not re-invoked for onError() case:
-			structDelete( request, 'view' );
+			structDelete( request._fw1, 'view' );
 		}
 	}
 
@@ -1394,7 +1394,7 @@ component {
 		if ( structKeyExists( rc, '$' ) ) {
 			$ = rc.$;
 		}
-		if ( !structKeyExists( request, 'controllerExecutionComplete' ) ) {
+		if ( !structKeyExists( request._fw1, 'controllerExecutionComplete' ) ) {
 			raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
 				detail="The layout method should not be called prior to the completion of the controller execution phase." );
 		}
@@ -1413,7 +1413,7 @@ component {
 			$ = rc.$;
 		}
 		structAppend( local, args );
-		if ( !structKeyExists( request, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
+		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
 			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
 				detail="The view method should not be called prior to the completion of the service execution phase." );
 		}
@@ -1813,7 +1813,7 @@ component {
             }
             var sesN = arrayLen( pathInfo );
             if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
-                request.generateSES = true;
+                request._fw1.generateSES = true;
             }
             for ( var sesIx = 1; sesIx <= sesN; sesIx = sesIx + 1 ) {
                 if ( sesIx == 1 ) {
@@ -1850,7 +1850,7 @@ component {
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
 		request.section = getSection( request.action );
 		request.item = getItem( request.action );
-		request.services = [ ];
+		request._fw1.services = [ ];
 		
 		if ( runSetup ) {
 			rc = request.context;
