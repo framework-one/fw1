@@ -1335,20 +1335,24 @@ component {
 	private string function getNextPreserveKeyAndPurgeOld() {
 		var nextPreserveKey = '';
 		var oldKeyToPurge = '';
-		if ( variables.framework.maxNumContextsPreserved > 1 ) {
-			lock scope="session" type="exclusive" timeout="30" {
-				param name="session.__fw1NextPreserveKey" default="1";
-				nextPreserveKey = session.__fw1NextPreserveKey;
-				session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1;
-			}
-			oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
-		} else {
-			lock scope="session" type="exclusive" timeout="30" {
-				session.__fw1PreserveKey = '';
-				nextPreserveKey = session.__fw1PreserveKey;
-			}
-			oldKeyToPurge = '';
-		}
+        try {
+		    if ( variables.framework.maxNumContextsPreserved > 1 ) {
+			    lock scope="session" type="exclusive" timeout="30" {
+				    param name="session.__fw1NextPreserveKey" default="1";
+				    nextPreserveKey = session.__fw1NextPreserveKey;
+				    session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1;
+			    }
+			    oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
+		    } else {
+			    lock scope="session" type="exclusive" timeout="30" {
+				    session.__fw1PreserveKey = '';
+				    nextPreserveKey = session.__fw1PreserveKey;
+			    }
+			    oldKeyToPurge = '';
+            }
+		} catch ( any e ) {
+            // ignore - assume session scope is disabled
+        }
 		var key = getPreserveKeySessionKey( oldKeyToPurge );
 		if ( structKeyExists( session, key ) ) {
 			structDelete( session, key );
