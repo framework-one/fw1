@@ -742,48 +742,7 @@ component {
      * want tracing functionality to continue working
      */
     public any function onRequestEnd() {
-        if ( variables.framework.trace && arrayLen( request._fw1.trace ) ) {
-            var startTime = request._fw1.trace[1].tick;
-            writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px;">' )
-            writeOutput( '<div style="font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div>' );
-            var table = '<table style="border: 1px solid; border-color: black; color: black;">';
-            writeOutput( table );
-            var colors = [ '##ccd4dd', '##ccddcc' ];
-            var row = 0;
-            var n = arrayLen( request._fw1.trace );
-            for ( var i = 1; i <= n; ++i ) {
-                var trace = request._fw1.trace[i];
-                var action = '';
-                if ( trace.s == variables.magicApplicationController ) {
-                    action = '<em>Application.cfc</em>';
-                    if ( right( trace.i, len( variables.magicApplicationAction ) ) == variables.magicApplicationAction ) {
-                        continue;
-                    }
-                } else {
-                    action = trace.sub;
-                    if ( action != '' ) {
-                        action &= variables.framework.subsystemDelimiter;
-                    }
-                    action &= trace.s;
-                    if ( action != '' ) {
-                        action &= '.';
-                    }
-                    action &= trace.i;
-                }
-                ++row;
-                writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' )
-                writeOutput( '<td style="border: 0; color: black;" width="5%">#trace.tick - startTime#ms</td>' );
-                writeOutput( '<td style="border: 0; color: black;" width="10%">#action#</td>' );
-                var color = trace.msg.startsWith( 'no ' ) ? '##cc8888' : '##0000';
-                writeOutput( '<td style="border: 0; color: #color#;">#trace.msg#</td>' );
-                writeOutput( '</tr>' );
-                if ( trace.msg.startsWith( 'redirecting ' ) ) {
-                    writeOutput( '</table>#table#' );
-                    if ( i < n ) startTime = request._fw1.trace[i+1].tick;
-                }
-            }
-            writeOutput( '<table></div>' );
-        }
+        frameworkTraceRender();
     }
 
 	/*
@@ -1369,6 +1328,54 @@ component {
                 structDelete( session, '_fw1_trace' );
             }
             arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item } );
+        }
+    }
+
+    private void function frameworkTraceRender() {
+        if ( variables.framework.trace && arrayLen( request._fw1.trace ) ) {
+            var startTime = request._fw1.trace[1].tick;
+            var font = 'font-family: verdana, helvetica;';
+            writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' )
+            writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
+            var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">';
+            writeOutput( table );
+            var colors = [ '##ccd4dd', '##ccddcc' ];
+            var row = 0;
+            var n = arrayLen( request._fw1.trace );
+            for ( var i = 1; i <= n; ++i ) {
+                var trace = request._fw1.trace[i];
+                var action = '';
+                if ( trace.s == variables.magicApplicationController || trace.sub == variables.magicApplicationSubsystem ) {
+                    action = '<em>Application.cfc</em>';
+                    if ( right( trace.i, len( variables.magicApplicationAction ) ) == variables.magicApplicationAction ) {
+                        continue;
+                    }
+                } else {
+                    action = trace.sub;
+                    if ( action != '' && trace.s != '' ) {
+                        action &= variables.framework.subsystemDelimiter;
+                    }
+                    action &= trace.s;
+                    if ( trace.s != '' ) {
+                        action &= '.';
+                    }
+                    action &= trace.i;
+                }
+                ++row;
+                writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' )
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="5%">#trace.tick - startTime#ms</td>' );
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="10%">#action#</td>' );
+                var color =
+                    trace.msg.startsWith( 'no ' ) ? '##cc8888' :
+                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##0000';
+                writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#</td>' );
+                writeOutput( '</tr>' );
+                if ( trace.msg.startsWith( 'redirecting ' ) ) {
+                    writeOutput( '</table>#table#' );
+                    if ( i < n ) startTime = request._fw1.trace[i+1].tick;
+                }
+            }
+            writeOutput( '<table></div>' );
         }
     }
 
