@@ -826,7 +826,7 @@ component {
 	public any function onSessionStart() {
 		setupFrameworkDefaults();
 		setupRequestDefaults();
-		setupSession();
+		setupSessionWrapper();
 	}
 	
 	// populate() may be invoked inside controllers
