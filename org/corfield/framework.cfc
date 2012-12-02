@@ -567,7 +567,7 @@ component {
 		    if ( !structKeyExists( variables, 'framework' ) ||
                  !structKeyExists( variables.framework, 'version' ) ) {
 		      // error occurred before framework was initialized
-		      failure(arguments.exception, arguments.event, false, true);
+		      failure( exception, event, false, true );
 		      return;
 		    }
 		    
