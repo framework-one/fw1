@@ -1323,7 +1323,7 @@ component {
 
     private void function frameworkTrace( string message, string subsystem = '', string section = '', string item = '' ) {
         if ( variables.framework.trace ) {
-            if ( structKeyExists( session, '_fw1_trace' ) ) {
+            if ( isDefined( 'session._fw1_trace' ) && structKeyExists( session, '_fw1_trace' ) ) {
                 request._fw1.trace = session._fw1_trace;
                 structDelete( session, '_fw1_trace' );
             }
@@ -1335,7 +1335,7 @@ component {
         if ( variables.framework.trace && arrayLen( request._fw1.trace ) ) {
             var startTime = request._fw1.trace[1].tick;
             var font = 'font-family: verdana, helvetica;';
-            writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' )
+            writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
             var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">';
             writeOutput( table );
@@ -1362,7 +1362,7 @@ component {
                     action &= trace.i;
                 }
                 ++row;
-                writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' )
+                writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' );
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="5%">#trace.tick - startTime#ms</td>' );
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="10%">#action#</td>' );
                 var color =
@@ -1883,7 +1883,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-		variables.framework.version = '2.1Beta1';
+		variables.framework.version = '2.1Beta2';
         setupFrameworkEnvironments();
 	}
 
