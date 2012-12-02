@@ -239,8 +239,8 @@ component {
 		var tuple = { };
 
 		if ( structKeyExists( request._fw1, 'controllerExecutionStarted' ) ) {
-			raiseException( type="FW1.controllerExecutionStarted", message="Controller '#action#' may not be added at this point.",
-				detail="The controller execution phase has already started. Controllers may not be added by other controller methods." );
+			raiseException( type='FW1.controllerExecutionStarted', message="Controller '#action#' may not be added at this point.",
+				detail='The controller execution phase has already started. Controllers may not be added by other controller methods.' );
 		}
 
 		tuple.controller = getController( section = section, subsystem = subsystem );
@@ -334,8 +334,8 @@ component {
 		}
 
 		if ( variables.framework.defaultSubsystem == '' ) {
-			raiseException( type="FW1.subsystemNotSpecified", message="No subsystem specified and no default configured.",
-					detail="When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured." );
+			raiseException( type='FW1.subsystemNotSpecified', message='No subsystem specified and no default configured.',
+					detail='When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured.' );
 		}
 
 		return variables.framework.defaultSubsystem;
@@ -346,7 +346,7 @@ component {
      * override this to provide your environment selector
      */
     public string function getEnvironment() {
-        return "";
+        return '';
     }
 	
 	/*
@@ -365,7 +365,7 @@ component {
      * return the local hostname of the server
      */
     public string function getHostname() {
-        return createObject( "java", "java.net.InetAddress" ).getLocalHost().getHostName();
+        return createObject( 'java', 'java.net.InetAddress' ).getLocalHost().getHostName();
     }
 	
 	/*
@@ -661,12 +661,12 @@ component {
 					if ( !structKeyExists( once, tuple.key ) ) {
 						once[ tuple.key ] = i;
 						doController( tuple.controller, 'before', 'before' );
-						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+						if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 					}
 					doController( tuple.controller, 'start' & tuple.item, 'start' );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 					doController( tuple.controller, tuple.item, 'item' );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 				}
 			}
 			n = arrayLen( request._fw1.services );
@@ -675,10 +675,10 @@ component {
 				if ( tuple.key == '' ) {
 					// throw the result away:
 					doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 				} else {
 					_data_fw1 = doService( tuple.service, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 					if ( isDefined('_data_fw1') ) {
 						request.context[ tuple.key ] = _data_fw1;
 					}
@@ -690,10 +690,10 @@ component {
 				for ( i = n; i >= 1; i = i - 1 ) {
 					tuple = request._fw1.controllers[ i ];
 					doController( tuple.controller, 'end' & tuple.item, 'end' );
-					if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 					if ( once[ tuple.key ] eq i ) {
 						doController( tuple.controller, 'after', 'after' );
-						if ( structKeyExists( request._fw1, "abortController" ) ) abortController();
+						if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 					}
 				}
 			}
@@ -792,12 +792,12 @@ component {
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, property, args );
-					} else if ( deep && structKeyExists( cfc, "get" & property ) ) {
+					} else if ( deep && structKeyExists( cfc, 'get' & property ) ) {
 						//look for a context property that starts with the property
 						for ( var key in request.context ) {
-							if ( listFindNoCase( key, property, ".") ) {
+							if ( listFindNoCase( key, property, '.') ) {
 								try {
-									setProperty( cfc, key, { "#key#" = request.context[ key ] } );
+									setProperty( cfc, key, { '#key#' = request.context[ key ] } );
 								} catch ( any e ) {
 									onPopulateError( cfc, key, request.context);
 								}
@@ -820,10 +820,10 @@ component {
 						setProperty( cfc, trimProperty, args );
 					}
 				} else if ( deep ) {
-					if ( listLen( trimProperty, "." ) > 1 ) {
-						var prop = listFirst( trimProperty, "." );
-						if ( structKeyExists( cfc, "get" & prop ) ) {
-                            setProperty( cfc, trimProperty, { "#trimProperty#" = request.context[ trimProperty ] } );
+					if ( listLen( trimProperty, '.' ) > 1 ) {
+						var prop = listFirst( trimProperty, '.' );
+						if ( structKeyExists( cfc, 'get' & prop ) ) {
+                            setProperty( cfc, trimProperty, { '#trimProperty#' = request.context[ trimProperty ] } );
                         }
 					}
 				}
@@ -833,14 +833,14 @@ component {
 	}
 
 	private void function setProperty( struct cfc, string property, struct args ) {
-		if ( listLen( property, "." ) > 1 ) {
-			var firstObjName = listFirst( property, "." );
-			var newProperty = listRest( property,  "." );
+		if ( listLen( property, '.' ) > 1 ) {
+			var firstObjName = listFirst( property, '.' );
+			var newProperty = listRest( property,  '.' );
 
 			args[ newProperty ] = args[ property ];
 			structDelete( args, property );
 
-			if ( structKeyExists( cfc , "get" & firstObjName ) ) {
+			if ( structKeyExists( cfc , 'get' & firstObjName ) ) {
 				var obj = getProperty( cfc, firstObjName );
 				if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
 			}
@@ -850,7 +850,7 @@ component {
 	}
 	
 	private any function getProperty( struct cfc, string property ) {
-		if ( structKeyExists( cfc, "get#property#" ) ) return evaluate( 'cfc.get#property#()' );
+		if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
 	}
 
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
@@ -915,9 +915,9 @@ component {
 		var item = getItem( action );
 		var tuple = { };
 
-		if ( structKeyExists( request._fw1, "serviceExecutionComplete" ) ) {
-			raiseException( type="FW1.serviceExecutionComplete", message="Service '#action#' may not be added at this point.",
-				detail="The service execution phase is complete. Services may not be added by end*() or after() controller methods." );
+		if ( structKeyExists( request._fw1, 'serviceExecutionComplete' ) ) {
+			raiseException( type='FW1.serviceExecutionComplete', message="Service '#action#' may not be added at this point.",
+				detail='The service execution phase is complete. Services may not be added by end*() or after() controller methods.' );
 		}
 
 		tuple.service = getService(section=section, subsystem=subsystem);
@@ -1034,7 +1034,7 @@ component {
 	 * returns the UI generated by the named view
 	 */
 	public string function view( string path, struct args = { } ) {
-		var viewPath = parseViewOrLayoutPath( path, "view" );
+		var viewPath = parseViewOrLayoutPath( path, 'view' );
 		return internalView( viewPath, args );
 	}
 	
@@ -1183,7 +1183,7 @@ component {
 				rethrow;
 			}
 		} else if ( enforceExistence ) {
-			raiseException( type="FW1.serviceMethodNotFound", message="Service method '#method#' does not exist in service '#getMetadata( cfc ).fullname#'.",
+			raiseException( type='FW1.serviceMethodNotFound', message="Service method '#method#' does not exist in service '#getMetadata( cfc ).fullname#'.",
 				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." );
 		}
 	}
@@ -1213,16 +1213,16 @@ component {
 		}
 		getPageContext().getResponse().setStatus( 500 );
 		if ( arguments.early ) {
-		    writeOutput( "<h1>Exception occured before FW/1 was initialized</h1>");
+		    writeOutput( '<h1>Exception occured before FW/1 was initialized</h1>');
 		} else {
-			writeOutput( "<h#h#>" & ( indirect ? "Original exception " : "Exception" ) & " in #event#</h#h#>" );
+			writeOutput( '<h#h#>' & ( indirect ? 'Original exception ' : 'Exception' ) & ' in #event#</h#h#>' );
 			if ( structKeyExists( request, 'failedAction' ) ) {
-				writeOutput( "<p>The action #request.failedAction# failed.</p>" );
+				writeOutput( '<p>The action #request.failedAction# failed.</p>' );
 			}
-			writeOutput( "<h#1+h#>#exception.message#</h#1+h#>" );
+			writeOutput( '<h#1+h#>#exception.message#</h#1+h#>' );
 		}
 		
-		writeOutput( "<p>#exception.detail# (#exception.type#)</p>" );
+		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
 		dumpException(exception);
 
 	}
@@ -1406,8 +1406,8 @@ component {
 			$ = rc.$;
 		}
 		if ( !structKeyExists( request._fw1, 'controllerExecutionComplete' ) ) {
-			raiseException( type="FW1.layoutExecutionFromController", message="Invalid to call the layout method at this point.",
-				detail="The layout method should not be called prior to the completion of the controller execution phase." );
+			raiseException( type='FW1.layoutExecutionFromController', message='Invalid to call the layout method at this point.',
+				detail='The layout method should not be called prior to the completion of the controller execution phase.' );
 		}
 		var response = '';
 		savecontent variable="response" {
@@ -1425,8 +1425,8 @@ component {
 		}
 		structAppend( local, args );
 		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
-			raiseException( type="FW1.viewExecutionFromController", message="Invalid to call the view method at this point.",
-				detail="The view method should not be called prior to the completion of the service execution phase." );
+			raiseException( type='FW1.viewExecutionFromController', message='Invalid to call the view method at this point.',
+				detail='The view method should not be called prior to the completion of the service execution phase.' );
 		}
 		var response = '';
 		savecontent variable="response" {
@@ -1508,7 +1508,7 @@ component {
 		var n = 1;
 		var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', route );
 		for ( var placeholder in placeholders ) {
-			if ( left( placeholder, 1 ) == ":") {
+			if ( left( placeholder, 1 ) == ':') {
 				route = replace( route, placeholder, '([^/]*)' );
 				target = replace( target, placeholder, chr(92) & n );
 			}
@@ -1902,14 +1902,14 @@ component {
 	private string function validateAction( string action ) {
 		// check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
 		if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
-			raiseException( type="FW1.actionContainsSlash", message="Found a slash in the action: '#action#'.",
-					detail="Actions are not allowed to embed sub-directory paths.");
+			raiseException( type='FW1.actionContainsSlash', message="Found a slash in the action: '#action#'.",
+					detail='Actions are not allowed to embed sub-directory paths.');
 		}
 		return action;
 	}
 
 	private void function viewNotFound() {
-		raiseException( type="FW1.viewNotFound", message="Unable to find a view for '#request.action#' action.",
+		raiseException( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
 	}
 	
