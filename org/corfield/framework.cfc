@@ -539,6 +539,7 @@ component {
 	 */
 	public string function layout( string path, string body ) {
 		var layoutPath = parseViewOrLayoutPath( path, 'layout' );
+        frameworkTrace( 'layout( #path# ) called - rendering #viewPath#' );
 		return internalLayout( layoutPath, body );
 	}
 
@@ -614,9 +615,11 @@ component {
 			frameworkTrace( 'onError( #exception.message#, #event# ) called' );
 			setupRequestWrapper( false );
 			onRequest( '' );
+            frameworkTraceRender();
 		} catch ( any e ) {
 			failure( e, 'onError' );
 			failure( exception, event, true );
+            frameworkTraceRender();
 		}
 
 	}
@@ -1104,6 +1107,7 @@ component {
 	 */
 	public string function view( string path, struct args = { } ) {
 		var viewPath = parseViewOrLayoutPath( path, 'view' );
+        frameworkTrace( 'view( #path# ) called - rendering #viewPath#' );
 		return internalView( viewPath, args );
 	}
 	
