@@ -453,6 +453,13 @@ component {
 		}
 		return getDefaultSubsystem();
 	}
+
+    /*
+     * return the base directory for the current request's subsystem
+     */
+    public string function getSubsystemBase() {
+        return request.subsystemBase;
+    }
 	
 	/*
 	 * return the (optional) configuration for a subsystem
