@@ -1204,7 +1204,7 @@ component {
 		if ( structKeyExists(exception, 'rootCause') ) {
 			exception = exception.rootCause;
 		}
-		
+		getPageContext().getResponse().setStatus( 500 );
 		if ( arguments.early ) {
 		    writeOutput( "<h1>Exception occured before FW/1 was initialized</h1>");
 		} else {
