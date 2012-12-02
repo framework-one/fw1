@@ -1521,7 +1521,8 @@ component {
 			$ = rc.$;
 		}
 		structAppend( local, args );
-		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') && arrayLen( request.services ) != 0 ) {
+		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') &&
+             structKeyExists( request, 'services' ) && arrayLen( request.services ) != 0 ) {
 			raiseException( type='FW1.viewExecutionFromController', message='Invalid to call the view method at this point.',
 				detail='The view method should not be called prior to the completion of the service execution phase.' );
 		}
