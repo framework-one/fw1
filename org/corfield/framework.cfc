@@ -27,7 +27,8 @@ component {
         cgiScriptName = CGI.SCRIPT_NAME,
         cgiRequestMethod = CGI.REQUEST_METHOD,
         requestDefaultsInitialized = false,
-        trace = []
+        trace = [],
+        traceVarDeclared= false
     };
 	// do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
@@ -932,6 +933,7 @@ component {
         if ( variables.framework.trace ) {
             frameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
             session._fw1_trace = request._fw1.trace;
+            session._fw1_traceVarDeclared= request._fw1.traceVarDeclared;
         }
 		location( targetURL, false, statusCode );
 	}
@@ -1323,11 +1325,24 @@ component {
 
     private void function frameworkTrace( string message, string subsystem = '', string section = '', string item = '' ) {
         if ( variables.framework.trace ) {
+        	var traceVar= '';
             if ( isDefined( 'session._fw1_trace' ) && structKeyExists( session, '_fw1_trace' ) ) {
                 request._fw1.trace = session._fw1_trace;
                 structDelete( session, '_fw1_trace' );
+                request._fw1.traceVarDeclared= session._fw1_traceVarDeclared;
+                structDelete(session, '_fw1_traceVarDeclared');
             }
-            arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item } );
+            if(request._fw1.traceVarDeclared || StructKeyExists(request.context,'traceVar')) {
+            	request._fw1.traceVarDeclared= true;
+            	 if(StructKeyExists(request.context,'traceVar')) {
+            	 	traceVar= request.context['traceVar'];
+            	 } else {
+            	 	traceVar='{traceVar not present in rc before this stage}';	 
+            	 }
+            } else {
+            	traceVar='{traceVar not yet declared}';
+            }
+            arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item, traceVar= traceVar } );
         }
     }
 
@@ -1363,12 +1378,26 @@ component {
                 }
                 ++row;
                 writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' );
-                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="5%">#trace.tick - startTime#ms</td>' );
-                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="10%">#action#</td>' );
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" valign="top" width="5%">#trace.tick - startTime#ms</td>' );
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" valign="top" width="10%">#action#</td>' );
                 var color =
                     trace.msg.startsWith( 'no ' ) ? '##cc8888' :
                         trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##0000';
-                writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#</td>' );
+                if(request._fw1.traceVarDeclared) {
+                	var msgWithTrace= '';
+                	savecontent variable='msgWithTrace' {
+                		writeOutput('<td style="border: 0; #font# font-size: small;" valign="top"><span style="color: #color#;">#trace.msg#</span><br />traceVar value entering stage:');
+                		if(IsSimpleValue(trace.traceVar)) {
+                			writeOutput('#trace.traceVar#');
+                		} else {
+                			writeDump(var='#trace.traceVar#',expand="false",label="traceVar");
+                		}
+                		writeOutput('</td>');		
+                	}
+                	writeOutput(msgWithTrace);
+                } else {
+                	writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;" valign="top">#trace.msg#</td>' );
+                }
                 writeOutput( '</tr>' );
                 if ( trace.msg.startsWith( 'redirecting ' ) ) {
                     writeOutput( '</table>#table#' );
