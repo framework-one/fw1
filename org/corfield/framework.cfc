@@ -770,6 +770,8 @@ component {
 				REFindNoCase( '^(' & variables.framework.unhandledPathRegex & ')', targetPath ) ) {		
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
+			structDelete(this, 'onRequestEnd');
+			structDelete(variables, 'onRequestEnd');			
             if ( !variables.framework.unhandledErrorCaught ) {
 			    structDelete(this, 'onError');
 			    structDelete(variables, 'onError');
