@@ -26,8 +26,10 @@ component {
 	request._fw1 = {
         cgiScriptName = CGI.SCRIPT_NAME,
         cgiRequestMethod = CGI.REQUEST_METHOD,
+        controllers = [ ],
         requestDefaultsInitialized = false,
-        trace = []
+        services = [ ],
+        trace = [ ]
     };
 	// do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
@@ -252,9 +254,6 @@ component {
 		tuple.item = item;
 
 		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
-			if ( !structKeyExists( request._fw1, 'controllers' ) ) {
-				request._fw1.controllers = [ ];
-			}
             frameworkTrace( 'queuing controller', subsystem, section, item );
 			arrayAppend( request._fw1.controllers, tuple );
 		}
@@ -584,7 +583,9 @@ component {
 			structDelete( request._fw1, 'serviceExecutionComplete' );
 			structDelete( request._fw1, 'overrideViewAction' );
 			// setup the new controller action, based on the error action:
-			structDelete( request._fw1, 'controllers' );
+			request._fw1.controllers = [ ];
+            // reset services for this new action:
+            request._fw1.services = [ ];
 			
 			if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
 				request.action = variables.framework.error;
@@ -661,25 +662,23 @@ component {
 
 		request._fw1.controllerExecutionStarted = true;
 		try {
-			if ( structKeyExists( request._fw1, 'controllers' ) ) {
-				n = arrayLen( request._fw1.controllers );
-				for ( i = 1; i <= n; i = i + 1 ) {
-					tuple = request._fw1.controllers[ i ];
-					// run before once per controller:
-					if ( !structKeyExists( once, tuple.key ) ) {
-						once[ tuple.key ] = i;
-						doController( tuple, 'before', 'before' );
-						if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					}
-					doController( tuple, 'start' & tuple.item, 'start' );
-					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					doController( tuple, tuple.item, 'item' );
+			n = arrayLen( request._fw1.controllers );
+			for ( i = 1; i <= n; i = i + 1 ) {
+				tuple = request._fw1.controllers[ i ];
+				// run before once per controller:
+				if ( !structKeyExists( once, tuple.key ) ) {
+					once[ tuple.key ] = i;
+					doController( tuple, 'before', 'before' );
 					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 				}
+				doController( tuple, 'start' & tuple.item, 'start' );
+				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+				doController( tuple, tuple.item, 'item' );
+				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 			}
 			n = arrayLen( request._fw1.services );
 			for ( i = 1; i <= n; i = i + 1 ) {
-				tuple = request._fw1.services[i];
+				tuple = request._fw1.services[ i ];
 				if ( tuple.key == '' ) {
 					// throw the result away:
 					doService( tuple, tuple.item, tuple.args, tuple.enforceExistence );
@@ -696,16 +695,14 @@ component {
 				}
 			}
 			request._fw1.serviceExecutionComplete = true;
-			if ( structKeyExists( request._fw1, 'controllers' ) ) {
-				n = arrayLen( request._fw1.controllers );
-				for ( i = n; i >= 1; i = i - 1 ) {
-					tuple = request._fw1.controllers[ i ];
-					doController( tuple, 'end' & tuple.item, 'end' );
+			n = arrayLen( request._fw1.controllers );
+			for ( i = n; i >= 1; i = i - 1 ) {
+				tuple = request._fw1.controllers[ i ];
+				doController( tuple, 'end' & tuple.item, 'end' );
+				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+				if ( once[ tuple.key ] eq i ) {
+					doController( tuple, 'after', 'after' );
 					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					if ( once[ tuple.key ] eq i ) {
-						doController( tuple, 'after', 'after' );
-						if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					}
 				}
 			}
 		} catch ( FW1.AbortControllerException e ) {
@@ -1531,7 +1528,7 @@ component {
 		}
 		structAppend( local, args );
 		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') &&
-             structKeyExists( request, 'services' ) && arrayLen( request.services ) != 0 ) {
+             structKeyExists( request._fw1, 'services' ) && arrayLen( request._fw1.services ) != 0 ) {
 			raiseException( type='FW1.viewExecutionFromController', message='Invalid to call the view method at this point.',
 				detail='The view method should not be called prior to the completion of the service execution phase.' );
 		}
@@ -1885,7 +1882,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-		variables.framework.version = '2.1Beta3';
+		variables.framework.version = '2.1RC1';
         setupFrameworkEnvironments();
 	}
 
@@ -1972,7 +1969,6 @@ component {
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
 		request.section = getSection( request.action );
 		request.item = getItem( request.action );
-		request._fw1.services = [ ];
 		
 		if ( runSetup ) {
 			rc = request.context;
