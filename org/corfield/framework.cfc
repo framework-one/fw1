@@ -629,11 +629,12 @@ component {
 	 * this can be overridden if you want to change the behavior when
 	 * FW/1 cannot find a matching view
 	 */
-	public void function onMissingView( struct rc ) {
+	public string function onMissingView( struct rc ) {
 		// unable to find a matching view - fail with a nice exception
 		viewNotFound();
 		// if we got here, we would return the string to be rendered
 		// but viewNotFound() throws an exception...
+        // for example, return view( 'main.missing' );
 	}
 
 	/*
@@ -1882,7 +1883,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-		variables.framework.version = '2.1RC1';
+		variables.framework.version = '2.1RC2';
         setupFrameworkEnvironments();
 	}
 
