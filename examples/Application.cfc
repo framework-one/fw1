@@ -6,7 +6,8 @@ component extends="org.corfield.framework" {
 	// FW/1 - configuration:
 	variables.framework = {
 		usingSubsystems = true,
-		SESOmitIndex = true
+		SESOmitIndex = true,
+        trace = true
 	};
 	
 	// pull in bean factory for hello8:
