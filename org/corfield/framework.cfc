@@ -1883,7 +1883,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-		variables.framework.version = '2.1';
+	    variables.framework.version = '2.1.1';
         setupFrameworkEnvironments();
 	}
 
