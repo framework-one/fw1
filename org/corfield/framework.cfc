@@ -539,7 +539,7 @@ component {
 	 */
 	public string function layout( string path, string body ) {
 		var layoutPath = parseViewOrLayoutPath( path, 'layout' );
-        frameworkTrace( 'layout( #path# ) called - rendering #viewPath#' );
+        frameworkTrace( 'layout( #path# ) called - rendering #layoutPath#' );
 		return internalLayout( layoutPath, body );
 	}
 
