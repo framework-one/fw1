@@ -101,7 +101,9 @@ component {
 		if ( isStruct( queryString ) && structCount( queryString ) ) {
 			var q = '';
 			for( var key in queryString ) {
-				q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
+				if( isSimpleValue( queryString[key] ) ){
+					q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
+				}
 			}
 			queryString = q;
 		}
