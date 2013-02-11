@@ -1534,8 +1534,12 @@ component {
 				detail='The view method should not be called prior to the completion of the service execution phase.' );
 		}
 		var response = '';
-		savecontent variable="response" {
-			include '#viewPath#';
+		try {
+			savecontent variable="response" {
+				include '#viewPath#';
+			}
+		} catch ( any e ) {
+			onMissingView( request.context );
 		}
 		return response;
 	}
