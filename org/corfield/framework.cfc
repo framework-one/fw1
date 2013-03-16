@@ -1926,7 +1926,11 @@ component {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
                 // any system that doesn't support .split() just in case (empty items won't work there!)
                 if ( len( pathInfo ) > 1 ) {
-                    pathInfo = right( pathInfo, len( pathInfo ) - 1 ).split( '/' );
+                    // Strip leading "/" if present.
+                    if ( left( pathInfo, 1 ) EQ '/' ) {
+                        pathInfo = right( pathInfo, len( pathInfo ) - 1 );
+                    }
+                    pathInfo = pathInfo.split( '/' );
                 } else {
                     pathInfo = arrayNew( 1 );
                 }
