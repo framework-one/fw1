@@ -6,7 +6,7 @@ mapping to the org directory directly).
 
 Project home: http://fw1.riaforge.org
 
-Documentation wiki: http://github.com/seancorfield/fw1/wiki
+Documentation wiki: http://github.com/framework-one/fw1/wiki
 
 Blog: http://corfield.org/blog/archives.cfm/category/fw1
 
