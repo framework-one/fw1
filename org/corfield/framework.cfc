@@ -1794,7 +1794,7 @@ component {
 			}
 		}
 		if ( !structKeyExists(variables.framework, 'usingSubsystems') ) {
-			variables.framework.usingSubsystems = false;
+			variables.framework.usingSubsystems = structKeyExists(variables.framework,'defaultSubsystem') || structKeyExists(variables.framework,'sitewideLayoutSubsystem');
 		}
 		if ( !structKeyExists(variables.framework, 'defaultSubsystem') ) {
 			variables.framework.defaultSubsystem = 'home';
