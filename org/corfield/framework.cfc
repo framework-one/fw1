@@ -115,7 +115,9 @@ component {
 			var q = find( '?', action );
 			var a = find( '##', action );
 			if ( q > 0 ) {
-				queryString = right( action, len( action ) - q );
+                if ( q < len( action ) ) {
+				    queryString = right( action, len( action ) - q );
+                }
 				if ( q == 1 ) {
 					action = '';
 				} else {
@@ -1885,7 +1887,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-	    variables.framework.version = '2.1.1';
+	    variables.framework.version = '2.1.2_pre_0';
         setupFrameworkEnvironments();
 	}
 
