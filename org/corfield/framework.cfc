@@ -1497,7 +1497,7 @@ component {
 	
 	private void function injectFramework( any cfc ) {
 		var args = { };
-		if ( structKeyExists( cfc, 'setFramework' ) ) {
+		if ( structKeyExists( cfc, 'setFramework' ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
 			args.framework = this;
 			// allow alternative spellings
 			args.fw = this;
