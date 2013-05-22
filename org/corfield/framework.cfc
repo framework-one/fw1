@@ -257,7 +257,7 @@ component {
         tuple.section = section;
 		tuple.item = item;
 
-		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
+		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) && !isNull(tuple.controller)) {
             frameworkTrace( 'queuing controller', subsystem, section, item );
 			arrayAppend( request._fw1.controllers, tuple );
 		}
@@ -1196,7 +1196,7 @@ component {
 	
 	private void function doController( struct tuple, string method, string lifecycle ) {
         var cfc = tuple.controller;
-		if ( !isNull(cfc) && structKeyExists( cfc, method ) ) {
+		if ( structKeyExists( cfc, method ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
 				evaluate( 'cfc.#method#( rc = request.context )' );
@@ -1205,7 +1205,7 @@ component {
 				rethrow;
 			}
 		}
-		else if ( !isNull(cfc) &&  structKeyExists( cfc, 'onMissingMethod' ) ) {
+		else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
 				evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
