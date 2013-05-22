@@ -1196,7 +1196,7 @@ component {
 	
 	private void function doController( struct tuple, string method, string lifecycle ) {
         var cfc = tuple.controller;
-		if ( structKeyExists( cfc, method ) ) {
+		if ( !isNull(cfc) && structKeyExists( cfc, method ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
 				evaluate( 'cfc.#method#( rc = request.context )' );
@@ -1205,7 +1205,7 @@ component {
 				rethrow;
 			}
 		}
-		else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
+		else if ( !isNull(cfc) &&  structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
 				evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
