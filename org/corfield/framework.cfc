@@ -257,7 +257,7 @@ component {
         tuple.section = section;
 		tuple.item = item;
 
-		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) ) {
+		if ( structKeyExists( tuple, 'controller' ) && isObject( tuple.controller ) && !isNull(tuple.controller)) {
             frameworkTrace( 'queuing controller', subsystem, section, item );
 			arrayAppend( request._fw1.controllers, tuple );
 		}
