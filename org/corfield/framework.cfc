@@ -1476,7 +1476,7 @@ component {
 	}
 	
 	private string function getPreserveKeySessionKey( string preserveKey ) {
-		return '__f1' & preserveKey;
+		return '__fw1' & preserveKey;
 	}
 	
 	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
