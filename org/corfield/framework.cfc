@@ -1400,10 +1400,8 @@ component {
 				if ( !structKeyExists( cache[ types ], componentKey ) ) {
 					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
 						cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
-						if ( type == 'controller' ) injectFramework( cfc );
 					} else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
 						cfc = getDefaultBeanFactory().getBean( beanName );
-						if ( type == 'controller' ) injectFramework( cfc );
 					} else {
 						if ( type == 'controller' && section == variables.magicApplicationController ) {
 							// treat this (Application.cfc) as a controller:
@@ -1428,6 +1426,7 @@ component {
 						}
 					}
 					if ( isObject( cfc ) ) {
+                        if ( type == 'controller' ) injectFramework( cfc );
 						cache[ types ][ componentKey ] = cfc;
 					}
 				}
@@ -1476,7 +1475,7 @@ component {
 	}
 	
 	private string function getPreserveKeySessionKey( string preserveKey ) {
-		return '__f1' & preserveKey;
+		return '__fw1' & preserveKey;
 	}
 	
 	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
