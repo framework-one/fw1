@@ -1829,7 +1829,13 @@ component {
 		if ( !structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
 			variables.framework.siteWideLayoutSubsystem = 'common';
 		}
-		if ( !structKeyExists(variables.framework, 'home') ) {
+		if ( structKeyExists(variables.framework, 'home') ) {
+            if (usingSubsystems()) {
+                if ( !find( variables.framework.subsystemDelimiter, variables.framework.home ) ) {
+                    raiseException( type = "FW1.configuration.home", message = "You are using subsystems but framework.home does not specify a subsystem.", detail = "You should set framework.home to #variables.framework.defaultSubsystem##variables.framework.subsystemDelimiter##variables.framework.home#" );
+                }
+            }
+        } else {
 			if (usingSubsystems()) {
 				variables.framework.home = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
 			} else {
