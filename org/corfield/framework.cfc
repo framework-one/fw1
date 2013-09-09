@@ -935,7 +935,11 @@ component {
 		setupResponseWrapper();
         if ( variables.framework.trace ) {
             frameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
-            session._fw1_trace = request._fw1.trace;
+            try {
+                session._fw1_trace = request._fw1.trace;
+            } catch ( any _ ) {
+                // ignore exception if session is not enabled
+            }
         }
 		location( targetURL, false, statusCode );
 	}
@@ -1327,9 +1331,14 @@ component {
 
     private void function frameworkTrace( string message, string subsystem = '', string section = '', string item = '' ) {
         if ( variables.framework.trace ) {
-            if ( isDefined( 'session._fw1_trace' ) && structKeyExists( session, '_fw1_trace' ) ) {
-                request._fw1.trace = session._fw1_trace;
-                structDelete( session, '_fw1_trace' );
+            try {
+                if ( isDefined( 'session._fw1_trace' ) &&
+                     structKeyExists( session, '_fw1_trace' ) ) {
+                    request._fw1.trace = session._fw1_trace;
+                    structDelete( session, '_fw1_trace' );
+                }
+            } catch ( any _ ) {
+                // ignore if session is not enabled
             }
             arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item } );
         }
