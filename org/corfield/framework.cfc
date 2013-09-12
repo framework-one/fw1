@@ -1598,7 +1598,7 @@ component {
 	
 	private struct function processRouteMatch( string route, string target, string path ) {
 		// TODO: could cache preprocessed versions of route / target / etc
-		var routeMatch = { matched = false, redirect = false, method = '' };
+		var routeMatch = { matched = false, redirect = false, method = '', route = route };
 		// if target has numeric prefix, strip it and set redirect:
 		var prefix = listFirst( target, ':' );
 		if ( isNumeric( prefix ) ) {
@@ -1655,24 +1655,54 @@ component {
 		return routeMatch;
 	}
 
-	private string function processRoutes( string path ) {
-		for ( var routePack in variables.framework.routes ) {
-			for ( var route in routePack ) {
-				if ( route != 'hint' ) {
-					var routeMatch = processRouteMatch( route, routePack[ route ], path );
-					if ( routeMatch.matched ) {
-						path = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
-						if ( routeMatch.redirect ) {
-							location( path, false, routeMatch.statusCode ); 
-						} else {
-							request._fw1.route = route;
-							return path;
-						}
-					}
+	private array function generateRoutes( string routeDefinitionKey, any substitutions ) {
+		var routeDefinition = variables.framework.routeDefinitions[ routeDefinitionKey ];
+		if ( !isArray( routeDefinition ) ) routeDefinition = [ routeDefinition ];
+		if ( !isArray( substitutions ) ) substitutions = listToArray( substitutions );
+		var routes = [ ];
+		for ( var packDefinition in routeDefinition ) {
+			var routePack = { };
+			for ( var route in packDefinition ) {
+				var routeTarget = packDefinition[ route ];
+				for ( var i = 1; i <= arrayLen( substitutions ); i++ ) {
+					route = replace( route, '{#i#}', substitutions[ i ], 'all' );
+					routeTarget = replace( routeTarget, '{#i#}', substitutions[ i ], 'all' );
+				}
+				routePack[ route ] = routeTarget; 
+			}
+			arrayAppend( routes, routePack );
+		}
+		return routes;
+	}
+
+	private struct function processRoutePack( string path, struct routePack ) {
+		for ( var route in routePack ) {
+			if ( route == 'hint' ) continue;
+			// check route definitions
+			var definitionMatch = false;
+			for ( var routeDefinitionKey in variables.framework.routeDefinitions ) {
+				if ( left( route, len( routeDefinitionKey ) ) == routeDefinitionKey ) {
+					definitionMatch = true;
+					// don't bother generating routes if root of path indicates nothing will match
+					if ( route != routeDefinitionKey && listRest( route, '/' ) != listFirst( path, '/' ) ) continue;
+					var routeMatch = processRoutes( path, generateRoutes( routeDefinitionKey, routePack[ route ] ) );
+					if ( routeMatch.matched ) return routeMatch;
 				}
 			}
+			if ( !definitionMatch ) {
+				var routeMatch = processRouteMatch( route, routePack[ route ], path );
+				if ( routeMatch.matched ) return routeMatch;
+			}
 		}
-		return path;
+		return { matched = false };
+	}
+
+	private struct function processRoutes( string path, array routes = variables.framework.routes ) {
+		for ( var routePack in routes ) {
+			var routeMatch = processRoutePack( path, routePack );
+			if ( routeMatch.matched ) return routeMatch;
+		}
+		return { matched = false };
 	}
 
 	private void function raiseException( string type, string message, string detail ) {
@@ -1897,6 +1927,9 @@ component {
 		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
+		if ( !structKeyExists( variables.framework, 'routeDefinitions' ) ) {
+			variables.framework.routeDefinitions = { };
+		}
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
@@ -1945,7 +1978,12 @@ component {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
-            pathInfo = processRoutes( pathInfo );
+            var routeMatch = processRoutes( pathInfo );
+            if ( routeMatch.matched ) {
+            	pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+            	if ( routeMatch.redirect ) location( pathInfo, false, routeMatch.statusCode ); 
+            	request._fw1.route = routeMatch.route;
+            }
             try {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
                 // any system that doesn't support .split() just in case (empty items won't work there!)
