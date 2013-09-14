@@ -1561,7 +1561,8 @@ component {
 	}
 	
 	private boolean function isFrameworkInitialized() {
-		return structKeyExists( application, variables.framework.applicationKey );
+		return structKeyExists( variables, 'framework' ) &&
+            structKeyExists( application, variables.framework.applicationKey );
 	}
 
 	private boolean function isFrameworkReloadRequest() {
