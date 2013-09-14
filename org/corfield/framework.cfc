@@ -1597,59 +1597,63 @@ component {
 	}
 	
 	private struct function processRouteMatch( string route, string target, string path ) {
-		// TODO: could cache preprocessed versions of route / target / etc
-		var routeMatch = { matched = false, redirect = false, method = '' };
-		// if target has numeric prefix, strip it and set redirect:
-		var prefix = listFirst( target, ':' );
-		if ( isNumeric( prefix ) ) {
-			routeMatch.redirect = true;
-			routeMatch.statusCode = prefix;
-			target = listRest( target, ':' );
-		}
-		// special routes begin with $METHOD, * is also a wildcard
-		var routeLen = len( route );
-		if ( routeLen ) {
-			if ( left( route, 1 ) == '$' ) {
-				// check HTTP method
-				routeMatch.method = listFirst( route, '*/' );
-				var methodLen = len( routeMatch.method );
-				if ( routeLen == methodLen ) {
-					route = '*';
-				} else {
-					route = right( route, routeLen - methodLen );
+		var regExCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.regex : { };
+		var cacheKey = hash( route & target );
+		if ( !structKeyExists( regExCache, cacheKey ) ) {
+			var routeRegEx = { redirect = false, method = '', pattern = route, target = target };
+			// if target has numeric prefix, strip it and set redirect:
+			var prefix = listFirst( routeRegEx.target, ':' );
+			if ( isNumeric( prefix ) ) {
+				routeRegEx.redirect = true;
+				routeRegEx.statusCode = prefix;
+				routeRegEx.target = listRest( routeRegEx.target, ':' );
+			}
+			// special routes begin with $METHOD, * is also a wildcard
+			var routeLen = len( routeRegEx.pattern );
+			if ( routeLen ) {
+				if ( left( routeRegEx.pattern, 1 ) == '$' ) {
+					// check HTTP method
+					routeRegEx.method = listFirst( routeRegEx.pattern, '*/' );
+					var methodLen = len( routeRegEx.method );
+					if ( routeLen == methodLen ) {
+						routeRegEx.pattern = '*';
+					} else {
+						routeRegEx.pattern = right( routeRegEx.pattern, routeLen - methodLen );
+					}
 				}
+				if ( routeRegEx.pattern == '*' ) {
+					routeRegEx.pattern = '/';
+				} else if ( right( routeRegEx.pattern, 1 ) != '/' && right( routeRegEx.pattern, 1 ) != '$' ) {
+					// only add the closing backslash if last position is not already a "/" or a "$" to respect regex end of string
+					routeRegEx.pattern &= '/';
+				}
+			} else {
+				routeRegEx.pattern = '/';
 			}
-			if ( route == '*' ) {
-				route = '/';
-			} else if ( right( route, 1 ) != '/' && right( route, 1 ) != '$' ) {
-				// only add the closing backslash if last position is not already a "/" or a "$" to respect regex end of string
-				route &= '/';
+			if ( !len( routeRegEx.target ) || right( routeRegEx.target, 1) != '/' ) routeRegEx.target &= '/';
+			// walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
+			var n = 1;
+			var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', routeRegEx.pattern );
+			for ( var placeholder in placeholders ) {
+				if ( left( placeholder, 1 ) == ':') {
+					routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, '([^/]*)' );
+					routeRegEx.target = replace( routeRegEx.target, placeholder, chr(92) & n );
+				}
+				++n;
 			}
-		} else {
-			route = '/';
+			// add trailing match/back reference: if last character is not "$" to respect regex end of string
+			if (right( routeRegEx.pattern, 1 ) != '$')
+				routeRegEx.pattern &= '(.*)';
+			routeRegEx.target &= chr(92) & n;
+			regExCache[ cacheKey ] = routeRegEx;
 		}
-		if ( !len( target ) || right( target, 1) != '/' ) target &= '/';
-		// walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
-		var n = 1;
-		var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', route );
-		for ( var placeholder in placeholders ) {
-			if ( left( placeholder, 1 ) == ':') {
-				route = replace( route, placeholder, '([^/]*)' );
-				target = replace( target, placeholder, chr(92) & n );
-			}
-			++n;
-		}
-		// add trailing match/back reference: if last character is not "$" to respect regex end of string
-		if (right( route, 1 ) != '$')
-			route &= '(.*)';
-		target &= chr(92) & n;
 		// end of preprocessing section
+		var routeMatch = { matched = false };
+		structAppend( routeMatch, regExCache[ cacheKey ] );
 		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
 		var matched = len( routeMatch.method ) ? ( '$' & request._fw1.cgiRequestMethod == routeMatch.method ) : true;
-		if ( matched && reFind( route, path ) ) {
+		if ( matched && reFind( routeMatch.pattern, path ) ) {
 			routeMatch.matched = true;
-			routeMatch.pattern = route;
-			routeMatch.target = target;
 			routeMatch.path = path;
 		}
 		return routeMatch;
@@ -1753,6 +1757,7 @@ component {
 		frameworkCache.fileExists = { };
 		frameworkCache.controllers = { };
 		frameworkCache.services = { };
+		frameworkCache.routes = { regex = { } };
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10" {
 			if ( structKeyExists( application, variables.framework.applicationKey ) ) {
 				// application is already loaded, just reset the cache and trigger re-initialization of subsystems
@@ -1783,6 +1788,7 @@ component {
 			frameworkCache.fileExists = { };
 			frameworkCache.controllers = { };
 			frameworkCache.services = { };
+			frameworkCache.routes = { regex = { } };
 			application[variables.framework.applicationKey].cache = frameworkCache;
 			application[variables.framework.applicationKey].subsystems = { };
 		}
