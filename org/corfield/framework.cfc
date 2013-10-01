@@ -1661,7 +1661,7 @@ component {
 	}
 
 	private string function processRoutes( string path ) {
-		for ( var routePack in variables.framework.routes ) {
+		for ( var routePack in getRoutes() ) {
 			for ( var route in routePack ) {
 				if ( route != 'hint' ) {
 					var routeMatch = processRouteMatch( route, routePack[ route ], path );
