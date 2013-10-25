@@ -961,7 +961,7 @@ component {
 			arrayAppend( request._fw1.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type='FW1.serviceCfcNotFound', message="Service '#action#' does not exist.",
-				detail="To have the execution of this service be conditional based upon its existence, pass in a third parameter of 'false'." );
+				detail="To have the execution of this service be conditional based upon its existence, pass in a fourth parameter (or enforceExistence if using named arguments) of 'false'." );
 		}
 	}
 	/*
