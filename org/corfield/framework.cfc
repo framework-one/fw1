@@ -399,6 +399,12 @@ component {
 		return variables.framework.routes;
 	}
 	
+	/*
+	 * return the resource route templates
+	 */
+	public array function getResourceRouteTemplates() {
+		return variables.framework.resourceRouteTemplates;
+	}
 	
 	/*
 	 * return the section part of the action
@@ -987,7 +993,7 @@ component {
 			arrayAppend( request._fw1.services, tuple );
 		} else if ( enforceExistence ) {
 			raiseException( type='FW1.serviceCfcNotFound', message="Service '#action#' does not exist.",
-				detail="To have the execution of this service be conditional based upon its existence, pass in a third parameter of 'false'." );
+				detail="To have the execution of this service be conditional based upon its existence, pass in a fourth parameter (or enforceExistence if using named arguments) of 'false'." );
 		}
 	}
 	/*
@@ -1673,29 +1679,82 @@ component {
 		var matched = len( routeMatch.method ) ? ( '$' & request._fw1.cgiRequestMethod == routeMatch.method ) : true;
 		if ( matched && reFind( routeMatch.pattern, path ) ) {
 			routeMatch.matched = true;
+			routeMatch.route = route;
 			routeMatch.path = path;
 		}
 		return routeMatch;
 	}
 
-	private string function processRoutes( string path ) {
-		for ( var routePack in variables.framework.routes ) {
-			for ( var route in routePack ) {
-				if ( route != 'hint' ) {
-					var routeMatch = processRouteMatch( route, routePack[ route ], path );
-					if ( routeMatch.matched ) {
-						path = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
-						if ( routeMatch.redirect ) {
-							location( path, false, routeMatch.statusCode ); 
-						} else {
-							request._fw1.route = route;
-							return path;
-						}
+	private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
+		var resourceCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.resources : { };
+		var cacheKey = hash( serializeJSON( resourcesToRoute ) );
+		if ( !structKeyExists( resourceCache, cacheKey ) ) {
+			// get passed in resourcesToRoute (string,array,struct) to match following struct
+			var resources = { resources = [ ], subsystem = subsystem, pathRoot = pathRoot, methods = [ ], nested = [ ] };
+			if ( isStruct( resourcesToRoute ) ) {
+				structAppend( resources, resourcesToRoute );
+				if ( !isArray( resources.resources ) ) resources.resources = listToArray( resources.resources );
+				if ( !isArray( resources.methods ) ) resources.methods = listToArray( resources.methods );
+				// if this is a recursive (nested) function call, don't let pathRoot or subsystem be overwritten
+				if ( len( pathRoot ) ) {
+					resources.pathRoot = pathRoot;
+					resources.subsystem = subsystem;
+				}
+			} else {
+				resources.resources = isArray( resourcesToRoute ) ? resourcesToRoute : listToArray( resourcesToRoute );
+			}
+			// create the routes
+			var routes = [ ];
+			for ( var resource in resources.resources  ) {
+				// take possible subsystem into account by qualifying resource name with subsystem name (if necessary)
+				var subsystemResource = ( len( resources.subsystem ) && !len( pathRoot ) ? '#resources.subsystem#/' : '' ) & resource;
+				var subsystemResourceTarget = ( len( resources.subsystem ) ? '#resources.subsystem#:' : '' ) & resource;
+				for ( var routeTemplate in getResourceRouteTemplates() ) {
+					// if method names were passed in, only use templates with matching method names
+					if ( arrayLen( resources.methods ) && !arrayFindNoCase( resources.methods, routeTemplate.method ) ) continue;
+					var routePack = { };
+					for ( var httpMethod in routeTemplate.httpMethods ) {
+						// build the route
+						var route = '#httpMethod##resources.pathRoot#/#subsystemResource#';
+						if ( structKeyExists( routeTemplate, 'includeId' ) && routeTemplate.includeId ) route &= '/:id';
+						if ( structKeyExists( routeTemplate, 'routeSuffix' ) ) route &= routeTemplate.routeSuffix;
+						route &= '/$';
+						// build the target
+						var target = '/#subsystemResourceTarget#/#routeTemplate.method#';
+						if ( structKeyExists( routeTemplate, 'includeId' ) && routeTemplate.includeId ) target &= '/id/:id';
+						if ( structKeyExists( routeTemplate, 'targetSuffix' ) ) target &= routeTemplate.targetSuffix;
+						target &= targetAppend; 
+						routePack[ route ] = target;
 					}
+					arrayAppend( routes, routePack );
+				}
+				// nested routes
+				var nestedPathRoot = '#resources.pathRoot#/#subsystemResource#/:#resource#_id';
+				var nestedTargetAppend = '#targetAppend#/#resource#_id/:#resource#_id';
+				var nestedRoutes = getResourceRoutes( resources.nested, resources.subsystem, nestedPathRoot, nestedTargetAppend );
+				// wish I could concatenate the arrays...not sure about using java -> routes.addAll( nestedRoutes )
+				for ( var nestedPack in nestedRoutes ) {
+					arrayAppend( routes, nestedPack );
 				}
 			}
+			resourceCache[ cacheKey ] = routes;
 		}
-		return path;
+		return resourceCache[ cacheKey ];
+	}
+
+	private struct function processRoutes( string path, array routes = getRoutes() ) {
+		for ( var routePack in routes ) {
+			for ( var route in routePack ) {
+				if ( route == 'hint' ) continue;
+				if ( route == '$RESOURCES' ) {
+					var routeMatch = processRoutes( path, getResourceRoutes( routePack[ route ] ) );
+				} else {
+					var routeMatch = processRouteMatch( route, routePack[ route ], path );
+				}
+				if ( routeMatch.matched ) return routeMatch;
+			}
+		}
+		return { matched = false };
 	}
 
 	private void function raiseException( string type, string message, string detail ) {
@@ -1817,7 +1876,7 @@ component {
 		frameworkCache.fileExists = { };
 		frameworkCache.controllers = { };
 		frameworkCache.services = { };
-		frameworkCache.routes = { regex = { } };
+		frameworkCache.routes = { regex = { }, resources = { } };
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10" {
 			if ( structKeyExists( application, variables.framework.applicationKey ) ) {
 				// application is already loaded, just reset the cache and trigger re-initialization of subsystems
@@ -1848,7 +1907,7 @@ component {
 			frameworkCache.fileExists = { };
 			frameworkCache.controllers = { };
 			frameworkCache.services = { };
-			frameworkCache.routes = { regex = { } };
+			frameworkCache.routes = { regex = { }, resources = { } };
 			application[variables.framework.applicationKey].cache = frameworkCache;
 			application[variables.framework.applicationKey].subsystems = { };
 		}
@@ -1966,6 +2025,16 @@ component {
 		if ( !structKeyExists( variables.framework, 'routes' ) ) {
 			variables.framework.routes = [ ];
 		}
+		if ( !structKeyExists( variables.framework, 'resourceRouteTemplates' ) ) {
+			variables.framework.resourceRouteTemplates = [
+				{ method = 'default', httpMethods = [ '$GET' ] },
+				{ method = 'new', httpMethods = [ '$GET' ], routeSuffix = '/new' },
+				{ method = 'create', httpMethods = [ '$POST' ] },
+				{ method = 'show', httpMethods = [ '$GET' ], includeId = true },
+				{ method = 'update', httpMethods = [ '$PUT','$PATCH' ], includeId = true },
+				{ method = 'destroy', httpMethods = [ '$DELETE' ], includeId = true }
+			];
+		}
 		if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
 			variables.framework.noLowerCase = false;
 		}
@@ -2011,7 +2080,15 @@ component {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
-            pathInfo = processRoutes( pathInfo );
+            var routeMatch = processRoutes( pathInfo );
+						if ( routeMatch.matched ) {
+							pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+							if ( routeMatch.redirect ) {
+								location( pathInfo, false, routeMatch.statusCode ); 
+							} else {
+								request._fw1.route = routeMatch.route;
+							}
+						}
             try {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
                 // any system that doesn't support .split() just in case (empty items won't work there!)
