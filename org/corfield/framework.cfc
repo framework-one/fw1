@@ -588,6 +588,7 @@ component {
 			request.exception = exception;
 			request.event = event;
 			// reset lifecycle flags:
+            structDelete( request, 'layout' );
 			structDelete( request._fw1, 'controllerExecutionComplete' );
 			structDelete( request._fw1, 'controllerExecutionStarted' );
 			structDelete( request._fw1, 'serviceExecutionComplete' );
