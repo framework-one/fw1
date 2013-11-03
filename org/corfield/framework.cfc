@@ -2045,7 +2045,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-	    variables.framework.version = '2.2_snapshot';
+	    variables.framework.version = '2.2_rc1';
         setupFrameworkEnvironments();
 	}
 
