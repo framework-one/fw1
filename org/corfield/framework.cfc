@@ -1299,7 +1299,7 @@ component {
 			exception = exception.rootCause;
 		}
 		getPageContext().getResponse().setStatus( 500 );
-		if ( arguments.early ) {
+		if ( early ) {
 		    writeOutput( '<h1>Exception occured before FW/1 was initialized</h1>');
 		} else {
 			writeOutput( '<h#h#>' & ( indirect ? 'Original exception ' : 'Exception' ) & ' in #event#</h#h#>' );
