@@ -592,6 +592,15 @@ component {
 			structDelete( request._fw1, 'controllerExecutionStarted' );
 			structDelete( request._fw1, 'serviceExecutionComplete' );
 			structDelete( request._fw1, 'overrideViewAction' );
+            if ( structKeyExists( request._fw1, 'renderData' ) ) {
+                // need to reset the content type as well!
+                try {
+                    getPageContext().getResponse().setContentType( 'text/html; charset=utf-8' );
+                } catch ( any e ) {
+                    // but ignore any exceptions
+                }
+                structDelete( request._fw1, 'renderData' );
+            }
 			// setup the new controller action, based on the error action:
 			request._fw1.controllers = [ ];
             // reset services for this new action:
@@ -721,26 +730,30 @@ component {
 		}
 		request._fw1.controllerExecutionComplete = true;
 
-		buildViewQueue();
-        frameworkTrace( 'setupView() called' );
-		setupView();
-		if ( structKeyExists(request._fw1, 'view') ) {
-            frameworkTrace( 'rendering #request._fw1.view#' );
-			out = internalView( request._fw1.view );
-		} else {
-            frameworkTrace( 'onMissingView() called' );
-			out = onMissingView( request.context );
-		}
-
-        buildLayoutQueue();
-		for ( i = 1; i <= arrayLen(request._fw1.layouts); i = i + 1 ) {
-			if ( structKeyExists(request, 'layout') && !request.layout ) {
-                frameworkTrace( 'aborting layout rendering' );
-				break;
-			}
-            frameworkTrace( 'rendering #request._fw1.layouts[i]#' );
-			out = internalLayout( request._fw1.layouts[i], out );
-		}
+        if ( structKeyExists( request._fw1, 'renderData' ) ) {
+            out = renderDataWithContentType();
+        } else {
+		    buildViewQueue();
+            frameworkTrace( 'setupView() called' );
+		    setupView();
+		    if ( structKeyExists(request._fw1, 'view') ) {
+                frameworkTrace( 'rendering #request._fw1.view#' );
+			    out = internalView( request._fw1.view );
+		    } else {
+                frameworkTrace( 'onMissingView() called' );
+			    out = onMissingView( request.context );
+		    }
+            
+            buildLayoutQueue();
+		    for ( i = 1; i <= arrayLen(request._fw1.layouts); i = i + 1 ) {
+			    if ( structKeyExists(request, 'layout') && !request.layout ) {
+                    frameworkTrace( 'aborting layout rendering' );
+				    break;
+			    }
+                frameworkTrace( 'rendering #request._fw1.layouts[i]#' );
+			    out = internalLayout( request._fw1.layouts[i], out );
+		    }
+        }
 		writeOutput( out );
 		setupResponseWrapper();
 	}
@@ -949,6 +962,11 @@ component {
         }
 		location( targetURL, false, statusCode );
 	}
+
+    // call this to render data rather than a view and layouts
+    public void function renderData( string type, any data ) {
+        request._fw1.renderData = { type = type, data = data };
+    }
 	
 	// call this from your controller to queue up additional services
 	public void function service( string action, string key, struct args = { }, boolean enforceExistence = true ) {
@@ -1742,7 +1760,48 @@ component {
 	private void function raiseException( string type, string message, string detail ) {
 		throw( type = type, message = message, detail = detail );
 	}
-	
+
+    private string function renderDataWithContentType() {
+        var out = '';
+        var contentType = '';
+        var type = request._fw1.renderData.type;
+        var data = request._fw1.renderData.data;
+        switch ( type ) {
+        case 'json':
+            contentType = 'application/javascript; charset=utf-8';
+            out = serializeJSON( data );
+            break;
+        case 'xml':
+            contentType = 'text/xml; charset=utf-8';
+            if ( isXML( data ) ) {
+                if ( isSimpleValue( data ) ) {
+                    // XML as string already
+                    out = data;
+                } else {
+                    // XML object
+                    out = toString( data );
+                }
+            } else {
+                throw( type = 'FW1.UnsupportXMLRender',
+                       message = 'Data is not XML',
+                       detail = 'renderData() called with XML type but unrecognized data format' );
+            }
+            break;
+        case 'text':
+            contentType = 'text/plain; charset=utf-8';
+            out = data;
+            break;
+        default:
+            throw( type = 'FW1.UnsupportedRenderType',
+                   message = 'Only JSON, XML, and TEXT are supported',
+                   detail = 'renderData() called with unknown type: ' & type );
+            break;
+        }
+        // set the content type header portably:
+        getPageContext().getResponse().setContentType( contentType );
+        return out;
+    }
+
 	private void function restoreFlashContext() {
 		if ( variables.framework.maxNumContextsPreserved > 1 ) {
 			if ( !structKeyExists( URL, variables.framework.preserveKeyURLKey ) ) {
