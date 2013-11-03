@@ -1201,7 +1201,7 @@
 		if ( not structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
-		variables.framework.version = '1.2';
+		variables.framework.version = '1.3';
 	}
 
 	function setupRequestDefaults() { // "private"
