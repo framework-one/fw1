@@ -965,8 +965,8 @@ component {
 	}
 
     // call this to render data rather than a view and layouts
-    public void function renderData( string type, any data ) {
-        request._fw1.renderData = { type = type, data = data };
+    public void function renderData( string type, any data, numeric statusCode = 200 ) {
+        request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
 	
 	// call this from your controller to queue up additional services
@@ -1767,6 +1767,7 @@ component {
         var contentType = '';
         var type = request._fw1.renderData.type;
         var data = request._fw1.renderData.data;
+        var statusCode = request._fw1.renderData.statusCode;
         switch ( type ) {
         case 'json':
             contentType = 'application/javascript; charset=utf-8';
@@ -1798,6 +1799,7 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
+        getPageContext().getResponse().setStatus( statusCode );
         // set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
         return out;
