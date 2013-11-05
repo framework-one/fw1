@@ -1770,7 +1770,7 @@ component {
         var statusCode = request._fw1.renderData.statusCode;
         switch ( type ) {
         case 'json':
-            contentType = 'application/javascript; charset=utf-8';
+            contentType = 'application/json; charset=utf-8';
             out = serializeJSON( data );
             break;
         case 'xml':
