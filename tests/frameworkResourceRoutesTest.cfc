@@ -13,7 +13,8 @@
             { method = 'update', httpMethods = [ '$PUT','$PATCH' ], includeId = true },
             { method = 'destroy', httpMethods = [ '$DELETE' ], includeId = true }
         ];
-    }
+        variables.fwVars.framework.subsystemDelimiter = ':';
+   }
 
     public void function testResourceBasics() {
 
