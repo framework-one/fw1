@@ -42,7 +42,7 @@
       defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
       outputdir="${output.dir}"
       port="${server.port}" server="${server.name}"
-      testResultsSummary="my.summary"
+      testResultsSummary="fw1.summary"
       verbose="true" haltonerror="true"
       failureproperty="mxunit.failed">
         <directory
