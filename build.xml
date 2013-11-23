@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!--
+
+   MXUnit Ant Task sample build file.
+
+   Usage: ant -f sample-build.xml
+
+   Notes: This assumes installation of mxunit directly under web root.
+          The webroot, in this example, is in D:/webapps/ on an MS Windows
+          installation.
+
+-->
+
+<project name="Framework One" basedir="." default="test">
+
+    <property name="mxunit.jar" value="/Users/marcin.szczepanski/Downloads/railo-express-4.1.1.009-macosx/webapps/www/mxunit/ant/lib/mxunit-ant.jar" />
+    <property name="server.name" value="localhost" />
+    <property name="server.port" value="8888" />
+    <property name="output.dir" value="tests/results/" />
+
+  <taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"   />
+
+  <target name="install-deps">
+    <exec executable="/bin/bash">
+      <arg line="tests/ci/scripts/install-deps.sh" />
+    </exec>
+  </target>
+
+   <target name="test" description="Make output directories and run the MXUnit task">
+      <delete dir="${output.dir}" />
+      <mkdir dir="${output.dir}/junit" />
+     <taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"   />
+       <mxunittask server="${server.name}" port="${server.port}"
+                   defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
+                   outputdir="${output.dir}"
+                   verbose="true"
+                   testResultsSummary="my.summary">
+          <directory
+                     remoteMethod="run"
+                     path="/fw1/tests/"
+                     componentPath="tests"
+                     packageName="fw1"
+                     recurse="false" />
+      </mxunittask>
+      <junitreport todir="${output.dir}/junit">
+        <fileset dir="${output.dir}">
+           <include name="*.xml"/>
+         </fileset>
+         <report format="frames" todir="${output.dir}/junit" styledir="tests/ci"/>
+      </junitreport>
+  </target>
+
+</project>
