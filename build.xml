@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project basedir="." default="test" name="Framework One">
 
-  <property name="mxunit.jar" value="../mxunit/ant/lib/mxunit-ant.jar"/>
+  <property name="mxunit.jar" value="tests/ci/mxunit-ant.jar"/>
   <property name="server.name" value="localhost"/>
   <property name="server.port" value="8888"/>
   <property name="output.dir" value="tests/results/"/>
 
   <property name="ci.railodir" value="tests/results/"/>
-
-  <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
 
   <target name="install-ci-deps">
     <exec executable="/bin/bash">
