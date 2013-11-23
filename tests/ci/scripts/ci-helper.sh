@@ -1,11 +1,11 @@
 #!/bin/bash
-MXUNIT_FILE="mxunit-2.1.3.zip"
+MXUNIT_FILE="fix-railo-nulls.zip"
 if [ "$TRAVIS" == "true" ]; then
 	WORKDIR="$HOME/work"
 	RAILO_VER="railo-express-4.1.1.009-nojre"
 	RAILO_FILE="$RAILO_VER.tar.gz"
 	RAILO_URL=http://getrailo.com/railo/remote/download/4.1.1.009/railix/linux/$RAILO_FILE
-	MXUNIT_URL=https://github.com/downloads/mxunit/mxunit/$MXUNIT_FILE
+	MXUNIT_URL="https://github.com/marcins/mxunit/archive/fix-railo-nulls.zip"
 else
 	# not TravisCI - local OSX testing
 	WORKDIR=/tmp/work
