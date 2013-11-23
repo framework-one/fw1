@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project basedir="." default="test" name="Framework One">
-  
+
   <property name="mxunit.jar" value="../mxunit/ant/lib/mxunit-ant.jar"/>
   <property name="server.name" value="localhost"/>
   <property name="server.port" value="8888"/>
   <property name="output.dir" value="tests/results/"/>
 
   <property name="ci.railodir" value="tests/results/"/>
-  
+
   <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
-  
+
   <target name="install-ci-deps">
     <exec executable="/bin/bash">
       <arg line="tests/ci/scripts/ci-helper.sh install"/>
@@ -30,7 +30,9 @@
     </exec>
   </target>
 
-  <target name="test-ci-railo" depends="run-ci-railo,test,stop-ci-railo" />
+  <target name="test-ci-railo" depends="run-ci-railo,test,stop-ci-railo">
+    <fail if="mxunit.failed" message="At least one test failure!"/>
+  </target>
 
   <target name="test" depends="test-run,test-report" />
 
@@ -38,8 +40,19 @@
     <delete dir="${output.dir}"/>
     <mkdir dir="${output.dir}"/>
     <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
-    <mxunittask defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc" outputdir="${output.dir}" port="${server.port}" server="${server.name}" testResultsSummary="my.summary" verbose="true" haltonerror="true" haltonfailure="true">
-      <directory componentPath="tests" packageName="fw1" path="/fw1/tests/" recurse="false" remoteMethod="run"/>
+    <mxunittask
+      defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
+      outputdir="${output.dir}"
+      port="${server.port}" server="${server.name}"
+      testResultsSummary="my.summary"
+      verbose="true" haltonerror="true"
+      failureproperty="mxunit.failed">
+        <directory
+          componentPath="tests"
+          packageName="fw1"
+          path="/fw1/tests/"
+          recurse="false"
+          remoteMethod="run"/>
     </mxunittask>
   </target>
 
