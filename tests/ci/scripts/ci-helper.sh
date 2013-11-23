@@ -1,18 +1,14 @@
 #!/bin/bash
-MXUNIT_FILE="fix-railo-nulls.zip"
+WGET_OPTS="--progress=bar"
 if [ "$TRAVIS" == "true" ]; then
 	WORKDIR="$HOME/work"
-	RAILO_VER="railo-express-4.1.1.009-nojre"
-	RAILO_FILE="$RAILO_VER.tar.gz"
-	RAILO_URL=http://getrailo.com/railo/remote/download/4.1.1.009/railix/linux/$RAILO_FILE
+	RAILO_URL=http://getrailo.com/railo/remote/download/4.1.1.009/railix/linux/railo-express-4.1.1.009-nojre.tar.gz
 	MXUNIT_URL="https://github.com/marcins/mxunit/archive/fix-railo-nulls.zip"
 else
 	# not TravisCI - local OSX testing
 	WORKDIR=/tmp/work
-	RAILO_VER="railo-express-4.1.1.009-macosx"
-	RAILO_FILE="$RAILO_VER.zip"
-	RAILO_URL="http://localhost/$RAILO_FILE"
-	MXUNIT_URL="http://localhost/$MXUNIT_FILE"
+	RAILO_URL="http://localhost/railo-express-4.1.1.009-macosx.zip"
+	MXUNIT_URL="https://github.com/marcins/mxunit/archive/fix-railo-nulls.zip"
 	TRAVIS_BUILD_DIR=`pwd`
 fi
 
@@ -28,21 +24,24 @@ cd $WORKDIR
 case $1 in
 	install)
 		# Download Railo Express
-		wget $RAILO_URL
-		if [[ "$RAILO_FILE" == *zip ]]; then
-			unzip $RAILO_FILE
+		if [[ "$RAILO_URL" == *zip ]]; then
+			wget $WGET_OPTS $RAILO_URL -O railo.zip
+			unzip railo.zip
 		else
-			tar -zxvf $RAILO_FILE
+			wget $WGET_OPTS $RAILO_URL -O railo.tar.gz
+			tar -zxvf railo.tar.gz
 		fi
-		wget $MXUNIT_URL
-		unzip $MXUNIT_FILE -d $RAILO_VER/webapps/www/
-		ln -s $TRAVIS_BUILD_DIR $RAILO_VER/webapps/www/fw1
+		mv railo-express* railo
+		wget $WGET_OPTS $MXUNIT_URL -O mxunit.zip
+		unzip mxunit.zip -d railo/webapps/www/
+		mv railo/webapps/www/mxunit* railo/webapps/www/mxunit
+		ln -s $TRAVIS_BUILD_DIR railo/webapps/www/fw1
 		;;
 	start)
-		sh $RAILO_VER/start
+		sh railo/start
 		;;
 	stop)
-		sh $RAILO_VER/stop
+		sh railo/stop
 		;;
 esac
 
