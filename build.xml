@@ -1,54 +1,55 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
+<project basedir="." default="test" name="Framework One">
+  
+  <property name="mxunit.jar" value="../mxunit/ant/lib/mxunit-ant.jar"/>
+  <property name="server.name" value="localhost"/>
+  <property name="server.port" value="8888"/>
+  <property name="output.dir" value="tests/results/"/>
 
-<!--
-
-   MXUnit Ant Task sample build file.
-
-   Usage: ant -f sample-build.xml
-
-   Notes: This assumes installation of mxunit directly under web root.
-          The webroot, in this example, is in D:/webapps/ on an MS Windows
-          installation.
-
--->
-
-<project name="Framework One" basedir="." default="test">
-
-    <property name="mxunit.jar" value="/Users/marcin.szczepanski/Downloads/railo-express-4.1.1.009-macosx/webapps/www/mxunit/ant/lib/mxunit-ant.jar" />
-    <property name="server.name" value="localhost" />
-    <property name="server.port" value="8888" />
-    <property name="output.dir" value="tests/results/" />
-
-  <taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"   />
-
-  <target name="install-deps">
+  <property name="ci.railodir" value="tests/results/"/>
+  
+  <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
+  
+  <target name="install-ci-deps">
     <exec executable="/bin/bash">
-      <arg line="tests/ci/scripts/install-deps.sh" />
+      <arg line="tests/ci/scripts/ci-helper.sh install"/>
     </exec>
   </target>
 
-   <target name="test" description="Make output directories and run the MXUnit task">
-      <delete dir="${output.dir}" />
-      <mkdir dir="${output.dir}/junit" />
-     <taskdef name="mxunittask" classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}"   />
-       <mxunittask server="${server.name}" port="${server.port}"
-                   defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
-                   outputdir="${output.dir}"
-                   verbose="true"
-                   testResultsSummary="my.summary">
-          <directory
-                     remoteMethod="run"
-                     path="/fw1/tests/"
-                     componentPath="tests"
-                     packageName="fw1"
-                     recurse="false" />
-      </mxunittask>
-      <junitreport todir="${output.dir}/junit">
-        <fileset dir="${output.dir}">
-           <include name="*.xml"/>
-         </fileset>
-         <report format="frames" todir="${output.dir}/junit" styledir="tests/ci"/>
-      </junitreport>
+  <target name="run-ci-railo">
+    <exec executable="/bin/bash"  spawn="true">
+      <arg line="tests/ci/scripts/ci-helper.sh start"/>
+    </exec>
+    <echo message="Waiting so Railo has time to startup..." />
+    <sleep seconds="10" />
   </target>
 
+  <target name="stop-ci-railo">
+    <exec executable="/bin/bash" spawn="true">
+      <arg line="tests/ci/scripts/ci-helper.sh stop"/>
+    </exec>
+  </target>
+
+  <target name="test-ci-railo" depends="run-ci-railo,test,stop-ci-railo" />
+
+  <target name="test" depends="test-run,test-report" />
+
+  <target description="Make output directories and run the MXUnit task" name="test-run">
+    <delete dir="${output.dir}"/>
+    <mkdir dir="${output.dir}"/>
+    <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
+    <mxunittask defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc" outputdir="${output.dir}" port="${server.port}" server="${server.name}" testResultsSummary="my.summary" verbose="true" haltonerror="true" haltonfailure="true">
+      <directory componentPath="tests" packageName="fw1" path="/fw1/tests/" recurse="false" remoteMethod="run"/>
+    </mxunittask>
+  </target>
+
+  <target name="test-report">
+    <mkdir dir="${output.dir}/junit" />
+    <junitreport todir="${output.dir}/junit">
+      <fileset dir="${output.dir}">
+        <include name="*.xml"/>
+      </fileset>
+      <report format="frames" styledir="tests/ci" todir="${output.dir}/junit"/>
+    </junitreport>
+  </target>
 </project>
