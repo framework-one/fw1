@@ -15,11 +15,9 @@
   </target>
 
   <target name="run-ci-railo">
-    <exec executable="/bin/bash"  spawn="true">
+    <exec executable="/bin/bash"  spawn="false">
       <arg line="tests/ci/scripts/ci-helper.sh start"/>
     </exec>
-    <echo message="Waiting so Railo has time to startup..." />
-    <sleep seconds="10" />
   </target>
 
   <target name="stop-ci-railo">
@@ -43,7 +41,8 @@
       outputdir="${output.dir}"
       port="${server.port}" server="${server.name}"
       testResultsSummary="fw1.summary"
-      verbose="true" haltonerror="true"
+      verbose="true"
+      haltonerror="true" errorproperty="mxunit.error"
       failureproperty="mxunit.failed">
         <directory
           componentPath="tests"
@@ -52,6 +51,7 @@
           recurse="false"
           remoteMethod="run"/>
     </mxunittask>
+    <fail if="mxunit.error" message="An error occured running MXUnit" />
   </target>
 
   <target name="test-report">

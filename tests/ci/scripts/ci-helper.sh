@@ -38,7 +38,12 @@ case $1 in
 		ln -s $TRAVIS_BUILD_DIR railo/webapps/www/fw1
 		;;
 	start)
-		sh railo/start
+		sh railo/start>/dev/null &
+		until curl -s http://localhost:8888>/dev/null
+		do
+			echo "Waiting for Railo..."
+			sleep 1
+		done
 		;;
 	stop)
 		sh railo/stop
