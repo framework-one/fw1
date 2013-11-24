@@ -1,5 +1,5 @@
 #!/bin/bash
-WGET_OPTS="--progress=bar"
+WGET_OPTS="-nv"
 if [ "$TRAVIS" == "true" ]; then
 	WORKDIR="$HOME/work"
 	RAILO_URL=http://getrailo.com/railo/remote/download/4.1.1.009/railix/linux/railo-express-4.1.1.009-nojre.tar.gz
@@ -26,14 +26,14 @@ case $1 in
 		# Download Railo Express
 		if [[ "$RAILO_URL" == *zip ]]; then
 			wget $WGET_OPTS $RAILO_URL -O railo.zip
-			unzip railo.zip
+			unzip -q railo.zip
 		else
 			wget $WGET_OPTS $RAILO_URL -O railo.tar.gz
-			tar -zxvf railo.tar.gz
+			tar -zxf railo.tar.gz
 		fi
 		mv railo-express* railo
 		wget $WGET_OPTS $MXUNIT_URL -O mxunit.zip
-		unzip mxunit.zip -d railo/webapps/www/
+		unzip -q mxunit.zip -d railo/webapps/www/
 		mv railo/webapps/www/mxunit* railo/webapps/www/mxunit
 		ln -s $TRAVIS_BUILD_DIR railo/webapps/www/fw1
 		;;
