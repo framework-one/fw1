@@ -73,8 +73,11 @@ component {
 	 *	in order to provide a simpler transition to using subsystems in the future
 	 */
 	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
-		if ( action == '.' ) action = getFullyQualifiedAction();
-        else if ( action == '.?' ) action = getFullyQualifiedAction() & '?';
+		if ( action == '.' ) {
+            action = getFullyQualifiedAction();
+        } else if ( left( action, 2 ) == '.?' ) {
+            action = replace( action, '.', getFullyQualifiedAction() );
+        }
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
 		if ( path == 'useSubsystemConfig' ) {
@@ -2050,7 +2053,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-	    variables.framework.version = '2.2_rc2';
+	    variables.framework.version = '2.2_snapshot';
         setupFrameworkEnvironments();
 	}
 
