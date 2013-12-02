@@ -74,6 +74,7 @@ component {
 	 */
 	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
 		if ( action == '.' ) action = getFullyQualifiedAction();
+        else if ( action == '.?' ) action = getFullyQualifiedAction() & '?';
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
 		if ( path == 'useSubsystemConfig' ) {
