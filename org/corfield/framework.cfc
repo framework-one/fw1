@@ -967,6 +967,8 @@ component {
 
     // call this to render data rather than a view and layouts
     public void function renderData( string type, any data, numeric statusCode = 200 ) {
+        // turn off tracing so we don't interfere with the REST result:
+        variables.framework.trace = false;
         request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
 	
