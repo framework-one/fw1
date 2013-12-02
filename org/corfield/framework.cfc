@@ -1710,7 +1710,7 @@ component {
 			for ( var resource in resources.resources  ) {
 				// take possible subsystem into account by qualifying resource name with subsystem name (if necessary)
 				var subsystemResource = ( len( resources.subsystem ) && !len( pathRoot ) ? '#resources.subsystem#/' : '' ) & resource;
-				var subsystemResourceTarget = ( len( resources.subsystem ) ? '#resources.subsystem#:' : '' ) & resource;
+				var subsystemResourceTarget = ( len( resources.subsystem ) ? '#resources.subsystem##variables.framework.subsystemDelimiter#' : '' ) & resource;
 				for ( var routeTemplate in getResourceRouteTemplates() ) {
 					// if method names were passed in, only use templates with matching method names
 					if ( arrayLen( resources.methods ) && !arrayFindNoCase( resources.methods, routeTemplate.method ) ) continue;
