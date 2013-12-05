@@ -15,7 +15,7 @@
   </target>
 
   <target name="run-ci-railo">
-    <exec executable="/bin/bash"  spawn="false">
+    <exec executable="/bin/bash"  spawn="false" failonerror="true">
       <arg line="tests/ci/scripts/ci-helper.sh start"/>
     </exec>
   </target>
