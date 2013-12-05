@@ -1,7 +1,8 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="utf-8"?>
 <project basedir="." default="test" name="Framework One">
 
   <property name="mxunit.jar" value="tests/ci/mxunit-ant.jar"/>
+  <property name="mxunit.output.jar" value="tests/ci/mxunit-output-ant.jar"/>
   <property name="server.name" value="localhost"/>
   <property name="server.port" value="8888"/>
   <property name="output.dir" value="tests/results/"/>
@@ -36,14 +37,18 @@
     <delete dir="${output.dir}"/>
     <mkdir dir="${output.dir}"/>
     <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
+    <taskdef classname="au.com.imagichine.ant.MxunitOutputAntTask" classpath="${mxunit.output.jar}" name="mxunitoutputtask"/>
     <mxunittask
       defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
       outputdir="${output.dir}"
       port="${server.port}" server="${server.name}"
       testResultsSummary="fw1.summary"
-      verbose="true"
+      verbose="false"
       haltonerror="true" errorproperty="mxunit.error"
       failureproperty="mxunit.failed">
+        <!--<testcase name="tests.frameworkErrorTest" packageName="tests.frameworkErrorTest"/>
+        <testcase name="tests.frameworkPopulateTest" packageName="tests.frameworkPopulateTest"/>
+        <testcase name="tests.frameworkEnvTest" packageName="tests.frameworkEnvTest"/>-->
         <directory
           componentPath="tests"
           packageName="fw1"
@@ -51,6 +56,7 @@
           recurse="false"
           remoteMethod="run"/>
     </mxunittask>
+    <mxunitoutputtask resultsdirectory="${output.dir}" />
     <fail if="mxunit.error" message="An error occured running MXUnit" />
   </target>
 
