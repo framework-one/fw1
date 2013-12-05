@@ -14,15 +14,22 @@ fi
 
 echo "Working directory: $WORKDIR"
 
-if [ -d $WORKDIR -a "$1" == "install" ]; then
-	rm -rf $WORKDIR
+if [ ! "$1" == "install" -a ! -d $WORKDIR ]; then
+	echo "Working directory doesn't exist and this isn't an install!"
+	exit 1
+else
+	cd $WORKDIR
 fi
-
-mkdir -p $WORKDIR
-cd $WORKDIR
 
 case $1 in
 	install)
+		if [ -d $WORKDIR ]; then
+			rm -rf $WORKDIR
+		fi
+
+		mkdir -p $WORKDIR
+		cd $WORKDIR
+
 		# Download Railo Express
 		if [[ "$RAILO_URL" == *zip ]]; then
 			wget $WGET_OPTS $RAILO_URL -O railo.zip
@@ -38,6 +45,11 @@ case $1 in
 		ln -s $TRAVIS_BUILD_DIR railo/webapps/www/fw1
 		;;
 	start)
+		if [ ! -f railo/start ]; then
+			echo "Railo start script does not exist!"
+			exit 1
+		fi
+		echo "Starting Railo..."
 		sh railo/start>/dev/null &
 		until curl -s http://localhost:8888>/dev/null
 		do
