@@ -31,7 +31,7 @@
     <fail if="mxunit.failed" message="At least one test failure!"/>
   </target>
 
-  <target name="test" depends="test-run,test-report" />
+  <target name="test" depends="test-run" />
 
   <target description="Make output directories and run the MXUnit task" name="test-run">
     <delete dir="${output.dir}"/>
@@ -58,15 +58,5 @@
     </mxunittask>
     <mxunitoutputtask resultsdirectory="${output.dir}" />
     <fail if="mxunit.error" message="An error occured running MXUnit" />
-  </target>
-
-  <target name="test-report">
-    <mkdir dir="${output.dir}/junit" />
-    <junitreport todir="${output.dir}/junit">
-      <fileset dir="${output.dir}">
-        <include name="*.xml"/>
-      </fileset>
-      <report format="frames" styledir="tests/ci" todir="${output.dir}/junit"/>
-    </junitreport>
   </target>
 </project>
