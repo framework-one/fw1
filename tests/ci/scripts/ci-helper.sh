@@ -14,11 +14,13 @@ fi
 
 echo "Working directory: $WORKDIR"
 
-if [ ! "$1" == "install" -a ! -d $WORKDIR ]; then
-	echo "Working directory doesn't exist and this isn't an install!"
-	exit 1
-else
-	cd $WORKDIR
+if [ ! "$1" == "install" ]; then
+	if [ ! -d $WORKDIR ]; then
+		echo "Working directory doesn't exist and this isn't an install!"
+		exit 1
+	else
+		cd $WORKDIR
+	fi
 fi
 
 case $1 in
@@ -58,7 +60,17 @@ case $1 in
 		done
 		;;
 	stop)
+		echo "Stopping Railo..."
 		sh railo/stop
+		while curl -s http://localhost:8888>/dev/null
+		do
+			echo "Waiting for Railo..."
+			sleep 1
+		done
+		;;
+	*)
+		echo "Usage: $0 {install|start|stop}"
+		exit 1
 		;;
 esac
 
