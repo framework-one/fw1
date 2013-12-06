@@ -5,9 +5,7 @@
   <property name="mxunit.output.jar" value="tests/ci/mxunit-output-ant.jar"/>
   <property name="server.name" value="localhost"/>
   <property name="server.port" value="8888"/>
-  <property name="output.dir" value="tests/results/"/>
-
-  <property name="ci.railodir" value="tests/results/"/>
+  <property name="output.dir" value="tests/ci/results/"/>
 
   <target name="install-ci-deps">
     <exec executable="/bin/bash">

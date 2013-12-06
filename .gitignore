@@ -1,8 +1,8 @@
 WEB-INF/*
 litepost/*
 mxunit/*
-tests/results
-tests/results/*
+tests/ci/results
+tests/ci/results/*
 .project
 settings.xml
 .settings/org.eclipse.core.resources.prefs
