@@ -1,6 +1,6 @@
 component {
 /*
-	Copyright (c) 2009-2012, Sean Corfield, Ryan Cogswell
+	Copyright (c) 2009-2013, Sean Corfield, Ryan Cogswell
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -73,7 +73,11 @@ component {
 	 *	in order to provide a simpler transition to using subsystems in the future
 	 */
 	public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
-		if ( action == '.' ) action = getFullyQualifiedAction();
+		if ( action == '.' ) {
+            action = getFullyQualifiedAction();
+        } else if ( left( action, 2 ) == '.?' ) {
+            action = replace( action, '.', getFullyQualifiedAction() );
+        }
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
 		var omitIndex = false;
 		if ( path == 'useSubsystemConfig' ) {
@@ -966,6 +970,8 @@ component {
 
     // call this to render data rather than a view and layouts
     public void function renderData( string type, any data, numeric statusCode = 200 ) {
+        // turn off tracing so we don't interfere with the REST result:
+        variables.framework.trace = false;
         request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
 	
