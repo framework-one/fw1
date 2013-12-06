@@ -1,7 +1,7 @@
 component extends="tests.InjectableTest" {
 
     public void function setUp() {
-        structClear( request );
+        clearFrameworkFromRequest();
         variables.fw = new org.corfield.framework();
         variables.fwvars = getVariablesScope( variables.fw );
         variables.fwvars.framework = { };

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project basedir="." default="test" name="Framework One">
+
+  <property name="mxunit.jar" value="tests/ci/mxunit-ant.jar"/>
+  <property name="mxunit.output.jar" value="tests/ci/mxunit-output-ant.jar"/>
+  <property name="server.name" value="localhost"/>
+  <property name="server.port" value="8888"/>
+  <property name="output.dir" value="tests/ci/results/"/>
+
+  <target name="install-ci-deps">
+    <exec executable="/bin/bash">
+      <arg line="tests/ci/scripts/ci-helper.sh install"/>
+    </exec>
+  </target>
+
+  <target name="run-ci-railo">
+    <exec executable="/bin/bash"  spawn="false" failonerror="true">
+      <arg line="tests/ci/scripts/ci-helper.sh start"/>
+    </exec>
+  </target>
+
+  <target name="stop-ci-railo">
+    <exec executable="/bin/bash" spawn="true">
+      <arg line="tests/ci/scripts/ci-helper.sh stop"/>
+    </exec>
+  </target>
+
+  <target name="test-ci-railo" depends="run-ci-railo,test,stop-ci-railo">
+    <fail if="mxunit.failed" message="At least one test failure!"/>
+  </target>
+
+  <target name="test" depends="test-run" />
+
+  <target description="Make output directories and run the MXUnit task" name="test-run">
+    <delete dir="${output.dir}"/>
+    <mkdir dir="${output.dir}"/>
+    <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
+    <taskdef classname="au.com.imagichine.ant.MxunitOutputAntTask" classpath="${mxunit.output.jar}" name="mxunitoutputtask"/>
+    <mxunittask
+      defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
+      outputdir="${output.dir}"
+      port="${server.port}" server="${server.name}"
+      testResultsSummary="fw1.summary"
+      verbose="false"
+      haltonerror="true" errorproperty="mxunit.error"
+      failureproperty="mxunit.failed">
+        <!--<testcase name="tests.frameworkErrorTest" packageName="tests.frameworkErrorTest"/>
+        <testcase name="tests.frameworkPopulateTest" packageName="tests.frameworkPopulateTest"/>
+        <testcase name="tests.frameworkEnvTest" packageName="tests.frameworkEnvTest"/>-->
+        <directory
+          componentPath="tests"
+          packageName="fw1"
+          path="/fw1/tests/"
+          recurse="false"
+          remoteMethod="run"/>
+    </mxunittask>
+    <mxunitoutputtask resultsdirectory="${output.dir}" />
+    <fail if="mxunit.error" message="An error occured running MXUnit" />
+  </target>
+</project>

@@ -1,6 +1,8 @@
 WEB-INF/*
 litepost/*
 mxunit/*
+tests/ci/results
+tests/ci/results/*
 .project
 settings.xml
 .settings/org.eclipse.core.resources.prefs
@@ -8,3 +10,4 @@ settings.xml
 *.iml
 *.ipr
 *.idea
+.ant-targets-build.xml
