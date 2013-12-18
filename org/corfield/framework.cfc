@@ -970,8 +970,6 @@ component {
 
     // call this to render data rather than a view and layouts
     public void function renderData( string type, any data, numeric statusCode = 200 ) {
-        // turn off tracing so we don't interfere with the REST result:
-        variables.framework.trace = false;
         request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
 	
@@ -1384,7 +1382,11 @@ component {
     }
 
     private void function frameworkTraceRender() {
-        if ( variables.framework.trace && arrayLen( request._fw1.trace ) ) {
+        // do not output trace information if we are rendering data as opposed
+        // to rendering HTML views - see #226 and #232
+        if ( variables.framework.trace &&
+             arrayLen( request._fw1.trace ) &&
+             !structKeyExists( request._fw1, 'renderData' ) ) {
             var startTime = request._fw1.trace[1].tick;
             var font = 'font-family: verdana, helvetica;';
             writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
