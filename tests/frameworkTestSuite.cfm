@@ -2,6 +2,7 @@
 testSuite = createObject("component","mxunit.framework.TestSuite").TestSuite();
 testSuite.addAll("tests.frameworkPopulateTest");
 testSuite.addAll("tests.frameworkErrorTest");
+testSuite.addAll("tests.frameworkRenderTest");
 testSuite.addAll("tests.frameworkRouteTest");
 testSuite.addAll("tests.frameworkResourceRoutesTest");
 testSuite.addAll("tests.frameworkProcessRoutesTest");
