@@ -5,6 +5,7 @@
   <property name="mxunit.output.jar" value="tests/ci/mxunit-output-ant.jar"/>
   <property name="server.name" value="localhost"/>
   <property name="server.port" value="8888"/>
+  <property name="context.root" value="/fw1"/>
   <property name="output.dir" value="tests/ci/results/"/>
 
   <target name="install-ci-deps">
@@ -37,7 +38,7 @@
     <taskdef classname="org.mxunit.ant.MXUnitAntTask" classpath="${mxunit.jar}" name="mxunittask"/>
     <taskdef classname="au.com.imagichine.ant.MxunitOutputAntTask" classpath="${mxunit.output.jar}" name="mxunitoutputtask"/>
     <mxunittask
-      defaultrunner="/fw1/tests/ci/HttpAntRunner.cfc"
+      defaultrunner="${context.root}/tests/ci/HttpAntRunner.cfc"
       outputdir="${output.dir}"
       port="${server.port}" server="${server.name}"
       testResultsSummary="fw1.summary"
@@ -50,7 +51,7 @@
         <directory
           componentPath="tests"
           packageName="fw1"
-          path="/fw1/tests/"
+          path="${context.root}/tests/"
           recurse="false"
           remoteMethod="run"/>
     </mxunittask>
