@@ -64,7 +64,7 @@ component extends="mxunit.framework.TestCase" {
 	}
 
 	public void function testComponentWithSingleChildAndDeepFalse() {
-		var user = new stubs.userTwoLevel();
+		var user = new stubs.UserTwoLevel();
 		request.context = getTwoLevelRC();
 
 		variables.fw.populate( cfc=user );
