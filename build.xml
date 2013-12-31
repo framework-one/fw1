@@ -133,7 +133,7 @@ Valid values are:
       port="${server.port}" server="${server.name}"
       testResultsSummary="fw1.summary"
       verbose="false"
-      haltonerror="true" errorproperty="mxunit.error"
+      haltonerror="false" errorproperty="mxunit.error"
       failureproperty="mxunit.failed">
         <directory
           componentPath="tests"
