@@ -17,7 +17,7 @@
 
   <!-- Local URLs: Set these to locally available copies of the test server
   platforms if available to avoid a remote HTTP download - won't work for Travis CI -->
-  <property name="railo41.local.url" value="/opt/ci/railo-express-4.1.1.009-nojre.tar.gz" />
+  <property name="railo41.local.url" value="/opt/ci/railo-express-4.1.2.005-nojre.tar.gz" />
   <property name="railo41-osx.local.url" value="/opt/ci/railo-express-4.1.2.005-macosx.zip" />
   <property name="acf10-linux32.local.url" value="/opt/ci/cf10-linux32.tar.gz" />
   <property name="acf10-linux64.local.url" value="/opt/ci/cf10-linux64.tar.gz" />
