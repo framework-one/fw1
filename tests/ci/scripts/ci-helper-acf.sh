@@ -2,7 +2,7 @@
 CONTROL_SCRIPT='coldfusion10/cfusion/bin/coldfusion'
 
 PLATFORM_DIR="coldfusion10"
-WEBROOT="coldfusion10/cfusion/wwwroot/"
+WEBROOT="coldfusion10/cfusion/wwwroot"
 MY_DIR=`dirname $0`
 source $MY_DIR/ci-helper-base.sh $1 $2
 

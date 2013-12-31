@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 case $1 in
 	start)
 		CONTROL_SCRIPT='railo/start'
@@ -9,7 +11,7 @@ case $1 in
 esac
 
 PLATFORM_DIR="railo"
-WEBROOT="railo/webapps/www/"
+WEBROOT="railo/webapps/www"
 MY_DIR=`dirname $0`
 source $MY_DIR/ci-helper-base.sh $1 $2
 

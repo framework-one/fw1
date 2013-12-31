@@ -75,13 +75,13 @@ case $1 in
 
 		case $TESTFRAMEWORK in
 			mxunit)
-				mv mxunit* "$WEBROOT$TESTFRAMEWORK"
+				mv mxunit* "$WEBROOT/$TESTFRAMEWORK"
 				;;
 			testbox)
-				mv testbox "$WEBROOT$TESTFRAMEWORK"
+				mv testbox "$WEBROOT/$TESTFRAMEWORK"
 				;;
 		esac
-		ln -s $BUILD_DIR $WEBROOT$2
+		ln -s $BUILD_DIR $WEBROOT/$2
 		;;
 	start)
 		if [ ! -f $CONTROL_SCRIPT ]; then
