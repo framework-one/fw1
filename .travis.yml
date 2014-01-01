@@ -1,3 +1,15 @@
 language: java
-install: ant install-ci-deps
-script: ant test-ci-railo
+env:
+  matrix:
+    - PLATFORM=railo40
+    - PLATFORM=railo41
+    - PLATFORM=railo42beta
+    - PLATFORM=acf10-linux64
+    - PLATFORM=acf902-linux64
+
+matrix:
+  allow_failures:
+    - env: PLATFORM=railo42beta
+
+install: ant -Dsource=remote -Dwork.dir=$HOME/work -Dbuild.dir=$TRAVIS_BUILD_DIR -Dplatform=$PLATFORM install-ci-deps
+script: ant -Dsource=remote -Dwork.dir=$HOME/work -Dbuild.dir=$TRAVIS_BUILD_DIR -Dplatform=$PLATFORM test-ci
