@@ -2,6 +2,9 @@ component extends="org.corfield.framework" accessors="true" {
 	// autowire these properties:
 	property foo;
 	property bar;
+    // this example uses the deprecated service() call
+    // this example uses the deprecated start/end actions
+    variables.framework.suppressServiceQueue = false;
 	// setup (simple) bean factory:
 	function setupApplication() {
 		var bf = new BF();

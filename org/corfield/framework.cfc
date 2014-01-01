@@ -975,6 +975,8 @@ component {
 	
 	// call this from your controller to queue up additional services
 	public void function service( string action, string key, struct args = { }, boolean enforceExistence = true ) {
+        deprecated( variables.framework.suppressServiceQueue,
+                    "service() call requires suppressServiceQueue = false" );
 		var subsystem = getSubsystem( action );
 		var section = getSection( action );
 		var item = getItem( action );
@@ -1234,9 +1236,28 @@ component {
 			return '/' & replace( dottedPath, '.', '/', 'all' ) & '/';
 		}
 	}
+
+    private void function deprecated( boolean throwit, string message ) {
+        if ( throwit ) {
+            throw( type="FW1.Deprecated",
+                   message="Deprecated: #message#",
+                   detail="This feature is deprecated: you need to configure FW/1 to allow it (or update your code)." );
+        } else {
+            var out = createObject( "java", "java.lang.System" ).out;
+            out.println( "FW/1: DEPRECATED: " & message );
+        }
+    }
 	
 	private void function doController( struct tuple, string method, string lifecycle ) {
         var cfc = tuple.controller;
+        if ( lifecycle == "start" ||
+             lifecycle == "end" ) {
+            if ( structKeyExists( cfc, method ) ) {
+                deprecated( variables.framework.suppressServiceQueue,
+                            "start/end methods require suppressServiceQueue = false" );
+            }
+            if ( variables.framework.suppressServiceQueue ) return;
+        }
 		if ( structKeyExists( cfc, method ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
@@ -1245,8 +1266,7 @@ component {
 				setCfcMethodFailureInfo( cfc, method );
 				rethrow;
 			}
-		}
-		else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
+		} else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
 			try {
                 frameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
 				evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
@@ -2029,6 +2049,9 @@ component {
 		}
 		if ( !structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = true;
+		}
+		if ( !structKeyExists( variables.framework, 'suppressServiceQueue' ) ) {
+			variables.framework.suppressServiceQueue = true;
 		}
 		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
