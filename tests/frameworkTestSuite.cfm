@@ -7,8 +7,8 @@ testSuite.addAll("tests.frameworkRouteTest");
 testSuite.addAll("tests.frameworkResourceRoutesTest");
 testSuite.addAll("tests.frameworkProcessRoutesTest");
 testSuite.addAll("tests.frameworkEnvTest");
-testSuite.addAll("tests.onMissingViewLayout");
-testSuite.addAll("tests.onSessionStartBuildURL");
+testSuite.addAll("tests.onMissingViewLayoutTest");
+testSuite.addAll("tests.onSessionStartBuildURLTest");
 results = testSuite.run();
 writeOutput(results.getResultsOutput('html'));
 </cfscript>
