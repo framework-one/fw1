@@ -3,7 +3,9 @@
 	<cfset variables.departments = structNew()>
 	
 	<cffunction name="init" access="public" output="false" returntype="any">
+        <cfargument name="beanFactory" />
 		<cfscript>
+        variables.beanFactory = arguments.beanFactory;
 		var dept = "";
 		
 		// since services are cached department data we'll be persisted
@@ -60,7 +62,7 @@
     </cffunction>
 	
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.model.Department").init()>
+		<cfreturn variables.beanFactory.getBean( "departmentBean" ) />
 	</cffunction>
-	
+
 </cfcomponent>

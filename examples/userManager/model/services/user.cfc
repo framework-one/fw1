@@ -4,8 +4,9 @@
 	
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="departmentService" type="any" required="true" />
-		
+		<cfargument name="beanFactory" />
 		<cfscript>
+        variables.beanFactory = arguments.beanFactory;
 		var user = "";
 		var deptService = arguments.departmentService;
 		
@@ -88,7 +89,7 @@
     </cffunction>
 	
 	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.model.User").init()>
+		<cfreturn variables.beanFactory.getBean( "userBean" ) />
 	</cffunction>
 	
 	<cffunction name="save" access="public" output="false" returntype="void">
