@@ -32,9 +32,9 @@
 		<cfset rc.message = "Welcome to the Framework One User Manager application demo!">
 	</cffunction>
 	
-	<cffunction name="endDelete" access="public" output="false" returntype="void">
+	<cffunction name="delete" access="public" output="false" returntype="void">
 		<cfargument name="rc" type="struct" required="true">
-		
+		<cfset variables.userService.delete( rc.id ) />
 		<!--- user deleted so by default lets go back to the users list page --->
 		<cfset variables.fw.redirect("user.list")>
 	</cffunction>
@@ -48,8 +48,18 @@
 		<!--- we need to retrieve all departments for the drop down selection --->
 		<cfset rc.departments = getDepartmentService().list()>
 	</cffunction>
+
+    <cfscript>
+    function get( rc ) {
+        rc.data = variables.userService.get( rc.id );
+    }
+
+    function list( rc ) {
+        rc.data = variables.userService.list();
+    }
+    </cfscript>
 	
-	<cffunction name="startSave" access="public" output="false" returntype="void">
+	<cffunction name="save" access="public" output="false" returntype="void">
 		<cfargument name="rc" type="struct" required="true">
 		
 		<cfset var userService = getUserService()>
@@ -67,11 +77,7 @@
 			<cfset user.setDepartment(getDepartmentService().get(rc.departmentId))>
 		</cfif>
 		
-		<cfset rc.user = user>
-	</cffunction>
-	
-	<cffunction name="endSave" access="public" output="false" returntype="void">
-		<cfargument name="rc" type="struct" required="true">
+        <cfset variables.userService.save( user ) />
 		
 		<!--- user saved so by default lets go back to the users list page --->
 		<cfset variables.fw.redirect("user.list")>
