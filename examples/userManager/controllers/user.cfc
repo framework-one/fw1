@@ -13,6 +13,7 @@ component accessors=true {
 
     function delete( rc ) {
         variables.userService.delete( rc.id );
+        variables.fw.frameworkTrace( "deleted user", rc.id );
         variables.fw.redirect( "user.list" );
     }
 	
@@ -37,6 +38,7 @@ component accessors=true {
             user.setDepartment( variables.departmentService.get( rc.departmentId ) );
         }
         variables.userService.save( user );
+        variables.fw.frameworkTrace( "added user", user );
         variables.fw.redirect( "user.list" );
     }
 
