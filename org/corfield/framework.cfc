@@ -1,4 +1,5 @@
 component {
+    variables._fw1_version = "2.5_snapshot";
 /*
 	Copyright (c) 2009-2014, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -2134,7 +2135,7 @@ component {
 			variables.framework.trace = false;
 		}
         request._fw1.doTrace = variables.framework.trace;
-	    variables.framework.version = '2.5_snapshot';
+	    variables.framework.version = variables._fw1_version;
         setupFrameworkEnvironments();
 	}
 
