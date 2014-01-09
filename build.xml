@@ -27,9 +27,9 @@
   <property name="mxunit.local.url" value="/opt/ci/fix-railo-nulls.zip" />
 
   <!-- Remote URLs -->
-  <property name="railo40.remote.url" value="http://getrailo.com/railo/remote/download/4.0.4.001/railix/linux/railo-express-4.0.4.001-nojre.tar.gz" />
-  <property name="railo41.remote.url" value="http://getrailo.com/railo/remote/download/4.1.2.005/railix/linux/railo-express-4.1.2.005-nojre.tar.gz" />
-  <property name="railo42beta.remote.url" value="http://getrailo.com/railo/remote/download42/4.2.0.000/railix/linux/railo-express-4.2.0.000-nojre.tar.gz" />
+  <property name="railo40.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.0.4.001-nojre.tar.gz" />
+  <property name="railo41.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.1.2.005-nojre.tar.gz" />
+  <property name="railo42beta.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.2.0.000-nojre.tar.gz" />
   <property name="acf10-linux32.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf10-linux32.tar.gz" />
   <property name="acf10-linux64.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf10-linux64.tar.gz" />
   <property name="acf902-linux64.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf902-linux64.tar.gz" />
