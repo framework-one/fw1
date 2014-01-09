@@ -69,6 +69,15 @@ component {
 			}
 		}
 	}
+
+    /*
+     * buildCustomURL() can be used to construct routes by appending the given URI
+     * to a resolvedBaseURL() value
+     */
+    public string function buildCustomURL( string uri ) {
+        var baseData = resolveBaseURL();
+        return baseData.path & uri;
+    }
 	
 	/*
 	 *	buildURL() should be used from views to construct urls when using subsystems or
@@ -80,29 +89,9 @@ component {
         } else if ( left( action, 2 ) == '.?' ) {
             action = replace( action, '.', getFullyQualifiedAction() );
         }
-		if ( path == variables.magicBaseURL ) path = getBaseURL();
-		var omitIndex = false;
-		if ( path == 'useSubsystemConfig' ) {
-			var subsystemConfig = getSubsystemConfig( getSubsystem( action ) );
-			if ( structKeyExists( subsystemConfig, 'baseURL' ) ) {
-				path = subsystemConfig.baseURL;
-			} else {
-				path = getBaseURL();
-			}
-		}
-		if ( path == 'useCgiScriptName' ) {
-			path = request._fw1.cgiScriptName;
-			if ( variables.framework.SESOmitIndex ) {
-				path = getDirectoryFromPath( path );
-				omitIndex = true;
-			}
-		} else if ( path == 'useRequestURI' ) {
-			path = getPageContext().getRequest().getRequestURI();
-			if ( variables.framework.SESOmitIndex ) {
-				path = getDirectoryFromPath( path );
-				omitIndex = true;
-			}
-		}
+        var pathData = resolveBaseURL( action, path );
+        path = pathData.path;
+		var omitIndex = pathData.omitIndex;
 		// if queryString is a struct, massage it into a string
 		if ( isStruct( queryString ) && structCount( queryString ) ) {
 			var q = '';
@@ -1897,6 +1886,33 @@ component {
         // set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
         return out;
+    }
+
+    private struct function resolveBaseURL( string action = '.', string path = variables.magicBaseURL ) {
+        if ( path == variables.magicBaseURL ) path = getBaseURL();
+		var omitIndex = false;
+		if ( path == 'useSubsystemConfig' ) {
+			var subsystemConfig = getSubsystemConfig( getSubsystem( action ) );
+			if ( structKeyExists( subsystemConfig, 'baseURL' ) ) {
+				path = subsystemConfig.baseURL;
+			} else {
+				path = getBaseURL();
+			}
+		}
+		if ( path == 'useCgiScriptName' ) {
+			path = request._fw1.cgiScriptName;
+			if ( variables.framework.SESOmitIndex ) {
+				path = getDirectoryFromPath( path );
+				omitIndex = true;
+			}
+		} else if ( path == 'useRequestURI' ) {
+			path = getPageContext().getRequest().getRequestURI();
+			if ( variables.framework.SESOmitIndex ) {
+				path = getDirectoryFromPath( path );
+				omitIndex = true;
+			}
+		}
+        return { path = path, omitIndex = omitIndex };
     }
 
 	private void function restoreFlashContext() {
