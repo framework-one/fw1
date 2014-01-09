@@ -874,38 +874,39 @@ component {
 	}
 	
 	// populate() may be invoked inside controllers
-	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
+	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, boolean deep = false, any properties = '' ) {
+        var props = isSimpleValue( properties ) ? request.context : properties;
 		if ( keys == '' ) {
 			if ( trustKeys ) {
-				// assume everything in the request context can be set into the CFC
-				for ( var property in request.context ) {
+				// assume every property can be set into the CFC
+				for ( var property in props ) {
 					try {
 						var args = { };
-						args[ property ] = request.context[ property ];
+						args[ property ] = props[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!						
 						setProperty( cfc, property, args );
 					} catch ( any e ) {
-						onPopulateError( cfc, property, request.context );
+						onPopulateError( cfc, property, props );
 					}
 				}
 			} else {
 				var setters = findImplicitAndExplicitSetters( cfc );
 				for ( var property in setters ) {
-					if ( structKeyExists( request.context, property ) ) {
+					if ( structKeyExists( props, property ) ) {
 						var args = { };
-						args[ property ] = request.context[ property ];
+						args[ property ] = props[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
 						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, property, args );
 					} else if ( deep && structKeyExists( cfc, 'get' & property ) ) {
-						//look for a context property that starts with the property
-						for ( var key in request.context ) {
+						// look for a property that starts with the property
+						for ( var key in props ) {
 							if ( listFindNoCase( key, property, '.') ) {
 								try {
-									setProperty( cfc, key, { '#key#' = request.context[ key ] } );
+									setProperty( cfc, key, { '#key#' = props[ key ] } );
 								} catch ( any e ) {
-									onPopulateError( cfc, key, request.context);
+									onPopulateError( cfc, key, props );
 								}
 							}
 						}
@@ -918,9 +919,9 @@ component {
 			for ( var property in keyArray ) {
 				var trimProperty = trim( property );
 				if ( structKeyExists( setters, trimProperty ) || trustKeys ) {
-					if ( structKeyExists( request.context, trimProperty ) ) {
+					if ( structKeyExists( props, trimProperty ) ) {
 						var args = { };
-						args[ trimProperty ] = request.context[ trimProperty ];
+						args[ trimProperty ] = props[ trimProperty ];
 						if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
 						// cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, trimProperty, args );
@@ -929,7 +930,7 @@ component {
 					if ( listLen( trimProperty, '.' ) > 1 ) {
 						var prop = listFirst( trimProperty, '.' );
 						if ( structKeyExists( cfc, 'get' & prop ) ) {
-                            setProperty( cfc, trimProperty, { '#trimProperty#' = request.context[ trimProperty ] } );
+                            setProperty( cfc, trimProperty, { '#trimProperty#' = props[ trimProperty ] } );
                         }
 					}
 				}
