@@ -88,7 +88,7 @@
         // since we are not running FW/1 "properly", get the stem of the
         // test suite file as the prefix, so lets strip anything up to the .cfm
         var uri = variables.fw.buildCustomURL( "/product/123" );
-        uri = REReplace( uri, "^.*\.cfm", "" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
         assertEquals( "/product/123", uri );
     }
 }
