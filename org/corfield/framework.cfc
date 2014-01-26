@@ -1954,6 +1954,7 @@ component {
 				var key = 0;
 				var keyNames = listToArray( keys );
 				for ( key in keyNames ) {
+                    key = trim( key );
 					if ( structKeyExists( request.context, key ) ) {
 						session[ preserveKeySessionKey ][ key ] = request.context[ key ];
 					}
