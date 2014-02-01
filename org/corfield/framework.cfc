@@ -420,7 +420,26 @@ component {
 	public string function getItem( string action = request.action ) {
 		return listLast( getSectionAndItem( action ), '.' );
 	}
+    
+    
+    /*
+     * return the current request context structure
+	 */
+    public struct function getRC() {
+        return request.context;
+    }
 	
+    /*
+     * return the specified property from the request context or a default value
+	 */
+    public any function getRCValue( string propName, any defaultValue = '' ) {
+        if ( structKeyExists( request, 'context' ) &&
+             structKeyExists( request.context, propName ) ) {
+            return request.context[ propName ];
+        } else {
+            return defaultValue;
+        }
+    }
 	
 	/*
 	 * return the current route (if any)
@@ -2136,6 +2155,9 @@ component {
 		if ( !structKeyExists( variables.framework, 'suppressServiceQueue' ) ) {
 			variables.framework.suppressServiceQueue = true;
 		}
+        if ( !structKeyExists( variables.framework, 'enableGlobalRC' ) ) {
+            variables.framework.enableGlobalRC = false;
+        }
 		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
@@ -2263,7 +2285,12 @@ component {
 		request.item = getItem( request.action );
 		
 		if ( runSetup ) {
-			rc = request.context;
+            if ( variables.framework.enableGlobalRC ) {
+			    rc = request.context;
+            } else {
+			    rc = "Update your code to use getRCValue() or " &
+                     "set enableGlobalRC to true while you migrate to the new API.";
+            }
             if ( usingSubsystems() ) {
 			    controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
                             variables.magicApplicationController & '.' & variables.magicApplicationAction );
