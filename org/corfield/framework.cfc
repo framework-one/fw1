@@ -802,7 +802,7 @@ component {
         } else {
 		    buildViewQueue();
             internalFrameworkTrace( 'setupView() called' );
-		    setupView();
+		    setupView( rc = request.context );
 		    if ( structKeyExists(request._fw1, 'view') ) {
                 internalFrameworkTrace( 'rendering #request._fw1.view#' );
 			    out = internalView( request._fw1.view );
@@ -1123,7 +1123,7 @@ component {
 	 * override this to provide request-specific finalization
 	 * you do not need to call super.setupResponse()
 	 */
-	public void function setupResponse() { }
+	public void function setupResponse( struct rc ) { }
 
 	/*
 	 * override this to provide session-specific initialization
@@ -1152,7 +1152,7 @@ component {
 	 * populate the request context with globally required data
 	 * you do not need to call super.setupView()
 	 */
-	public void function setupView() { }
+	public void function setupView( struct rc ) { }
 	
 	/*
 	 * use this to override the default view
@@ -2310,7 +2310,7 @@ component {
 
 	private void function setupResponseWrapper() {
         internalFrameworkTrace( 'setupResponse() called' );
-		setupResponse();
+		setupResponse( rc = request.context );
 	}
 
 	private void function setupSessionWrapper() {
