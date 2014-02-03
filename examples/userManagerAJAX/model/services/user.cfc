@@ -1,6 +1,7 @@
 component accessors=true {
 
     property departmentService;
+    property beanFactory;
 
     variables.users = { };
     variables.nextId = 0;
@@ -16,7 +17,7 @@ component accessors=true {
 		// ideally, this would be saved elsewhere, e.g. database
 		
 		// FIRST
-		user = new();
+		user = variables.beanFactory.getBean( "user" );
 		user.setId("1");
 		user.setFirstName("Curly");
 		user.setLastName("Stooge");
@@ -27,7 +28,7 @@ component accessors=true {
 		variables.users[user.getId()] = user;
 		
 		// SECOND
-		user = new();
+		user = variables.beanFactory.getBean( "user" );
 		user.setId("2");
 		user.setFirstName("Larry");
 		user.setLastName("Stooge");
@@ -38,7 +39,7 @@ component accessors=true {
 		variables.users[user.getId()] = user;
 		
 		// THIRD
-		user = new();
+		user = variables.beanFactory.getBean( "user" );
 		user.setId("3");
 		user.setFirstName("Moe");
 		user.setLastName("Stooge");
@@ -63,7 +64,7 @@ component accessors=true {
         if ( len( id ) && structKeyExists( variables.users, id ) ) {
             result = variables.users[ id ];
         } else {
-            result = new examples.userManagerAJAX.model.user();
+            result = variables.beanFactory.getBean( "user" );
         }
         return result;
     }
