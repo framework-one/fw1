@@ -1,11 +1,12 @@
-<cfcomponent displayname="UserService" output="false">
-	
-	<cfset variables.users = structNew()>
-	
-	<cffunction name="init" access="public" output="false" returntype="any">
-		<cfargument name="departmentService" type="any" required="true" />
-		
-		<cfscript>
+component accessors=true {
+
+    property departmentService;
+
+    variables.users = { };
+    variables.nextId = 0;
+
+    function init( deoartmentService ) {
+
 		var user = "";
 		var deptService = arguments.departmentService;
 		
@@ -50,68 +51,40 @@
 		// BEN
 		variables.nextid = 4;
 	
-		</cfscript>
-		
-		<cfreturn this>
-	</cffunction>
-	
-	<cffunction name="setDepartmentService" access="public" output="false">
-		<cfargument name="departmentService" type="any" required="true" />
-		<cfset variables.departmentService = arguments.departmentService />
-	</cffunction>
-	<cffunction name="getDepartmentService" access="public" returntype="any" output="false">
-		<cfreturn variables.departmentService />
-	</cffunction>
-	
-	<cffunction name="delete" access="public" output="false" returntype="boolean">
-		<cfargument name="id" type="string" required="true">
-		
-		<cfreturn structDelete(variables.users, arguments.id)>
-	</cffunction>
-	
-	<cffunction name="get" access="public" output="false" returntype="any">
-		<cfargument name="id" type="string" required="false" default="">
-		
-		<cfset var result = "">
-		
-		<cfif len(id) AND structKeyExists(variables.users, id)>
-			<cfset result = variables.users[id]>
-		<cfelse>
-			<cfset result = new()>
-		</cfif>
-		
-		<cfreturn result>
-	</cffunction>
-	
-	<cffunction name="list" access="public" output="false" returntype="struct">
-		<cfreturn variables.users>
-    </cffunction>
-	
-	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManagerAJAX.model.User").init()>
-	</cffunction>
-	
-	<cffunction name="save" access="public" output="false" returntype="void">
-		<cfargument name="user" type="any" required="true">
-		
-		<cfset var newId = 0>
-		
-		<!--- since we have an id we are updating a user --->
-		<cfif len(arguments.user.getId())>
-			<cfset variables.users[arguments.user.getId()] = arguments.user>
-		<cfelse>
-			<!--- otherwise a new user is being saved --->
-			<!--- BEN --->
-			<cflock type="exclusive" name="setNextID" timeout="10" throwontimeout="false">
-				<cfset newId = variables.nextid>
-				<cfset variables.nextid = variables.nextid + 1>
-			</cflock>
-			<!--- END BEN --->
-			
-			<cfset arguments.user.setId(newId)>
-			
-			<cfset variables.users[newId] = arguments.user>
-		</cfif>
-	</cffunction>
-	
-</cfcomponent>
+        return this;
+    }
+
+    function delete( string id ) {
+        structDelete( variables.users, id );
+    }
+
+    function get( string id ) {
+        var result = "";
+        if ( len( id ) && structKeyExists( variables.users, id ) ) {
+            result = variables.users[ id ];
+        } else {
+            result = new examples.userManagerAJAX.model.user();
+        }
+        return result;
+    }
+
+    function list() {
+        return variables.users;
+    }
+
+    function save( user ) {
+        var newId = 0;
+        if ( len( user.getId() ) {
+            variables.users[ user.getId() ] = user;
+        } else {
+            // save new user
+            lock type="exclusive" name="setNextID" timeout="10" throwontimeout="false" {
+                newId = variables.nextId;
+                ++ variables.nextId;
+            }
+            user.setId( newId );
+            variables.users[ newId ] = user;
+        }
+    }
+
+}
