@@ -14,7 +14,7 @@ component extends="org.corfield.framework" {
 	
 	function setupApplication() 
 	{
-		setBeanFactory(createObject("component", "model.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));	
+        setBeanFactory( new framework.ioc( "model" ) );
 	}
 	
 	function setupRequest()
