@@ -28,7 +28,7 @@ component extends="org.corfield.framework" {
             if ( append == "none" ) {
                 append = "";
             }
-            append = listAppend( append, "isAjxRequest" );
+            append = listAppend( append, "isAjaxRequest" );
         }
         super.redirect( argumentCollection = arguments );
     }

@@ -39,10 +39,10 @@ component accessors=true {
 
     function checkAjaxRequest( rc ) {
         var httpData = getHttpRequestData();
-        if ( structKeyExists( rc, "isAjaxRequest" ) && isBoolean( rc.isAjxRequest ) ) {
+        if ( structKeyExists( rc, "isAjaxRequest" ) && isBoolean( rc.isAjaxRequest ) ) {
             return;
         }
-        rc.isAjxRequest = structKeyExists( httpData, "headers" ) &&
+        rc.isAjaxRequest = structKeyExists( httpData, "headers" ) &&
             structKeyExists( httpData.headers, "X-Requested-With" ) &&
             httpData.headers[ "X-Requested-With" ] == "XMLHttpRequest";
     }
