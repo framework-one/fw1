@@ -1,10 +1,12 @@
 component accessors="true" {
+
+    property mainService;
 	
 	function init( fw ) {
 		variables.fw = fw;
 	}
 	
-	function startDefault( rc ) {
+	function default( rc ) {
 		param name="rc.name" default="anonymous";
 		
 		// we default the greeting / punctuation so that when this example is run without
@@ -12,10 +14,7 @@ component accessors="true" {
 		param name="rc.greeting" default="Hi";
 		param name="rc.punctuation" default=".";
 
-		variables.fw.service( "main.default", "data" ); // was implicit in 1.x 
+        rc.name = variables.mainService.default( rc.name );
 	}
-	
-	function endDefault( rc ) {
-		rc.name = rc.data;
-	}
+
 }

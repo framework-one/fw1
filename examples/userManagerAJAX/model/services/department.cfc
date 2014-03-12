@@ -1,66 +1,58 @@
-<cfcomponent displayname="DepartmentService" output="false">
+component accessors=true {
 	
-	<cfset variables.departments = structNew()>
+	variables.departments = { };
 	
-	<cffunction name="init" access="public" output="false" returntype="any">
-		<cfscript>
+	function init( beanFactory ) {
+        variables.beanFactory = beanFactory;
 		var dept = "";
 		
 		// since services are cached department data we'll be persisted
 		// ideally, this would be saved elsewhere, e.g. database
 		
 		// FIRST
-		dept = new();
+		dept = beanFactory.getBean("departmentBean");
 		dept.setId("1");
 		dept.setName("Accounting");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// SECOND
-		dept = new();
+		dept = beanFactory.getBean("departmentBean");
 		dept.setId("2");
 		dept.setName("Sales");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// THIRD
-		dept = new();
+		dept = beanFactory.getBean("departmentBean");
 		dept.setId("3");
 		dept.setName("Support");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// FOURTH
-		dept = new();
+		dept = beanFactory.getBean("departmentBean");
 		dept.setId("4");
 		dept.setName("Development");
 		
 		variables.departments[dept.getId()] = dept;
-		</cfscript>
-		
-		<cfreturn this>
-	</cffunction>
+		return this;
+	}
 	
-	<cffunction name="get" access="public" output="false" returntype="any">
-		<cfargument name="id" type="string" required="true">
+	function get(id) {
+		var result = "";
 		
-		<cfset var result = "">
+		if ( len(id) && structKeyExists(variables.departments, id) ) {
+			result = variables.departments[id];
+		} else {
+			result = variables.beanFactory.getBean("departmentBean");
+		}
 		
-		<cfif len(id) AND structKeyExists(variables.departments, id)>
-			<cfset result = variables.departments[id]>
-		<cfelse>
-			<cfset result = new()>
-		</cfif>
-		
-		<cfreturn result>
-	</cffunction>
+		return result;
+	}
 	
-	<cffunction name="list" access="public" output="false" returntype="struct">
-		<cfreturn variables.departments>
-    </cffunction>
+	function list() {
+		return variables.departments;
+    }
 	
-	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManagerAJAX.model.Department").init()>
-	</cffunction>
-	
-</cfcomponent>
+}

@@ -16,7 +16,7 @@ component extends="org.corfield.framework" {
 	// pull in bean factory for hello8:
 	public void function setupSubsystem( string subsystem ) {
 		if ( subsystem == "hello8" ) {
-			var bf = new hello8.model.ioc( "./hello8" );
+			var bf = new framework.ioc( "./hello8" );
 			setSubsystemBeanFactory( subsystem, bf );
 		}
 	}
