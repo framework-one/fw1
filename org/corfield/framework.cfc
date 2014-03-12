@@ -1462,6 +1462,11 @@ component {
              arrayLen( request._fw1.trace ) &&
              !structKeyExists( request._fw1, 'renderData' ) ) {
             setupTraceRender();
+        }
+        // re-test to allow for setupTraceRender() handling / disabling tracing
+        if ( request._fw1.doTrace &&
+             arrayLen( request._fw1.trace ) &&
+             !structKeyExists( request._fw1, 'renderData' ) ) {
             var startTime = request._fw1.trace[1].tick;
             var font = 'font-family: verdana, helvetica;';
             writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
