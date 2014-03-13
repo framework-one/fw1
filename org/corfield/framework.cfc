@@ -2199,8 +2199,8 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-        request._fw1.doTrace = variables.framework.trace;
         setupEnvironment( env );
+        request._fw1.doTrace = variables.framework.trace;
 	}
 
     private string function setupFrameworkEnvironments() {
