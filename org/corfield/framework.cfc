@@ -2067,6 +2067,8 @@ component {
 		if ( !structKeyExists(variables, 'framework') ) {
 			variables.framework = { };
 		}
+	    variables.framework.version = variables._fw1_version;
+        var env = setupFrameworkEnvironments();
 		if ( !structKeyExists(variables.framework, 'action') ) {
 			variables.framework.action = 'action';
 		}
@@ -2198,11 +2200,10 @@ component {
 			variables.framework.trace = false;
 		}
         request._fw1.doTrace = variables.framework.trace;
-	    variables.framework.version = variables._fw1_version;
-        setupFrameworkEnvironments();
+        setupEnvironment( env );
 	}
 
-    private void function setupFrameworkEnvironments() {
+    private string function setupFrameworkEnvironments() {
         var env = getEnvironment();
         if ( structKeyExists( variables.framework, 'environments' ) ) {
             var envs = variables.framework.environments;
@@ -2214,7 +2215,7 @@ component {
                 structAppend( variables.framework, envs[ env ] );
             }
         }
-        setupEnvironment( env );
+        return env;
     }
 
 	private void function setupRequestDefaults() {
