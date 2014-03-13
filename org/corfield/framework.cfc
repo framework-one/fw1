@@ -1471,13 +1471,15 @@ component {
             var font = 'font-family: verdana, helvetica;';
             writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
-            var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">';
+            var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%"><tr><th style="text-align:right;">time</th><th style="text-align:right;">delta</th><th>action</th><th>message</th></tr>';
             writeOutput( table );
             var colors = [ '##ccd4dd', '##ccddcc' ];
             var row = 0;
             var n = arrayLen( request._fw1.trace );
+			var lastDuration = 0;
             for ( var i = 1; i <= n; ++i ) {
                 var trace = request._fw1.trace[i];
+	            var nextTraceTick = i + 1 <= n ? request._fw1.trace[i+1].tick : trace.tick;
                 var action = '';
                 if ( trace.s == variables.magicApplicationController || trace.sub == variables.magicApplicationSubsystem ) {
                     action = '<em>Application.cfc</em>';
@@ -1497,8 +1499,15 @@ component {
                 }
                 ++row;
                 writeOutput( '<tr style="border: 0; background: #colors[1 + row mod 2]#;">' );
-                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="5%">#trace.tick - startTime#ms</td>' );
-                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;" width="10%">#action#</td>' );
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small; text-align:right;" width="5%">#trace.tick - starttime#ms</td>' );
+	            writeOutput( '<td style="border: 0; color: black; #font# font-size: small; text-align:right;" width="5%">');
+	            var duration = nextTraceTick - startTime;
+	            if ((duration - lastDuration) > 0) {
+		            writeOutput('#duration - lastDuration#ms');
+                }
+				lastDuration = duration;
+				writeOutput('</td>' );
+                writeOutput( '<td style="border: 0; color: black; #font# font-size: small;padding-left: 5px;" width="10%">#action#</td>' );
                 var color =
                     trace.msg.startsWith( 'no ' ) ? '##cc8888' :
                         trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##0000';
