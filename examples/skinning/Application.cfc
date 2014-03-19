@@ -1,4 +1,4 @@
-﻿<cfcomponent extends="org.corfield.framework" output="false"><cfscript>
+﻿component extends="org.corfield.framework" {
 
 	this.sessionManagement = true;
 	
@@ -20,4 +20,4 @@
 		}
 	}
 
-</cfscript></cfcomponent>
+}
