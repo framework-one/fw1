@@ -42,8 +42,6 @@ component extends="org.corfield.framework" {
 		baseURL = 'useCgiScriptName',
 		// location used to find controllers / services:
 		// cfcbase = essentially base with / replaced by .
-		// whether FW/1 implicit service call should be suppressed:
-		suppressImplicitService = true,
 		// list of file extensions that FW/1 should not handle:
 		unhandledExtensions = 'cfc',
 		// list of (partial) paths that FW/1 should not handle:
@@ -62,5 +60,10 @@ component extends="org.corfield.framework" {
 		// use setupRequest to do initialization per request
 		request.context.startTime = getTickCount();
 	}
+
+    function setupApplication() {
+        var bf = new framework.ioc( "services" );
+        setBeanFactory( bf );
+    }
 	
 }

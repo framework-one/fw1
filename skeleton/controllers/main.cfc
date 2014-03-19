@@ -1,4 +1,6 @@
-component {
+component accessors="true" {
+
+    property formatterService;
 	
 	public any function init( fw ) {
 		variables.fw = fw;
@@ -6,9 +8,7 @@ component {
 	}
 	
 	public void function default( rc ) {
-		rc.when = now(); // set when for service argument
-		// queue up a specific service (formatter.longdate) with named result (today)
-		variables.fw.service( 'formatter.longdate', 'today' );
+		rc.today = variables.formatterService.longdate( now() );
 	}
 	
 }
