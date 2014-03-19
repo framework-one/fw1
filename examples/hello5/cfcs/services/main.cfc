@@ -1,6 +1,5 @@
-<cfcomponent output="false">
-	<cffunction name="default" output="false">
-		<cfargument name="name">
-		<cfreturn "so-called " & name>
-	</cffunction>
-</cfcomponent>
+component {
+    function default( name ) {
+        return "so-called " & name;
+    }
+}
