@@ -1,5 +1,6 @@
 component accessors="true" {
 
+    property beanFactory;
     property formatterService;
 	
 	public any function init( fw ) {
@@ -8,7 +9,8 @@ component accessors="true" {
 	}
 	
 	public void function default( rc ) {
-		rc.today = variables.formatterService.longdate( now() );
+        var instant = variables.beanFactory.getBean( "instant" );
+		rc.today = variables.formatterService.longdate( instant.created() );
 	}
 	
 }

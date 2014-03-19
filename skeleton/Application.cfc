@@ -1,8 +1,8 @@
 component extends="org.corfield.framework" {
 	
 	/*
-		This is provided for illustration only - you should not use this in
-		a real program! Only override the defaults you need to change!
+		This is provided for illustration only - YOU SHOULD NOT USE THIS IN
+		A REAL PROGRAM! ONLY OVERRIDE THE DEFAULTS YOU NEED TO CHANGE!
 	variables.framework = {
 		// the name of the URL variable:
 		action = 'action',
@@ -37,7 +37,7 @@ component extends="org.corfield.framework" {
 		// whether to omit /index.cfm in SES URLs:
 		SESOmitIndex = false,
 		// location used to find layouts / views:
-		base = getDirectoryFromPath( CGI.SCRIPT_NAME ),
+		base = ... relative path from Application.cfc to application files ...
 		// either CGI.SCRIPT_NAME or a specified base URL path:
 		baseURL = 'useCgiScriptName',
 		// location used to find controllers / services:
@@ -62,7 +62,8 @@ component extends="org.corfield.framework" {
 	}
 
     function setupApplication() {
-        var bf = new framework.ioc( "services" );
+        // bean factory should look in the model tree for services and beans
+        var bf = new framework.ioc( "model" );
         setBeanFactory( bf );
     }
 	
