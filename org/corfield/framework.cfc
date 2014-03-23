@@ -806,7 +806,11 @@ component {
 		    if ( structKeyExists(request._fw1, 'view') ) {
                 internalFrameworkTrace( 'rendering #request._fw1.view#' );
 			    out = internalView( request._fw1.view );
-		    } else {
+		    } else if ( structKeyExists(request._fw1, 'omvInProgress') ) {
+                internalFrameworkTrace( 'viewNotFound() called' );
+                viewNotFound();
+            } else {
+                request._fw1.omvInProgress = true;
                 internalFrameworkTrace( 'onMissingView() called' );
 			    out = onMissingView( request.context );
 		    }
@@ -1180,7 +1184,11 @@ component {
 		    return internalView( viewPath, args );
         } else if ( isSimpleValue( missingView ) ) {
             return missingView;
+		} else if ( structKeyExists(request._fw1, 'omvInProgress') ) {
+            internalFrameworkTrace( 'view( #path# ) called - viewNotFound() called' );
+            viewNotFound();
         } else {
+            request._fw1.omvInProgress = true;
             internalFrameworkTrace( 'view( #path# ) called - onMissingView() called' );
             return onMissingView( request.context );
         }
@@ -1369,7 +1377,7 @@ component {
 	}
 	
 	private void function dumpException( any exception ) {
-		writeDump( var = exception, label = 'Exception' );
+		writeDump( var = exception, label = 'Exception - click to expand', expand = false );
 	}
 	
 	private void function ensureNewFrameworkStructsExist() {
