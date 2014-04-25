@@ -1,0 +1,40 @@
+body {
+	background-color: #cccc99;
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+}
+
+#header {
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;	
+	background-color: white;
+	padding: 5px;
+}
+
+#body {
+	width: 70%;
+	margin-top: 10px;
+	margin-left: auto;
+	margin-right: auto;	
+	background-color: white;
+	padding: 5px;
+}
+
+.answer, .answerOdd, .selectedAnswer {
+	padding: 5px;
+	border-width:1px;
+	border-style: solid;
+	margin-bottom: 5px;	
+}
+
+.answerOdd {
+	background-color: #eeeeee;
+}
+
+.selectedAnswer {
+	background-color: #66cc99;
+}
+
+.pagination {
+	text-align: right;	
+}
