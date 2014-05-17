@@ -13,12 +13,11 @@ component extends="org.corfield.framework" {
         suppressServiceQueue = false
 	};
 	
-	// pull in bean factory for hello8:
+	// pull in bean factory for each subsystem:
 	public void function setupSubsystem( string subsystem ) {
-		if ( subsystem == "hello8" ) {
-			var bf = new framework.ioc( "./hello8" );
-			setSubsystemBeanFactory( subsystem, bf );
-		}
+        var bf = new framework.ioc( "./" & subsystem );
+        bf.addBean( "fw", this ); // so controllers can be init'd with fw
+        setSubsystemBeanFactory( subsystem, bf );
 	}
 	
 }
