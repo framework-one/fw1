@@ -67,7 +67,7 @@
 
 		<!--- if there were validation errors, grab a blank user to populate and send back to the form --->
 		<cfif not arrayIsEmpty(rc.message)>
-			<cfset rc.user = userService.new() />
+			<cfset rc.user = variables.fw.getBeanFactory().getBean( "userBean" ) />
 		</cfif>
 
 		<!--- update the user object with the data entered --->

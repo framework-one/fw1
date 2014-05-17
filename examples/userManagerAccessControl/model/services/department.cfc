@@ -1,8 +1,10 @@
-<cfcomponent displayname="DepartmentService" output="false">
-	
+<cfcomponent output="false">
+
 	<cfset variables.departments = structNew()>
 	
 	<cffunction name="init" access="public" output="false" returntype="any">
+        <cfargument name="beanFactory"/>
+        <cfset variables.beanFactory = arguments.beanFactory/>
 		<cfscript>
 		var dept = "";
 		
@@ -10,28 +12,28 @@
 		// ideally, this would be saved elsewhere, e.g. database
 		
 		// FIRST
-		dept = new();
+		dept = variables.beanFactory.getBean("departmentBean");
 		dept.setId("1");
 		dept.setName("Accounting");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// SECOND
-		dept = new();
+		dept = variables.beanFactory.getBean("departmentBean");
 		dept.setId("2");
 		dept.setName("Sales");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// THIRD
-		dept = new();
+		dept = variables.beanFactory.getBean("departmentBean");
 		dept.setId("3");
 		dept.setName("Support");
 		
 		variables.departments[dept.getId()] = dept;
 		
 		// FOURTH
-		dept = new();
+		dept = variables.beanFactory.getBean("departmentBean");
 		dept.setId("4");
 		dept.setName("Development");
 		
@@ -49,7 +51,7 @@
 		<cfif len(id) AND structKeyExists(variables.departments, id)>
 			<cfset result = variables.departments[id]>
 		<cfelse>
-			<cfset result = new()>
+			<cfset result = variables.beanFactory.getBean("departmentBean")>
 		</cfif>
 		
 		<cfreturn result>
@@ -58,9 +60,5 @@
 	<cffunction name="list" access="public" output="false" returntype="struct">
 		<cfreturn variables.departments>
     </cffunction>
-	
-	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.model.Department").init()>
-	</cffunction>
 	
 </cfcomponent>

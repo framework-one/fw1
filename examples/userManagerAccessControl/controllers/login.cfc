@@ -1,4 +1,4 @@
-﻿<cfcomponent>
+<cfcomponent>
 	<cfset variables.fw = '' />
 	<cffunction name="init" access="public" returntype="void">
 		<cfargument name="fw" type="any" required="yes" />
@@ -15,7 +15,7 @@
 
 	<cffunction name="before" access="public" output="no" returntype="void">
 		<cfargument name="rc" type="struct" required="yes" />
-		<cfif session.auth.isLoggedIn and variables.fw.getItem() is not 'logout'>
+		<cfif structKeyExists( session, "auth" ) and session.auth.isLoggedIn and variables.fw.getItem() is not 'logout'>
 			<cfset variables.fw.redirect('main') />
 		</cfif>
 	</cffunction>

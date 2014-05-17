@@ -1,8 +1,12 @@
-<cfcomponent displayname="RoleService" output="false">
+<cfcomponent output="false">
+
+    <cfproperty name="beanFactory" />
 
 	<cfset variables.roles = structNew()>
 
 	<cffunction name="init" access="public" output="false" returntype="any">
+        <cfargument name="beanFactory"/>
+        <cfset variables.beanFactory = arguments.beanFactory/>
 		<cfscript>
 		var role = "";
 
@@ -10,14 +14,14 @@
 		// ideally, this would be saved elsewhere, e.g. database
 
 		// FIRST
-		role = new();
+		role = variables.beanFactory.getBean("roleBean");
 		role.setId("1");
 		role.setName("Admin");
 
 		variables.roles[role.getId()] = role;
 
 		// SECOND
-		role = new();
+		role = variables.beanFactory.getBean("roleBean");
 		role.setId("2");
 		role.setName("User");
 
@@ -35,7 +39,7 @@
 		<cfif len(id) AND structKeyExists(variables.roles, id)>
 			<cfset result = variables.roles[id]>
 		<cfelse>
-			<cfset result = new()>
+			<cfset result = variables.beanFactory.getBean( "roleBean" )>
 		</cfif>
 
 		<cfreturn result>
@@ -44,9 +48,5 @@
 	<cffunction name="list" access="public" output="false" returntype="struct">
 		<cfreturn variables.roles>
     </cffunction>
-
-	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.model.Role").init()>
-	</cffunction>
 
 </cfcomponent>

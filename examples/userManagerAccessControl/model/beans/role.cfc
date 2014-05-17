@@ -3,7 +3,7 @@
 	<cfset variables.id = 0 />
 	<cfset variables.name = "" />
 
-	<cffunction name="init" access="public" output="false" returntype="Role">
+	<cffunction name="init" access="public" output="false" returntype="role">
 		<cfreturn this />
 	</cffunction>
 

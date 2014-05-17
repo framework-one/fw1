@@ -1,10 +1,12 @@
-<cfcomponent displayname="UserService" output="false">
+<cfcomponent output="false">
 
-	<cfset variables.users = structNew()>
+	<cfset variables.users = structNew() />
 
 	<cffunction name="init" access="public" output="false" returntype="any">
 		<cfargument name="departmentService" type="any" required="true" />
 		<cfargument name="roleService" type="any" required="true" />
+        <cfargument name="beanFactory"/>
+        <cfset variables.beanFactory = arguments.beanFactory/>
 
 		<cfscript>
 		var user = "";
@@ -18,7 +20,7 @@
 		// ideally, this would be saved elsewhere, e.g. database
 
 		// FIRST
-		user = new();
+		user = variables.beanFactory.getBean( "userBean" );
 		user.setId("1");
 		user.setFirstName("Admin");
 		user.setLastName("User");
@@ -36,7 +38,7 @@
 		variables.users[user.getId()] = user;
 
 		// SECOND
-		user = new();
+		user = variables.beanFactory.getBean( "userBean" );
 		user.setId("2");
 		user.setFirstName("Larry");
 		user.setLastName("Stooge");
@@ -52,7 +54,7 @@
 		variables.users[user.getId()] = user;
 
 		// THIRD
-		user = new();
+		user = variables.beanFactory.getBean( "userBean" );
 		user.setId("3");
 		user.setFirstName("Moe");
 		user.setLastName("Stooge");
@@ -104,7 +106,7 @@
 		<cfif len(id) AND structKeyExists(variables.users, id)>
 			<cfset result = variables.users[id]>
 		<cfelse>
-			<cfset result = new()>
+			<cfset result = variables.beanFactory.getBean( "userBean" )>
 		</cfif>
 
 		<cfreturn result>
@@ -129,7 +131,7 @@
 
 		<!--- if there is no user with a matching email address, return a blank user --->
 		<cfif not isstruct(result)>
-			<cfset result = new()>
+			<cfset result = variables.beanFactory.getBean( "userBean" )>
 		</cfif>
 
 		<cfreturn result>
@@ -138,10 +140,6 @@
 	<cffunction name="list" access="public" output="false" returntype="struct">
 		<cfreturn variables.users>
     </cffunction>
-
-	<cffunction name="new" access="public" output="false" returntype="any">
-		<cfreturn createObject("component", "userManager.model.User").init()>
-	</cffunction>
 
 	<cffunction name="validate" access="public" output="false" returntype="Array">
 		<cfargument name="user" type="any" required="true" />

@@ -11,7 +11,7 @@
 	<cfset variables.passwordHash = "" />
 	<cfset variables.passwordSalt = "" />
 
-	<cffunction name="init" access="public" output="false" returntype="User">
+	<cffunction name="init" access="public" output="false" returntype="user">
 		<cfreturn this />
 	</cffunction>
 

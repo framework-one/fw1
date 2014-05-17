@@ -16,7 +16,7 @@ component extends="org.corfield.framework" {
 	function setupApplication()
 	{
 		application.adminEmail = 'admin@mysite.com';
-		setBeanFactory(createObject("component", "model.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));
+		setBeanFactory( new framework.ioc( 'model' ) );
 	}
 
 	function setupSession() {
