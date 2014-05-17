@@ -1,4 +1,4 @@
-<cfcomponent><cfscript>
+component {
 
 	function init( fw ) {
 		variables.fw = fw;
@@ -20,4 +20,4 @@
 		}
 	}
 
-</cfscript></cfcomponent>
+}
