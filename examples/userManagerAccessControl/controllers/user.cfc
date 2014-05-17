@@ -55,7 +55,11 @@
 		<cfset rc.roles = getRoleService().list()>
 	</cffunction>
 
-	<cffunction name="startSave" access="public" output="false" returntype="void">
+    <cffunction name="list" access="public" output="false" returntype="void">
+        <cfset rc.data = variables.userService.list()>
+    </cffunction>
+
+	<cffunction name="save" access="public" output="false" returntype="void">
 		<cfargument name="rc" type="struct" required="true">
 
 		<cfset var userService = getUserService() />
@@ -91,17 +95,16 @@
 			<cfset rc.user.setPasswordSalt(newpasshash.salt) />
 		</cfif>
 
-	</cffunction>
-
-	<cffunction name="endSave" access="public" output="false" returntype="void">
-		<cfargument name="rc" type="struct" required="true">
+        <cfset variables.userService.save( rc.user ) />
 
 		<!--- user saved so by default lets go back to the users list page --->
 		<cfset variables.fw.redirect("user.list")>
 	</cffunction>
 
-	<cffunction name="endDelete" access="public" output="false" returntype="void">
+	<cffunction name="delete" access="public" output="false" returntype="void">
 		<cfargument name="rc" type="struct" required="true">
+
+        <cfset variables.userService.delete( rc.id )>
 
 		<!--- user deleted so by default lets go back to the users list page --->
 		<cfset variables.fw.redirect("user.list")>
