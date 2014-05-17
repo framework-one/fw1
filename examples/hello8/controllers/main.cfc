@@ -1,6 +1,6 @@
 component accessors="true" {
 	
-	property framework;
+	property framework; // alternative way to depend on FW/1"
 	property mainService;
 	
 	public void function default( rc ) {
