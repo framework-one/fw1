@@ -1,4 +1,4 @@
-<cfcomponent extends="org.corfield.framework" output="false"><cfscript>
+component extends="org.corfield.framework" {
 
 	this.name = 'fw1litepost';
 	this.sessionmanagement = true;
@@ -34,4 +34,4 @@
 		
 	}
 
-</cfscript></cfcomponent>
+}
