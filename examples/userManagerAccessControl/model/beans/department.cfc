@@ -1,26 +1,11 @@
-<cfcomponent displayname="Department" output="false">
+component accessors=true {
 
-	<cfset variables.id = 0 />
-	<cfset variables.name = "" />
+    property id;
+    property name;
 
-	<cffunction name="init" access="public" output="false" returntype="department">
-		<cfreturn this />
-	</cffunction>
-
-	<cffunction name="setId" access="public" output="false">
-		<cfargument name="id" type="string" required="true" />
-		<cfset variables.id = arguments.id />
-	</cffunction>
-	<cffunction name="getId" access="public" returntype="string" output="false">
-		<cfreturn variables.id />
-	</cffunction>
-
-	<cffunction name="setName" access="public" output="false">
-		<cfargument name="name" type="string" required="true" />
-		<cfset variables.name = arguments.name />
-	</cffunction>
-	<cffunction name="getName" access="public" returntype="string" output="false">
-		<cfreturn variables.name />
-	</cffunction>
-
-</cfcomponent>
+    function init( string id = 0, string name = "" ) {
+        variables.id = id;
+        variables.name = name;
+        return this;
+    }
+}
