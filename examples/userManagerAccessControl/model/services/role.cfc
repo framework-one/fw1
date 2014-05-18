@@ -1,20 +1,14 @@
-<cfcomponent output="false">
+component {
 
-    <cfproperty name="beanFactory" />
+    function init( beanFactory ) {
+        variables.beanFactory = beanFactory;
+        variables.roles = { };
 
-	<cfset variables.roles = structNew()>
-
-	<cffunction name="init" access="public" output="false" returntype="any">
-        <cfargument name="beanFactory"/>
-        <cfset variables.beanFactory = arguments.beanFactory/>
-		<cfscript>
-		var role = "";
-
-		// since services are cached role data we'll be persisted
+		// since services are cached role data will be persisted
 		// ideally, this would be saved elsewhere, e.g. database
 
 		// FIRST
-		role = variables.beanFactory.getBean("roleBean");
+        var role = variables.beanFactory.getBean("roleBean");
 		role.setId("1");
 		role.setName("Admin");
 
@@ -26,27 +20,22 @@
 		role.setName("User");
 
 		variables.roles[role.getId()] = role;
-		</cfscript>
 
-		<cfreturn this>
-	</cffunction>
+        return this;
+    }
 
-	<cffunction name="get" access="public" output="false" returntype="any">
-		<cfargument name="id" type="string" required="true">
+    function get( string id ) {
+        var result = 0;
+        if ( len( id ) && structKeyExists( variables.roles, id ) ) {
+            result = variables.roles[ id ];
+        } else {
+            result = variables.beanFactory.getBean( "roleBean" );
+        }
+        return result;
+    }
 
-		<cfset var result = "">
+    function list() {
+        return variables.roles;
+    }
 
-		<cfif len(id) AND structKeyExists(variables.roles, id)>
-			<cfset result = variables.roles[id]>
-		<cfelse>
-			<cfset result = variables.beanFactory.getBean( "roleBean" )>
-		</cfif>
-
-		<cfreturn result>
-	</cffunction>
-
-	<cffunction name="list" access="public" output="false" returntype="struct">
-		<cfreturn variables.roles>
-    </cffunction>
-
-</cfcomponent>
+}
