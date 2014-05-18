@@ -1,37 +1,27 @@
-<cfcomponent output="false">
+component accessors=true {
 
-	<cfset variables.users = structNew() />
+    function init( any departmentService, any roleService, any beanFactory ) {
+        variables.departmentService = departmentService;
+        variables.roleService = roleService;
+        variables.beanFactory = beanFactory;
+        variables.users = { };
 
-	<cffunction name="init" access="public" output="false" returntype="any">
-		<cfargument name="departmentService" type="any" required="true" />
-		<cfargument name="roleService" type="any" required="true" />
-        <cfargument name="beanFactory"/>
-        <cfset variables.beanFactory = arguments.beanFactory/>
-
-		<cfscript>
-		var user = "";
-		var deptService = arguments.departmentService;
-		var passwordHashSalt = '';
-
-		setDepartmentService(arguments.departmentService);
-		setRoleService(arguments.roleService);
-
-		// since services are cached, user data well be persisted
+		// since services are cached, user data will be persisted
 		// ideally, this would be saved elsewhere, e.g. database
 
 		// FIRST
-		user = variables.beanFactory.getBean( "userBean" );
+        var user = variables.beanFactory.getBean( "userBean" );
 		user.setId("1");
 		user.setFirstName("Admin");
 		user.setLastName("User");
 		user.setEmail("admin@mysite.com");
 		user.setDepartmentId("1");
-		user.setDepartment(deptService.get("1"));
+		user.setDepartment(variables.departmentService.get("1"));
 		user.setRoleId("1");
 		user.setRole(arguments.roleService.get("1"));
 		// set the password.  typically the hash and salt would be in a database.
 		// avoid plain text passwords in files or the database
-		passwordHashSalt = hashPassword('admin');
+		var passwordHashSalt = hashPassword('admin');
 		user.setPasswordHash(passwordHashSalt.hash);
 		user.setPasswordSalt(passwordHashSalt.salt);
 
@@ -44,7 +34,7 @@
 		user.setLastName("Stooge");
 		user.setEmail("larry@stooges.com");
 		user.setDepartmentId("2");
-		user.setDepartment(deptService.get("2"));
+		user.setDepartment(variables.departmentService.get("2"));
 		user.setRoleId("2");
 		user.setRole(arguments.roleService.get("2"));
 		passwordHashSalt = hashPassword('larryrulz');
@@ -60,7 +50,7 @@
 		user.setLastName("Stooge");
 		user.setEmail("moe@stooges.com");
 		user.setDepartmentId("3");
-		user.setDepartment(deptService.get("3"));
+		user.setDepartment(variables.departmentService.get("3"));
 		user.setRoleId("2");
 		user.setRole(arguments.roleService.get("2"));
 		passwordHashSalt = hashPassword('moerulz');
@@ -71,212 +61,123 @@
 
 		// BEN
 		variables.nextid = 4;
-		</cfscript>
 
-		<cfreturn this>
-	</cffunction>
+        return this;
+    }
 
-	<cffunction name="setDepartmentService" access="public" output="false">
-		<cfargument name="departmentService" type="any" required="true" />
-		<cfset variables.departmentService = arguments.departmentService />
-	</cffunction>
-	<cffunction name="getDepartmentService" access="public" returntype="any" output="false">
-		<cfreturn variables.departmentService />
-	</cffunction>
+    function delete( string id ) {
+        structDelete( variables.users, id );
+    }
 
-	<cffunction name="setRoleService" access="public" output="false">
-		<cfargument name="roleService" type="any" required="true" />
-		<cfset variables.roleService = arguments.roleService />
-	</cffunction>
-	<cffunction name="getRoleService" access="public" returntype="any" output="false">
-		<cfreturn variables.roleService />
-	</cffunction>
+    function get( string id ) {
+        var result = 0;
+        if ( len( id ) && structKeyExists( variables.users, id ) ) {
+            result = variables.users[ id ];
+        } else {
+            result = variables.beanFactory.getBean( "userBean" );
+        }
+        return result;
+    }
 
-	<cffunction name="delete" access="public" output="false" returntype="boolean">
-		<cfargument name="id" type="string" required="true">
+    function getByEmail( string email ) {
+        var result = "";
+        if ( len( email ) ) {
+            for ( var userId in variables.users ) {
+                var user = variables.users[ userId ];
+                if ( !comparenocase( email, user.getEmail() ) ) {
+                    result = user;
+                }
+            }
+        }
+        if ( !isStruct( result ) ) {
+            result = variables.beanFactory.getBean( "userBean" );
+        }
+        return result;
+    }
 
-		<cfreturn structDelete(variables.users, arguments.id)>
-	</cffunction>
+    function list() {
+        return variables.users;
+    }
 
-	<cffunction name="get" access="public" output="false" returntype="any">
-		<cfargument name="id" type="string" required="false" default="">
+    function validate( any user, string firstName = "", string lastName = "", string email = "",
+                       string departmentId = "", string roleId = "", string password = "" ) {
+        var aErrors = [ ];
+        var userByEmail = getByEmail( email );
+        var department = variables.departmentService.get( departmentId );
+        var role = variables.roleService.get( roleId );
 
-		<cfset var result = "">
+        // validate password for new or existing user
+        if ( !user.getId() && !len( password ) ) {
+            arrayAppend( aErrors, "Please enter a password for the user" )
+        } else if ( len( password ) ) {
+            aErrors = checkPassword( user = user, newPassword = password, retypePassword = password );
+        }
+        // validate first and last name
+        if ( !len( user.getFirstName() ) && !len( firstName ) ) {
+            arrayAppend( aErrors, "Please enter the user's first name" );
+        }
+        if ( !len( user.getLastName() ) && !len( lastName ) ) {
+            arrayAppend( aErrors, "Please enter the user's last name" );
+        }
+        // validate email address
+        if ( !len( user.getEmail() ) && !len( email ) ) {
+            arrayAppend( aErrors, "Please enter the user's email address" );
+        } else if ( len( email ) && !isEmail( email ) ) {
+            arrayAppend( aErrors, "Please enter a valid email address" );
+        } else if ( len( email ) && !compare( email, userByEmail.getEmail() ) ) {
+            arrayAppend( aErrors, "A user already exists with this email address, please enter a new address." );
+        }
+        // validate department ID
+        if ( !len( departmentId ) || !isNumeric( departmentId ) || !department.getId() ) {
+            arrayAppend( aErrors, "Please select a department" );
+        }
+        // validate role ID
+        if ( !len( roleId ) || !isNumeric( roleId ) || !role.getId() ) {
+            arrayAppend( aErrors, "Please select a role" );
+        }
 
-		<cfif len(id) AND structKeyExists(variables.users, id)>
-			<cfset result = variables.users[id]>
-		<cfelse>
-			<cfset result = variables.beanFactory.getBean( "userBean" )>
-		</cfif>
+        return aErrors;
+    }
 
-		<cfreturn result>
-	</cffunction>
+    function save( any user ) { 
+        if ( user.getId() ) {
+            variables.users[ user.getId() ] = user;
+        } else {
+            // new user
+            // BEN
+            lock type="exclusive" name="setNextID" timeout="10" throwontimeout="false" {
+                var newId = variables.nextId;
+                ++variables.nextId;
+            }
+            // END BEN
+            user.setId( newId );
+            variables.users[ newId ] = user;
+        }
+    }
 
-	<cffunction name="getByEmail" access="public" returntype="any">
-		<cfargument name="email" type="string" required="false" default="">
-
-		<cfset var result = "">
-		<cfset var userid = "">
-		<cfset var user = "">
-
-		<cfif len(email)>
-			<!--- loop through the users, looking for a matching email address --->
-			<cfloop collection="#variables.users#" item="userid">
-				<cfset user = variables.users[userid] />
-				<cfif not comparenocase(arguments.email,user.getEmail())>
-					<cfset result = user />
-				</cfif>
-			</cfloop>
-		</cfif>
-
-		<!--- if there is no user with a matching email address, return a blank user --->
-		<cfif not isstruct(result)>
-			<cfset result = variables.beanFactory.getBean( "userBean" )>
-		</cfif>
-
-		<cfreturn result>
-	</cffunction>
-
-	<cffunction name="list" access="public" output="false" returntype="struct">
-		<cfreturn variables.users>
-    </cffunction>
-
-	<cffunction name="validate" access="public" output="false" returntype="Array">
-		<cfargument name="user" type="any" required="true" />
-		<cfargument name="firstName" type="string" required="false" default="" />
-		<cfargument name="lastName" type="string" required="false" default="" />
-		<cfargument name="email" type="string" required="false" default="" />
-		<cfargument name="departmentId" type="string" required="false" default="" />
-		<cfargument name="roleId" type="string" required="false" default="" />
-		<cfargument name="password" type="string" required="false" default="" />
-		<cfset var aErrors = arrayNew(1) />
-		<!--- check to see if a user exists with the email address --->
-		<cfset var userByEmail = getByEmail(arguments.email) />
-		<!--- check to see if the department selected matches a department record --->
-		<cfset var department = getDepartmentService().get(arguments.departmentId) />
-		<!--- check to see if the role selected matches a role record --->
-		<cfset var role = getRoleService().get(arguments.roleId) />
-
-		<!--- if the user is new, make sure there is a password --->
-		<cfif not arguments.user.getId() and not len(arguments.password)>
-			<cfset arrayAppend(aErrors,"Please enter a password for the user") />
-		<!--- make sure the password is valid --->
-		<cfelseif len(arguments.password)>
-			<cfset aErrors = checkPassword(user=arguments.user,
-				newPassword=arguments.password,
-				retypePassword=arguments.password) />
-		</cfif>
-
-		<!--- first name is required --->
-		<cfif not len(arguments.user.getFirstName()) and not len(arguments.firstName)>
-			<cfset arrayAppend(aErrors,"Please enter the user's first name") />
-		</cfif>
-
-		<!--- last name is required --->
-		<cfif not len(arguments.user.getLastName()) and not len(arguments.lastName)>
-			<cfset arrayAppend(aErrors,"Please enter the user's last name") />
-		</cfif>
-
-		<!--- email address is required --->
-		<cfif not len(arguments.user.getEmail()) and not len(arguments.email)>
-			<cfset arrayAppend(aErrors,"Please enter the user's email address") />
-		<!--- verify the email is a valid format --->
-		<cfelseif len(arguments.email) and not isEmail(arguments.email)>
-			<cfset arrayAppend(aErrors,"Please enter a valid email address") />
-		<!--- verify the email address is unique for this user --->
-		<cfelseif len(arguments.email) and compare(arguments.email,arguments.user.getEmail()) and userByEmail.getId()>
-			<cfset arrayAppend(aErrors,"A user already exists with this email address, please enter a new address.") />
-		</cfif>
-
-		<!--- department id is required, must be numeric and match a department record --->
-		<cfif not len(arguments.departmentId) or not isnumeric(arguments.departmentId) or not department.getId()>
-			<cfset arrayAppend(aErrors,"Please select a department") />
-		</cfif>
-
-		<!--- role id is required, must be numeric and match a role record --->
-		<cfif not len(arguments.roleId) or not isnumeric(arguments.roleId) or not role.getId()>
-			<cfset arrayAppend(aErrors,"Please select a role") />
-		</cfif>
-
-		<cfreturn aErrors />
-	</cffunction>
-
-	<cffunction name="save" access="public" output="false" returntype="void">
-		<cfargument name="user" type="any" required="true">
-
-		<cfset var newId = 0>
-
-		<!--- since we have an id we are updating a user --->
-		<cfif arguments.user.getId()>
-			<cfset variables.users[arguments.user.getId()] = arguments.user>
-		<cfelse>
-			<!--- otherwise a new user is being saved --->
-			<!--- BEN --->
-			<cflock type="exclusive" name="setNextID" timeout="10" throwontimeout="false">
-				<cfset newId = variables.nextid>
-				<cfset variables.nextid = variables.nextid + 1>
-			</cflock>
-			<!--- END BEN --->
-
-			<cfset arguments.user.setId(newId)>
-
-			<cfset variables.users[newId] = arguments.user>
-		</cfif>
-	</cffunction>
-
-<!---
+/*
 security functions were adapted from Jason Dean's security series
 http://www.12robots.com/index.cfm/2008/5/13/A-Simple-Password-Strength-Function-Security-Series-4.1
 http://www.12robots.com/index.cfm/2008/5/29/Salting-and-Hashing-Code-Example--Security-Series-44
 http://www.12robots.com/index.cfm/2008/6/2/User-Login-with-Salted-and-Hashed-passwords--Security-Series-45
---->
+*/
 
-	<cffunction name="hashPassword" access="public" output="false" returntype="struct">
-		<cfargument name="password" type="string" required="true" hint="Pass in password" />
-		<!--- At this point the function assumes that you have already validated the
-			password as meeting application requirements --->
-		<cfset var returnVar = structNew() />
-		<cfset var passwordHash = "" />
+    function hashPassword( string password ) {
+        var returnVar = { };
+        returnVar.salt = createUUID();
+        returnVar.hash = hash( password & returnVar.salt, "SHA-512" );
+        return returnVar;
+    }
 
-		<!--- Salt the password --->
-		<cfset var salt = createUUID() />
+    function validatePassword( any user, string password ) {
+        // catenate password and user salt to generate hash
+        var inputHash = hash( trim( password ) & trim( user.getPasswordSalt() ), "SHA-512" );
+        // password is valid if hash matches existing user hash
+        return !compare( inputHash, user.getPasswordHash() );
+    }
 
-		<cfset passwordHash = hash(arguments.password & salt, 'SHA-512') />
-
-		<cfset returnVar.hash = passwordHash />
-		<cfset returnVar.salt = salt />
-
-		<cfreturn returnVar />
-	</cffunction>
-
-	<cffunction name="validatePassword" access="public" output="no" returntype="boolean">
-		<cfargument name="user" required="yes" type="any" />
-		<cfargument name="password" required="yes" type="string" />
-		<cfset var validPass = false />
-
-		<!--- Set the input hash by concatenating the password that was passed in to the salt
-			and hashing it with the same hash function as when it was stored. --->
-		<cfset var inputHash = hash(trim(arguments.password) & trim(arguments.user.getPasswordSalt()), 'SHA-512') />
-
-		<!--- Compare the inputHash with the hash we pulled from the db if they match,
-			then the correct password was passed in --->
-		<cfif not compare(inputHash, arguments.user.getPasswordHash())>
-			<cfset validPass = true />
-		</cfif>
-
-		<cfreturn validPass />
-	</cffunction>
-
-	<cffunction name="checkPassword" access="public" output="no" returntype="array"
-    	hint="I check password strength and determine if it is up to snuff, I return an array of error messages">
-		<cfargument name="user" type="any" required="true">
-		<cfargument name="currentPassword" type="string" required="no" default=""
-			hint="Send in current user's password for validation when user is changing password" />
-		<cfargument name="newPassword" required="no" default="" type="string"
-			hint="Send in password1 as a string, default is a blank string, which will fail" />
-		<cfargument name="retypePassword" required="no" default="" type="string"
-			hint="Send in password2 as a string, default is a blank string, which will fail" />
-		<cfscript>
+    function checkPassword( any user, string currentPassword = "",
+                            string newPassword = "", string retypePassword = "" ) {
 		// Initialize return variable
 		var aErrors = arrayNew(1);
 		var inputHash = '';
@@ -367,16 +268,13 @@ http://www.12robots.com/index.cfm/2008/6/2/User-Login-with-Salted-and-Hashed-pas
 		// Make sure password contains no spaces
 		if (arguments.newPassword CONTAINS " ")
 			arrayAppend(aErrors, "Your password cannot contain spaces");
-		</cfscript>
 
-		<!--- return the array of errors --->
-		<cfreturn aErrors />
-	</cffunction>
+        return aErrors;
+    }
 
-<!--- cflib.org --->
+    /* cflib.org */
 
-<cfscript>
-/**
+    /**
 * Tests passed value to see if it is a valid e-mail address (supports subdomain nesting and new top-level domains).
 * Update by David Kearns to support '
 * SBrown@xacting.com pointing out regex still wasn't accepting ' correctly.
@@ -391,11 +289,10 @@ http://www.12robots.com/index.cfm/2008/6/2/User-Login-with-Salted-and-Hashed-pas
 * @author Jeff Guillaume (SBrown@xacting.comjeff@kazoomis.com)
 * @version 7, May 8, 2009
 */
-function isEmail(str) {
-return (REFindNoCase("^['_a-z0-9-\+]+(\.['_a-z0-9-\+]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*\.(([a-z]{2,3})|(aero|asia|biz|cat|coop|info|museum|name|jobs|post|pro|tel|travel|mobi))$",
-arguments.str) AND len(listGetAt(arguments.str, 1, "@")) LTE 64 AND
-len(listGetAt(arguments.str, 2, "@")) LTE 255) IS 1;
-}
-</cfscript>
+    function isEmail(str) {
+        return REFindNoCase("^['_a-z0-9-\+]+(\.['_a-z0-9-\+]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*\.(([a-z]{2,3})|(aero|asia|biz|cat|coop|info|museum|name|jobs|post|pro|tel|travel|mobi))$",str) &&
+            len( listFirst(str, "@") ) <= 64 &&
+            len( listRest(str, "@") ) <= 255;
+    }
 
-</cfcomponent>
+}
