@@ -7,18 +7,14 @@ component extends="org.corfield.framework" {
 	variables.framework = {
 		usingSubsystems = true,
 		SESOmitIndex = true,
-        trace = true,
-        // this example uses the deprecated service() call
-        // this example uses the deprecated start/end actions
-        suppressServiceQueue = false
+        trace = true
 	};
 	
-	// pull in bean factory for hello8:
+	// pull in bean factory for each subsystem:
 	public void function setupSubsystem( string subsystem ) {
-		if ( subsystem == "hello8" ) {
-			var bf = new framework.ioc( "./hello8" );
-			setSubsystemBeanFactory( subsystem, bf );
-		}
+        var bf = new framework.ioc( "./" & subsystem );
+        bf.addBean( "fw", this ); // so controllers can be init'd with fw
+        setSubsystemBeanFactory( subsystem, bf );
 	}
 	
 }

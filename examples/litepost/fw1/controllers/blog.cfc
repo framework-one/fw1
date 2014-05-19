@@ -1,4 +1,4 @@
-<cfcomponent><cfscript>
+component {
 
 	// constructor - access to FW/1 API:
 	function init(fw) {
@@ -295,4 +295,4 @@
 		variables.userService = userService;
 	}
 	
-</cfscript></cfcomponent>
+}

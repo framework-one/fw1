@@ -1479,7 +1479,9 @@ component {
             var font = 'font-family: verdana, helvetica;';
             writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
-            var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%"><tr><th style="text-align:right;">time</th><th style="text-align:right;">delta</th><th>action</th><th>message</th></tr>';
+            var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">' &
+                      '<tr><th style="text-align:right;" width="5%">time</th><th style="text-align:right;" width="5%">delta</th>' &
+                      '<th width="10%">action</th><th>message</th></tr>';
             writeOutput( table );
             var colors = [ '##ccd4dd', '##ccddcc' ];
             var row = 0;
@@ -2037,6 +2039,8 @@ component {
 				// application is already loaded, just reset the cache and trigger re-initialization of subsystems
 				application[variables.framework.applicationKey].cache = frameworkCache;
 				application[variables.framework.applicationKey].subsystems = { };
+				application[variables.framework.applicationKey].subsystemFactories = { };
+				structDelete( application[variables.framework.applicationKey], "factory" );
 			} else {
 				// must be first request so we need to set up the entire structure
 				isReload = false;

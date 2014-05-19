@@ -2,7 +2,7 @@ component extends="org.corfield.framework" {
 	
 	/*
 		This is provided for illustration only - YOU SHOULD NOT USE THIS IN
-		A REAL PROGRAM! ONLY OVERRIDE THE DEFAULTS YOU NEED TO CHANGE!
+		A REAL PROGRAM! ONLY SPECIFY THE DEFAULTS YOU NEED TO CHANGE!
 	variables.framework = {
 		// the name of the URL variable:
 		action = 'action',
