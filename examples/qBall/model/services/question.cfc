@@ -3,7 +3,7 @@
  */
 component {
 
-    public any function get(numeric questionid) {
+    public any function getQuestion(numeric questionid) {
         return entityLoadByPk("question", arguments.questionid);
     }
 
@@ -50,11 +50,15 @@ component {
 
     public void function selectAnswer(any question, numeric answerid) {
         //loop over answers, mark ALL as NOT the answer, except the chosen one
-        var answers = arguments.question.getAnswers();
-        for(var i=1; i <= arrayLen(answers); i++) {
-            if(answers[i].getId() != arguments.answerid) answers[i].setSelectedAnswer(false);
-            else answers[i].setSelectedAnswer(true);
-            entitySave(answers[i]);
+        var thisQuestion = entityLoadByPk("question", arguments.question);
+        transaction {
+
+            var answers = thisQuestion.getAnswers();
+            for(var i=1; i <= arrayLen(answers); i++) {
+                if(answers[i].getId() != arguments.answerid) answers[i].setSelectedAnswer(false);
+                else answers[i].setSelectedAnswer(true);
+                entitySave(answers[i]);
+            }
         }
     }
 

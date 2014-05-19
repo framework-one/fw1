@@ -47,7 +47,8 @@ component {
     }
 
     function logout(rc) {
-        structDelete(session, "userid");
+        session.auth.isloggedin = false;
+
         variables.fw.redirect("main.default");
     }
 
