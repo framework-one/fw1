@@ -1923,9 +1923,11 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        getPageContext().getResponse().setStatus( statusCode );
+        getPageContext().getResponse().setStatus( statusCode );        
         // set the content type header portably:
-        getPageContext().getResponse().setContentType( contentType );
+        getPageContext().getResponse().setContentType( contentType );        
+        // clear response whitespace (Adobe CF)
+        getPageContext().getCfOutput().clearAll();
         return out;
     }
 
