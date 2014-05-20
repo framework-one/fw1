@@ -1,10 +1,4 @@
-/**
- * I model a user.
- * @persistent true
- * @table users
- * @output false
- */
-component {
+component persistent="true" table="users" accessors="true" {
 
     property name="id" generator="native" ormtype="integer" fieldtype="id";
     property name="username" ormtype="string" length="50";
