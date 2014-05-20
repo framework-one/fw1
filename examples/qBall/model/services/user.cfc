@@ -1,6 +1,5 @@
 /**
  * I am the User service.
- * @output false
  */
 component {
 

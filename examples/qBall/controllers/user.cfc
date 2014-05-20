@@ -1,8 +1,4 @@
-/**
- * I am the User controller.
- * @accessors true
- */
-component {
+component accessors="true" {
 
     property user;
 

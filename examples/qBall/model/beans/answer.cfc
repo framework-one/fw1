@@ -1,4 +1,4 @@
-component persistent="true" {
+component persistent="true" accessors="true" {
 
     property name="id" generator="native" ormtype="integer" fieldtype="id";
     property name="text" ormtype="text";

@@ -1,8 +1,4 @@
-/**
- * I am the question controller.
- * @accessors true
- */
-component {
+component accessors="true" {
 
     property question;
 
