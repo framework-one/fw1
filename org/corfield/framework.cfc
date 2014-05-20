@@ -1928,6 +1928,8 @@ component {
         getPageContext().getResponse().setStatus( statusCode );
         // set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
+        // clear response whitespace (Adobe CF)
+        getPageContext().getCfOutput().clearAll();
         return out;
     }
 
