@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	
 	/*
 		This is provided for illustration only - YOU SHOULD NOT USE THIS IN
@@ -52,7 +52,7 @@ component extends="org.corfield.framework" {
 		// set this to true to cache the results of fileExists for performance:
 		cacheFileExists = false,
 		// change this if you need multiple FW/1 applications in a single CFML application:
-		applicationKey = 'org.corfield.framework'
+		applicationKey = 'framework.one'
 	};
 	*/
 	

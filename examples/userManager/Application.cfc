@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	
 	this.mappings["/userManager"] = getDirectoryFromPath(getCurrentTemplatePath());
 	this.name = 'fw1-userManager';

@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	// this demonstrates the global before/after methods:
 	function before( rc ) {
 		rc.information = "Powered by Framework One!";

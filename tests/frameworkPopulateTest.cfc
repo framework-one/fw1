@@ -1,7 +1,7 @@
 component extends="mxunit.framework.TestCase" {
 
 	public void function setUp() {
-		variables.fw = new org.corfield.framework();
+		variables.fw = new framework.one();
 		clearFW1MetaData();
 	}
 

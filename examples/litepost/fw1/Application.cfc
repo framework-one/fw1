@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 
 	this.name = 'fw1litepost';
 	this.sessionmanagement = true;

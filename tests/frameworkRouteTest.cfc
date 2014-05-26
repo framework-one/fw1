@@ -1,7 +1,7 @@
-﻿component extends="tests.InjectableTest" {
+component extends="tests.InjectableTest" {
 
     public void function setUp() {
-        variables.fw = new org.corfield.framework();
+        variables.fw = new framework.one();
         // doesn't work on Railo:
         // makePublic(variables.fw, "processRouteMatch");
         // this works on both Railo and ACF:

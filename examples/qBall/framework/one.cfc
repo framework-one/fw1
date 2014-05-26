@@ -2147,7 +2147,7 @@ component {
 			REReplace( variables.framework.unhandledPaths, '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)', '\\\1', 'all' ),
 			',', '|', 'all' );
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
-			variables.framework.applicationKey = 'org.corfield.framework';
+			variables.framework.applicationKey = 'framework.one';
 		}
 		if ( !structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
 			variables.framework.suppressImplicitService = true;

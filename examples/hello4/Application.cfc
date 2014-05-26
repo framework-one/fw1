@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" accessors="true" {
+component extends="framework.one" accessors="true" {
 	// autowire these properties:
 	property foo;
 	property bar;

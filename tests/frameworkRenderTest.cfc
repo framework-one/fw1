@@ -1,10 +1,10 @@
 component extends="mxunit.framework.TestCase" {
 
     public void function setUp() {
-        variables.fw = new org.corfield.framework();
+        variables.fw = new framework.one();
         variables.fw.enableTracing = _enableTracing;
         variables.fw.enableTracing();
-        request.fw = new org.corfield.framework();
+        request.fw = new framework.one();
         request.fw.enableTracing = _enableTracing;
         request.fw.enableTracing();
     }

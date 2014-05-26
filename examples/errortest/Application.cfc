@@ -1,4 +1,4 @@
-﻿component extends="org.corfield.framework" {
+component extends="framework.one" {
 
     function setupApplication() {
         setBeanFactory( new framework.ioc( "services" )  );

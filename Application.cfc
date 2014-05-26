@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	
 	// Either put the org folder in your webroot or create a mapping for it!
 	

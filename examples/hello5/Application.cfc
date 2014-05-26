@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 
 	// setting framework.base so the application will work when there is a non-empty context root:
 	variables.root = getDirectoryFromPath( CGI.SCRIPT_NAME ).replaceFirst( getContextRoot(), '' );

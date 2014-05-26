@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 
     function setupApplication() {
         var bf = new framework.WireBoxAdapter();
