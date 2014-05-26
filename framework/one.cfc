@@ -29,7 +29,6 @@ component {
         cgiRequestMethod = CGI.REQUEST_METHOD,
         controllers = [ ],
         requestDefaultsInitialized = false,
-        services = [ ],
         doTrace = false,
         trace = [ ]
     };
@@ -506,16 +505,6 @@ component {
 	
 	
 	/*
-	 * return the default service result key
-	 * override this if you want the default service result to be
-	 * stored under a different request context key, based on the
-	 * requested action, e.g., return getSection( action );
-	 */
-	public string function getServiceKey( action ) {
-		return 'data';
-	}
-	
-	/*
 	 * return the subsystem part of the action
 	 */
 	public string function getSubsystem( string action = request.action ) {
@@ -657,7 +646,6 @@ component {
             structDelete( request, 'layout' );
 			structDelete( request._fw1, 'controllerExecutionComplete' );
 			structDelete( request._fw1, 'controllerExecutionStarted' );
-			structDelete( request._fw1, 'serviceExecutionComplete' );
 			structDelete( request._fw1, 'overrideViewAction' );
             if ( structKeyExists( request._fw1, 'renderData' ) ) {
                 // need to reset the content type as well!
@@ -670,8 +658,6 @@ component {
             }
 			// setup the new controller action, based on the error action:
 			request._fw1.controllers = [ ];
-            // reset services for this new action:
-            request._fw1.services = [ ];
 			
 			if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
 				request.action = variables.framework.error;
@@ -763,25 +749,6 @@ component {
 				doController( tuple, tuple.item, 'item' );
 				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 			}
-			n = arrayLen( request._fw1.services );
-			for ( i = 1; i <= n; i = i + 1 ) {
-				tuple = request._fw1.services[ i ];
-				if ( tuple.key == '' ) {
-					// throw the result away:
-					doService( tuple, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-				} else {
-					_data_fw1 = doService( tuple, tuple.item, tuple.args, tuple.enforceExistence );
-					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					if ( !isNull( _data_fw1 ) ) {
-                        internalFrameworkTrace( 'store service result in rc.#tuple.key#', tuple.subsystem, tuple.section, tuple.item );
-						request.context[ tuple.key ] = _data_fw1;
-					} else {
-                        internalFrameworkTrace( 'service returned no result for rc.#tuple.key#', tuple.subsystem, tuple.section, tuple.item );
-                    }
-				}
-			}
-			request._fw1.serviceExecutionComplete = true;
 			n = arrayLen( request._fw1.controllers );
 			for ( i = n; i >= 1; i = i - 1 ) {
 				tuple = request._fw1.controllers[ i ];
@@ -793,7 +760,7 @@ component {
 				}
 			}
 		} catch ( FW1.AbortControllerException e ) {
-			request._fw1.serviceExecutionComplete = true;
+            // do "nothing" since this is a control flow exception
 		}
 		request._fw1.controllerExecutionComplete = true;
 
@@ -1040,36 +1007,6 @@ component {
         request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
 	
-	// call this from your controller to queue up additional services
-	public void function service( string action, string key, struct args = { }, boolean enforceExistence = true ) {
-        deprecated( variables.framework.suppressServiceQueue,
-                    "service() call requires suppressServiceQueue = false" );
-		var subsystem = getSubsystem( action );
-		var section = getSection( action );
-		var item = getItem( action );
-		var tuple = { };
-
-		if ( structKeyExists( request._fw1, 'serviceExecutionComplete' ) ) {
-			raiseException( type='FW1.serviceExecutionComplete', message="Service '#action#' may not be added at this point.",
-				detail='The service execution phase is complete. Services may not be added by end*() or after() controller methods.' );
-		}
-
-		tuple.service = getService(section=section, subsystem=subsystem);
-        tuple.subsystem = subsystem;
-        tuple.section = section;
-		tuple.item = item;
-		tuple.key = key;
-		tuple.args = args;
-		tuple.enforceExistence = enforceExistence;
-
-		if ( structKeyExists( tuple, 'service' ) && isObject( tuple.service ) ) {
-            internalFrameworkTrace( 'queuing service', subsystem, section, item );
-			arrayAppend( request._fw1.services, tuple );
-		} else if ( enforceExistence ) {
-			raiseException( type='FW1.serviceCfcNotFound', message="Service '#action#' does not exist.",
-				detail="To have the execution of this service be conditional based upon its existence, pass in a fourth parameter (or enforceExistence if using named arguments) of 'false'." );
-		}
-	}
 	/*
 	 * call this from your setupApplication() method to tell the framework
 	 * about your bean factory - only assumption is that it supports:
@@ -1356,26 +1293,6 @@ component {
         }
 	}
 	
-	private any function doService( struct tuple, string method, struct args, boolean enforceExistence ) {
-        var cfc = tuple.service;
-		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
-			try {
-				structAppend( args, request.context, false );
-                internalFrameworkTrace( 'calling service', tuple.subsystem, tuple.section, method );
-				var _result_fw1 = evaluate( 'cfc.#method#( argumentCollection = args )' );
-				if ( !isNull( _result_fw1 ) ) {
-					return _result_fw1;
-				}
-			} catch ( any e ) {
-				setCfcMethodFailureInfo( cfc, method );
-				rethrow;
-			}
-		} else if ( enforceExistence ) {
-			raiseException( type='FW1.serviceMethodNotFound', message="Service method '#method#' does not exist in service '#getMetadata( cfc ).fullname#'.",
-				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." );
-		}
-	}
-	
 	private void function dumpException( any exception ) {
 		writeDump( var = exception, label = 'Exception - click to expand', expand = false );
 	}
@@ -1631,13 +1548,6 @@ component {
 		return '__fw1' & preserveKey;
 	}
 	
-	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
-		var _service_fw1 = getCachedComponent( 'service', subsystem, section );
-		if ( !isNull( _service_fw1 ) ) {
-			return _service_fw1;
-		}
-	}
-	
 	private string function getSubsystemDirPrefix( string subsystem ) {
 
 		if ( subsystem eq '' ) {
@@ -1699,11 +1609,6 @@ component {
 			$ = rc.$;
 		}
 		structAppend( local, args );
-		if ( !structKeyExists( request._fw1, 'serviceExecutionComplete') &&
-             structKeyExists( request._fw1, 'services' ) && arrayLen( request._fw1.services ) != 0 ) {
-			raiseException( type='FW1.viewExecutionFromController', message='Invalid to call the view method at this point.',
-				detail='The view method should not be called prior to the completion of the service execution phase.' );
-		}
 		var response = '';
 		savecontent variable="response" {
 			include '#viewPath#';
@@ -2032,7 +1937,6 @@ component {
 		frameworkCache.lastReload = now();
 		frameworkCache.fileExists = { };
 		frameworkCache.controllers = { };
-		frameworkCache.services = { };
 		frameworkCache.routes = { regex = { }, resources = { } };
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10" {
 			if ( structKeyExists( application, variables.framework.applicationKey ) ) {
@@ -2065,7 +1969,6 @@ component {
 			frameworkCache.lastReload = now();
 			frameworkCache.fileExists = { };
 			frameworkCache.controllers = { };
-			frameworkCache.services = { };
 			frameworkCache.routes = { regex = { }, resources = { } };
 			application[variables.framework.applicationKey].cache = frameworkCache;
 			application[variables.framework.applicationKey].subsystems = { };
@@ -2176,9 +2079,6 @@ component {
 			',', '|', 'all' );
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'framework.one';
-		}
-		if ( !structKeyExists( variables.framework, 'suppressImplicitService' ) ) {
-			variables.framework.suppressImplicitService = true;
 		}
 		if ( !structKeyExists( variables.framework, 'suppressServiceQueue' ) ) {
 			variables.framework.suppressServiceQueue = true;
@@ -2330,9 +2230,6 @@ component {
 		}
 
 		controller( request.action );
-		if ( !variables.framework.suppressImplicitService ) {
-			service( request.action, getServiceKey( request.action ), { }, false );
-		}
 	}
 
 	private void function setupResponseWrapper() {
