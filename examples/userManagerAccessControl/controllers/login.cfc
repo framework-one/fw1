@@ -1,67 +1,48 @@
-﻿<cfcomponent>
-	<cfset variables.fw = '' />
-	<cffunction name="init" access="public" returntype="void">
-		<cfargument name="fw" type="any" required="yes" />
-		<cfset variables.fw = arguments.fw />
-	</cffunction>
+component accessors=true {
 
-	<cffunction name="setUserService" access="public" output="false" returntype="void">
-		<cfargument name="userService" type="any" required="true" />
-		<cfset variables.userService = arguments.userService />
-	</cffunction>
-	<cffunction name="getUserService" access="public" output="false" returntype="any">
-		<cfreturn variables.userService />
-	</cffunction>
+    property userService;
 
-	<cffunction name="before" access="public" output="no" returntype="void">
-		<cfargument name="rc" type="struct" required="yes" />
-		<cfif session.auth.isLoggedIn and variables.fw.getItem() is not 'logout'>
-			<cfset variables.fw.redirect('main') />
-		</cfif>
-	</cffunction>
-	
-	<cffunction name="login" access="public" returntype="void">
-		<cfargument name="rc" type="struct" required="yes" />
+    function init( fw ) {
+        variables.fw = fw;
+        return this;
+    }
 
-		<cfset var userValid = 0 />
-		<cfset var userService = getUserService() />
-		<cfset var user = '' />
+    function before( rc ) {
+        if ( structKeyExists( session, "auth" ) && session.auth.isLoggedIn &&
+             variables.fw.getItem() != "logout" ) {
+            variables.fw.redirect( "main" );
+        }
+    }
 
-		<!--- if the form variables do not exist, redirect to the login form --->
-		<cfif not structkeyexists(rc,'email') or not structkeyexists(rc,'password')>
-			<cfset variables.fw.redirect('login') />
-		</cfif>
+    function login( rc ) {
+        // if the form variables do not exist, redirect to the login form
+        if ( !structKeyExists( rc, "email" ) || !structKeyExists( rc, "password" ) ) {
+            variables.fw.redirect( "login" );
+        }
+        // look up the user's record by the email address
+        var user = variables.userService.getByEmail( rc.email );
+        // if that's a real user, verify their password is also correct
+        var userValid = user.getId() ? variables.userService.validatePassword( user, rc.password ) : false;
+        // on invalid credentials, redisplay the login form
+        if ( !userValid ) {
+            rc.message = ["Invalid Username or Password"];
+            variables.fw.redirect( "login", "message" );
+        }
+        // set session variables from valid user
+        session.auth.isLoggedIn = true;
+        session.auth.fullname = user.getFirstName() & " " & user.getLastName();
+        session.auth.user = user;
 
-		<!--- look up the user's record by the email address --->
-		<cfset user = userService.getByEmail(rc.email) />
+        variables.fw.redirect( "main" );
+    }
 
-		<!--- if the user object contains a record then the username was legit, lets look at the passwords --->
-		<cfif user.getId()>
-			<cfset userValid = userService.validatePassword(user,rc.password) />
-		</cfif>
+    function logout( rc ) {
+        // reset session variables
+        session.auth.isLoggedIn = false;
+        session.auth.fullname = "Guest";
+        structdelete( session.auth, "user" );
+        rc.message = ["You have safely logged out"];
+        variables.fw.redirect( "login", "message" );
+    }
 
-		<!--- if the login credentials failed the test, set a message and redirect to the login form --->
-		<cfif not userValid>
-			<cfset rc.message = ['Invalid Username or Password'] />
-			<cfset variables.fw.redirect('login','message') />
-		</cfif>
-
-		<!--- since the user is valid, set session variables --->
-		<cfset session.auth.isLoggedIn = true />
-		<cfset session.auth.fullname = user.getFirstName() & ' ' & user.getLastName() />
-		<cfset session.auth.user = user />
-
-		<cfset variables.fw.redirect('main') />
-	</cffunction>
-
-	<cffunction name="logout" access="public" returntype="void">
-		<cfargument name="rc" type="struct" required="yes" />
-		<!--- reset the session variables --->
-		<cfset session.auth.isLoggedIn = false />
-		<cfset session.auth.fullname = 'Guest' />
-		<cfset structdelete(session.auth,'user') />
-		<cfset rc.message = ['You have safely logged out'] />
-		<cfset variables.fw.redirect('login','message') />
-	</cffunction>
-
-</cfcomponent>
+}

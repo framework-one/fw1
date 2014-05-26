@@ -1,4 +1,4 @@
-﻿<cfcomponent output="false"><cfscript>
+﻿component {
 
 	function before( rc ) {
 		// change skin if specified:
@@ -13,4 +13,4 @@
 		}
 	}
 
-</cfscript></cfcomponent>
+}

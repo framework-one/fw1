@@ -1,6 +1,5 @@
-<cfcomponent extends="org.corfield.framework">
+component extends="org.corfield.framework" {
 
-	<cfscript>
 	this.mappings["/userManager"] = getDirectoryFromPath(getCurrentTemplatePath());
 	this.name = 'fw1-userManager-accessControl';
 	this.sessionmanagement = true;
@@ -8,13 +7,13 @@
 	
 	// FW/1 - configuration:
 	variables.framework = {
-		suppressImplicitService = false
+        trace = true
 	};
 
 	function setupApplication()
 	{
 		application.adminEmail = 'admin@mysite.com';
-		setBeanFactory(createObject("component", "model.ObjectFactory").init(expandPath("./assets/config/beans.xml.cfm")));
+		setBeanFactory( new framework.ioc( 'model' ) );
 	}
 
 	function setupSession() {
@@ -24,6 +23,5 @@
 	function setupRequest() {
 		controller( 'security.authorize' );
 	}
-	</cfscript>
 
-</cfcomponent>
+}

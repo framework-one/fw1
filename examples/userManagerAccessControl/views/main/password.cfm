@@ -1,8 +1,6 @@
-﻿<cfset local.user = rc.user />
-
 <cfoutput>
 	<cfform name="userForm" id="userForm" method="post" action="#buildUrl('main.change')#">
-		<cfinput type="hidden" name="id" value="#local.user.getId()#">
+		<cfinput type="hidden" name="id" value="#rc.id#">
 		<table cellpadding="0" cellspacing="0">
 			<tr>
 				<th colspan="2">Change Password</th>

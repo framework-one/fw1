@@ -46,7 +46,6 @@
         
     private void function exceptionCapture( any exception)
     {
-        writeLog(text="Exception: #exception.message#");
         request.capturedException = arguments.exception;
     }
 }

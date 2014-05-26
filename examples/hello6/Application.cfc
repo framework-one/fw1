@@ -1,6 +1,5 @@
-<cfcomponent extends="org.corfield.framework"><cfscript>
+component extends="org.corfield.framework" {
 	this.sessionManagement = true;
-	variables.framework = structNew();
 	// reduce contexts to 1 to remove fw1pk from redirect URL:
-	variables.framework.maxNumContextsPreserved = 1;
-</cfscript></cfcomponent>
+	variables.framework = { maxNumContextsPreserved = 1 };
+}

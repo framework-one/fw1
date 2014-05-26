@@ -13,7 +13,7 @@
 	<h1>User Manager with Access Control</h1>
 
 	<ul class="nav horizontal clear">
-		<cfif session.auth.isLoggedIn>
+		<cfif structKeyExists( session, "auth" ) and session.auth.isLoggedIn>
 			<li><a href="index.cfm">Home</a></li>
 			<cfif session.auth.user.getRoleId() is 1>
 				<li><a href="index.cfm?action=user.list" title="View the list of users">Users</a></li>

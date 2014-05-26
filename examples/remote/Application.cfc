@@ -1,3 +1,3 @@
-<cfcomponent extends="org.corfield.framework"><cfscript>
+component extends="org.corfield.framework" {
 	this.name = 'fw1-remote';
-</cfscript></cfcomponent>
+}

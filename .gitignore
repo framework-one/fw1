@@ -1,6 +1,7 @@
 WEB-INF/*
 litepost/*
 mxunit/*
+wirebox/*
 tests/ci/results
 tests/ci/results/*
 .project

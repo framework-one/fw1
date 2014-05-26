@@ -22,7 +22,17 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( output contains "framework lifecycle trace" );
     }
 
-    public void function testTraceOutputReq() {
+    public void function testTraceOutputVarDisabled() {
+        variables.fw.onApplicationStart();
+        request.fw.disableFrameworkTrace();
+        var output = "";
+        savecontent variable="output" {
+            variables.fw.onRequestEnd();
+        }
+        assertFalse( output contains "framework lifecycle trace" );
+    }
+
+    public void function testTraceEmptyOutputReq() {
         request.fw.onApplicationStart();
         var output = "";
         savecontent variable="output" {

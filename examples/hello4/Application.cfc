@@ -4,7 +4,7 @@ component extends="org.corfield.framework" accessors="true" {
 	property bar;
 	// setup (simple) bean factory:
 	function setupApplication() {
-		var bf = new BF();
+		var bf = new framework.ioc( "beans,services" );
 		setBeanFactory( bf );
 	}
 	// show that before/after have bean factory autowired:
