@@ -744,16 +744,13 @@ component {
 					doController( tuple, 'before', 'before' );
 					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 				}
-				doController( tuple, 'start' & tuple.item, 'start' );
-				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 				doController( tuple, tuple.item, 'item' );
 				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
 			}
 			n = arrayLen( request._fw1.controllers );
 			for ( i = n; i >= 1; i = i - 1 ) {
 				tuple = request._fw1.controllers[ i ];
-				doController( tuple, 'end' & tuple.item, 'end' );
-				if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                // run after once per controller (in reverse order):
 				if ( once[ tuple.key ] eq i ) {
 					doController( tuple, 'after', 'after' );
 					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
@@ -1264,14 +1261,6 @@ component {
 	
 	private void function doController( struct tuple, string method, string lifecycle ) {
         var cfc = tuple.controller;
-        if ( lifecycle == "start" ||
-             lifecycle == "end" ) {
-            if ( structKeyExists( cfc, method ) ) {
-                deprecated( variables.framework.suppressServiceQueue,
-                            "start/end methods require suppressServiceQueue = false" );
-            }
-            if ( variables.framework.suppressServiceQueue ) return;
-        }
 		if ( structKeyExists( cfc, method ) ) {
 			try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
@@ -2079,9 +2068,6 @@ component {
 			',', '|', 'all' );
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'framework.one';
-		}
-		if ( !structKeyExists( variables.framework, 'suppressServiceQueue' ) ) {
-			variables.framework.suppressServiceQueue = true;
 		}
         if ( !structKeyExists( variables.framework, 'enableGlobalRC' ) ) {
             variables.framework.enableGlobalRC = false;
