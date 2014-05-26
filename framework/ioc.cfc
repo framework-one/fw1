@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Copyright (c) 2010-2013, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
