@@ -773,7 +773,7 @@ component {
 				} else {
 					_data_fw1 = doService( tuple, tuple.item, tuple.args, tuple.enforceExistence );
 					if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-					if ( !isNull('_data_fw1') ) {
+					if ( !isNull( _data_fw1 ) ) {
                         internalFrameworkTrace( 'store service result in rc.#tuple.key#', tuple.subsystem, tuple.section, tuple.item );
 						request.context[ tuple.key ] = _data_fw1;
 					} else {
@@ -1594,7 +1594,7 @@ component {
 	
 	private any function getController( string section, string subsystem = getDefaultSubsystem() ) {
 		var _controller_fw1 = getCachedComponent( 'controller', subsystem, section );
-		if ( !isNull( '_controller_fw1' ) ) {
+		if ( !isNull( _controller_fw1 ) ) {
 			return _controller_fw1;
 		}
 	}
@@ -1633,7 +1633,7 @@ component {
 	
 	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
 		var _service_fw1 = getCachedComponent( 'service', subsystem, section );
-		if ( !isNull( '_service_fw1' ) ) {
+		if ( !isNull( _service_fw1 ) ) {
 			return _service_fw1;
 		}
 	}

@@ -551,7 +551,7 @@ component {
 						// this allows for smart constructors that return things other
 						// than the CFC being created, such as implicit factory beans
 						// and automatic singletons etc (rare practices in CFML but...)
-						if ( !isNull( '__ioc_newBean' ) ) {
+						if ( !isNull( __ioc_newBean ) ) {
 						    bean = __ioc_newBean;
 							forceCache( bean, beanName );
 						}
