@@ -1,5 +1,5 @@
 ﻿/*
-	Copyright (c) 2010-2013, Sean Corfield
+	Copyright (c) 2010-2014, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -624,7 +624,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '0.5.0';
+		variables.config.version = '1.0.0_snapshot';
 	}
 	
 	
