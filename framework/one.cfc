@@ -2069,9 +2069,6 @@ component {
 		if ( !structKeyExists(variables.framework, 'applicationKey') ) {
 			variables.framework.applicationKey = 'framework.one';
 		}
-        if ( !structKeyExists( variables.framework, 'enableGlobalRC' ) ) {
-            variables.framework.enableGlobalRC = false;
-        }
 		if ( !structKeyExists( variables.framework, 'cacheFileExists' ) ) {
 			variables.framework.cacheFileExists = false;
 		}
@@ -2198,12 +2195,6 @@ component {
 		request.item = getItem( request.action );
 		
 		if ( runSetup ) {
-            if ( variables.framework.enableGlobalRC ) {
-			    rc = request.context;
-            } else {
-			    rc = "Update your code to use getRCValue() or " &
-                     "set enableGlobalRC to true while you migrate to the new API.";
-            }
             if ( usingSubsystems() ) {
 			    controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
                             variables.magicApplicationController & '.' & variables.magicApplicationAction );
