@@ -1,5 +1,5 @@
 component extends="framework.one" {
-	// Either put the org folder in your webroot or create a mapping for it!
+	// Either put the framework folder in your webroot or create a mapping for it!
 	
 	this.name = 'fw1-examples';
 	this.sessionManagement = true;
