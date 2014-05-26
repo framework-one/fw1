@@ -4,6 +4,6 @@ component extends="framework.one" {
 		rc.information = "Powered by Framework One!";
 	}
 	function after( rc ) {
-		rc.information = rc.information & " Copyright (c) 2011 Sean Corfield, Ryan Cogswell.";
+		rc.information = rc.information & " Copyright (c) 2011-2014 Sean Corfield, Marcin Szczepanski, Ryan Cogswell.";
 	}
 }
