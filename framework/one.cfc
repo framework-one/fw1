@@ -1019,8 +1019,9 @@ component {
 	/*
 	 * use this to override the default layout
 	 */
-	public void function setLayout( string action ) {
+	public void function setLayout( string action, boolean suppressOtherLayouts = false ) {
 		request._fw1.overrideLayoutAction = validateAction( action );
+        request._fw1.suppressOtherLayouts = suppressOtherLayouts;
 	}
 	
 	/*
@@ -1152,6 +1153,7 @@ component {
 		var subsystembase = '';
 		
 		request._fw1.layouts = [ ];
+        var cascadeLayouts = true; // default can be overridden via setLayout() second argument
 		
 		// has layout been overridden?
 		if ( structKeyExists( request._fw1, 'overrideLayoutAction' ) ) {
@@ -1159,6 +1161,10 @@ component {
 			section = getSection( request._fw1.overrideLayoutAction );
 			item = getItem( request._fw1.overrideLayoutAction );
 			structDelete( request._fw1, 'overrideLayoutAction' );
+            if ( structKeyExists( request._fw1, 'suppressOtherLayouts' ) ) {
+                cascadeLayouts = !request._fw1.suppressOtherLayouts;
+                structDelete( request._fw1, 'suppressOtherLayouts' );
+            } 
 		}
 		subsystembase = request.base & getSubsystemDirPrefix( subsystem );
         internalFrameworkTrace( 'building layout queue', subsystem, section, item );
@@ -1169,31 +1175,32 @@ component {
             internalFrameworkTrace( 'found item-specific layout #testLayout#', subsystem, section, item );
 			arrayAppend( request._fw1.layouts, testLayout );
         }
-		// look for section-specific layout:
-		testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
-													section, 'layout' );
-		if ( cachedFileExists( testLayout ) ) {
-            internalFrameworkTrace( 'found section-specific layout #testLayout#', subsystem, section, item );
-			arrayAppend( request._fw1.layouts, testLayout );
-		}
-		// look for subsystem-specific layout (site-wide layout if not using subsystems):
-		if ( request.section != 'default' ) {
-			testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
-														'default', 'layout' );
-			if ( cachedFileExists( testLayout ) ) {
-                internalFrameworkTrace( 'found default layout #testLayout#', subsystem, section, item );
-				arrayAppend( request._fw1.layouts, testLayout );
-			}
-		}
-		// look for site-wide layout (only applicable if using subsystems)
-		if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
-			testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem & variables.framework.subsystemDelimiter &
-														'default', 'layout' );
-			if ( cachedFileExists( testLayout ) ) {
-                internalFrameworkTrace( 'found #variables.framework.siteWideLayoutSubsystem# layout #testLayout#', subsystem, section, item );
-				arrayAppend( request._fw1.layouts, testLayout );
-			}
-		}
+        if ( cascadeLayouts ) {
+            // look for section-specific layout:
+            testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter & section, 'layout' );
+            if ( cachedFileExists( testLayout ) ) {
+                internalFrameworkTrace( 'found section-specific layout #testLayout#', subsystem, section, item );
+                arrayAppend( request._fw1.layouts, testLayout );
+            }
+            // look for subsystem-specific layout (site-wide layout if not using subsystems):
+            if ( request.section != 'default' ) {
+                testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter & 'default', 'layout' );
+                if ( cachedFileExists( testLayout ) ) {
+                    internalFrameworkTrace( 'found default layout #testLayout#', subsystem, section, item );
+                    arrayAppend( request._fw1.layouts, testLayout );
+                }
+            }
+            // look for site-wide layout (only applicable if using subsystems)
+            if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
+                testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem &
+                                                    variables.framework.subsystemDelimiter & 'default', 'layout' );
+                if ( cachedFileExists( testLayout ) ) {
+                    internalFrameworkTrace( 'found #variables.framework.siteWideLayoutSubsystem# layout #testLayout#',
+                                            subsystem, section, item );
+                    arrayAppend( request._fw1.layouts, testLayout );
+                }
+            }
+        }
 	}
 
 
