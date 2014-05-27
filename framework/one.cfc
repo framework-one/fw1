@@ -1943,6 +1943,19 @@ component {
 				application[variables.framework.applicationKey] = framework;
 			}
 		}
+
+        switch ( variables.framework.diEngine ) {
+        case "di1":
+            var ioc = new framework.ioc( variables.framework.diLocations );
+            ioc.addBean( "fw", this ); // alias for controller constructor compatibility
+            setBeanFactory( ioc );
+            break;
+        case "wirebox":
+            var wb = new framework.WireBoxAdapter();
+            wb.getBinder().scanLocations( variables.framework.diLocations );
+            setBeanFactory( wb );
+            break;
+        }
 		
 		// this will recreate the main bean factory on a reload:
         internalFrameworkTrace( 'setupApplication() called' );
@@ -2094,6 +2107,12 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
+        if ( !structKeyExists( variables.framework, 'diEngine' ) ) {
+            variables.framework.diEngine = 'di1';
+        }
+        if ( !structKeyExists( variables.framework, 'diLocations' ) ) {
+            variables.framework.diLocations = 'model,controller';
+        }
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
 	}
