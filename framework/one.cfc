@@ -1445,7 +1445,7 @@ component {
                     if ( i < n ) startTime = request._fw1.trace[i+1].tick;
                 }
             }
-            writeOutput( '<table></div>' );
+            writeOutput( '</table></div>' );
         }
     }
 
