@@ -2243,6 +2243,22 @@ component {
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
 			if ( !isSubsystemInitialized( subsystem ) ) {
 				application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
+                // we can only reliably automate D/I engine setup for DI/1
+                if ( variables.framework.diEngine == "di1" ) {
+                    var locations = listToArray( variables.framework.diLocations );
+                    var subLocations = "";
+                    for ( var loc in locations ) {
+                        var relLoc = trim( loc );
+                        if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
+                            relLoc = right( relLoc, len( relLoc ) - 2 );
+                        }
+                        subLocations = listAppend( subLocations, "./" & subsystem & "/" & relLoc );
+                    }
+                    var ioc = new framework.ioc( subLocations );
+                    ioc.setParent( getDefaultBeanFactory() );
+                    setSubsystemBeanFactory( subsystem, ioc );
+                }
+		
                 internalFrameworkTrace( 'setupSubsystem() called', subsystem );
 				setupSubsystem( subsystem );
 			}

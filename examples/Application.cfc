@@ -7,14 +7,9 @@ component extends="framework.one" {
 	variables.framework = {
 		usingSubsystems = true,
 		SESOmitIndex = true,
+        diLocations = "model, controllers, beans, services", // to account for the variety of D/I locations in our examples
+        // that allows all our subsystems to automatically have their own bean factory with the base factory as parent
         trace = true
 	};
-	
-	// pull in bean factory for each subsystem:
-	public void function setupSubsystem( string subsystem ) {
-        var bf = new framework.ioc( "./" & subsystem );
-        bf.addBean( "fw", this ); // so controllers can be init'd with fw
-        setSubsystemBeanFactory( subsystem, bf );
-	}
 	
 }
