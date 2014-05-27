@@ -28,7 +28,7 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldAcceptExpandedPath() {
-        var servicePath = expandPath( "/tests/services" );
+        var servicePath = expandPath( getContextRoot() & "/tests/services" );
         var factory = new framework.ioc( servicePath );
         assertTrue( factory.containsBean( "user" ) );
         assertTrue( factory.containsBean( "userService" ) );
