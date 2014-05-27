@@ -4,12 +4,8 @@ component extends="framework.one" {
 	variables.root = getDirectoryFromPath( CGI.SCRIPT_NAME ).replaceFirst( getContextRoot(), '' );
 	variables.framework = {
         base = variables.root & 'cfml',
-	    cfcbase = replace( right( variables.root, len( variables.root ) - 1 ), '/', '.', 'all' ) & 'cfcs'
+	    cfcbase = replace( right( variables.root, len( variables.root ) - 1 ), '/', '.', 'all' ) & 'cfcs',
+        diLocations = "cfcs/services"
     };
-
-    function setupApplication() {
-        var bf = new framework.ioc( "cfcs/services" );
-        setBeanFactory( bf );
-    }
 
 }

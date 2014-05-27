@@ -8,13 +8,7 @@ component extends="framework.one" {
 		home = "user.default"
 	};
 	
-	function setupApplication() 
-	{
-        setBeanFactory( new framework.ioc( "model" ) );
-	}
-	
-	function setupRequest()
-	{
+	function setupRequest() {
 		controller( 'user.checkAjaxRequest' );
 	}
     

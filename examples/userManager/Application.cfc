@@ -9,10 +9,4 @@ component extends="framework.one" {
         trace = true
 	};
 	
-	function setupApplication() 
-	{
-        var beanFactory = new framework.ioc( "model" );
-        setBeanFactory( beanFactory );
-	}
-	
 }

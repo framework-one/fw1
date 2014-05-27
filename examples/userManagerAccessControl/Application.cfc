@@ -10,10 +10,8 @@ component extends="framework.one" {
         trace = true
 	};
 
-	function setupApplication()
-	{
+	function setupApplication() {
 		application.adminEmail = 'admin@mysite.com';
-		setBeanFactory( new framework.ioc( 'model' ) );
 	}
 
 	function setupSession() {

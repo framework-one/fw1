@@ -17,17 +17,13 @@ component extends="framework.one" {
     this.mappings["/root"] = getDirectoryFromPath(getCurrentTemplatePath());
 
     variables.framework = {
+        diLocations = "./model/services", // ColdFusion ORM handles Beans
         reloadApplicationOnEveryRequest = "true",
         trace = "false"
     };
 
     public function setupSession() {
         controller('security.session');
-    }
-
-    public function setupApplication() {
-        var bf = new framework.ioc("./model/services"); // ColdFusion ORM handles Beans
-        setBeanFactory(bf);
     }
 
     public function setupRequest() {
