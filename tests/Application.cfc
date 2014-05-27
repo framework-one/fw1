@@ -5,4 +5,5 @@ component{
 	this.mappings['/framework'] = variables.here & "../framework";
 	this.mappings['/tests'] = variables.here;
     this.mappings['/goldfish/trumpets'] = variables.here & "extrabeans";
+    this.mappings['/'] = variables.here & ".."; // override web root expansion
 }
