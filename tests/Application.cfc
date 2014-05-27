@@ -5,5 +5,4 @@ component{
 	this.mappings['/framework'] = variables.here & "../framework";
 	this.mappings['/tests'] = variables.here;
     this.mappings['/goldfish/trumpets'] = variables.here & "extrabeans";
-    this.mappings['/fw1'] = variables.here & ".."; // assist out-of-webroot deduction
 }
