@@ -28,6 +28,8 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldAcceptExpandedPath() {
+        // on CI, webroot does not match current directory so this becomes
+        // an undeducible path by default... we added /fw1 mapping to assist
         var servicePath = expandPath( "/tests/services" );
         var factory = new framework.ioc( servicePath );
         assertTrue( factory.containsBean( "user" ) );
