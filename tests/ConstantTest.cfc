@@ -1,7 +1,7 @@
 component extends="mxunit.framework.TestCase" {
 
     function setup() {
-        variables.constants = new framewor.ioc( "", { constants = { known = 42 } } );
+        variables.constants = new framework.ioc( "", { constants = { known = 42 } } );
     }
 
     function shouldHaveKnownValue() {
