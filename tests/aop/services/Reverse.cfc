@@ -1,5 +1,5 @@
 component output="false" displayname="ReverseService"  {
-	param name="request.callstack" default="#arrayNew()#";
+	param name="request.callstack" default="#arrayNew(1)#";
 
 	public function doReverse(String input){
 		ArrayAppend(request.callstack, "doReverse");
