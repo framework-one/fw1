@@ -25,22 +25,22 @@ component output="false" displayname="beanProxy"  {
 		variables.interceptors = arguments.interceptors;
 	}
 
-	public function onMissingMethod(methodName,args){
+	public function onMissingMethod(missingMethodName,missingMethodArguments){
 
 
-		var organizedArgs = cleanupArguments(arguments.methodName,arguments.args);
+		var organizedArgs = cleanupArguments(arguments.missingMethodName,arguments.missingMethodArguments);
 		var result = "";
 		try{
 			
 			if(!hasAround()){
-				runBeforeStack(arguments.methodName, organizedArgs, variables.targetBean);
+				runBeforeStack(arguments.missingMethodName, organizedArgs, variables.targetBean);
                 // because ACF doesn't support direct method invocation :(
-				result = evaluate("variables.targetBean[arguments.methodName](argumentCollection=organizedArgs)");
-				runAfterStack(local.result , arguments.methodName, local.organizedArgs, variables.targetBean);
+				result = evaluate("variables.targetBean[arguments.missingMethodName](argumentCollection=organizedArgs)");
+				runAfterStack(local.result , arguments.missingMethodName, local.organizedArgs, variables.targetBean);
 
 			}
 			else{
-				result = runAroundStack(arguments.methodName, local.organizedArgs, variables.targetBean);
+				result = runAroundStack(arguments.missingMethodName, local.organizedArgs, variables.targetBean);
 			}
 
 			return result;
@@ -48,7 +48,7 @@ component output="false" displayname="beanProxy"  {
 
 			if(!hasErrorStack()){ throw(e); }
 
-			runOnErrorStack(arguments.methodName, local.organizedArgs, variables.targetBean, e);
+			runOnErrorStack(arguments.missingMethodName, local.organizedArgs, variables.targetBean, e);
 		}
 	}
 
