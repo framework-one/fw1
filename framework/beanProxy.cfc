@@ -34,7 +34,8 @@ component output="false" displayname="beanProxy"  {
 			
 			if(!hasAround()){
 				runBeforeStack(arguments.methodName, organizedArgs, variables.targetBean);
-				result = variables.targetBean[arguments.methodName](argumentCollection=organizedArgs);
+                // because ACF doesn't support direct method invocation :(
+				result = evaluate("variables.targetBean[arguments.methodName](argumentCollection=organizedArgs)");
 				runAfterStack(local.result , arguments.methodName, local.organizedArgs, variables.targetBean);
 
 			}
