@@ -82,7 +82,7 @@ component extends="framework.ioc" {
 
 		for(var inter in getInterceptors(arguments.BeanName)){
 
-			var interceptorPacket = {bean:super.getBean(inter.name), methods:inter.methods} ;
+			var interceptorPacket = {bean = super.getBean(inter.name), methods = inter.methods} ;
 			ArrayAppend(interceptors,interceptorPacket);
 		}
 		var beanProxy = new framework.beanProxy(targetBean, interceptors);
