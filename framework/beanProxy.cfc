@@ -46,7 +46,7 @@ component output="false" displayname="beanProxy"  {
 			return result;
 		}catch(Any e){
 
-			if(!hasErrorStack()){ throw(e); }
+			if(!hasErrorStack()){ throw "#toString(e)#"; }
 
 			runOnErrorStack(arguments.missingMethodName, local.organizedArgs, variables.targetBean, e);
 		}
