@@ -1,5 +1,5 @@
 component output="false" displayname="ReverseService"  {
-	param name="request.callstack" default="#[]#";
+	param name="request.callstack" default="#arrayNew()#";
 
 	public function doReverse(String input){
 		ArrayAppend(request.callstack, "doReverse");
@@ -15,6 +15,6 @@ component output="false" displayname="ReverseService"  {
 	public function throwError(){
 		//This is just to throw an error
 		ArrayAppend(request.callstack, "throwError");
-		throw("I AM AN EVIL ERROR YOU WANT TO TRAP!");
+		throw "I AM AN EVIL ERROR YOU WANT TO TRAP!";
 	}
 }
