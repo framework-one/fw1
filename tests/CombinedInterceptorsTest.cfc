@@ -28,9 +28,9 @@ component extends="mxunit.framework.TestCase"{
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
 		//Need to create different Before interceptors
 
-		bf.addBean("BeforeInterceptorA", new interceptors.aop.BeforeInterceptor("beforeA"));
-		bf.addBean("BeforeInterceptorB", new interceptors.aop.BeforeInterceptor("beforeB"));
-		bf.addBean("BeforeInterceptorC", new interceptors.aop.BeforeInterceptor("beforeC"));
+		bf.addBean("BeforeInterceptorA", new tests.aop.interceptors.aop.BeforeInterceptor("beforeA"));
+		bf.addBean("BeforeInterceptorB", new tests.aop.interceptors.aop.BeforeInterceptor("beforeB"));
+		bf.addBean("BeforeInterceptorC", new tests.aop.interceptors.aop.BeforeInterceptor("beforeC"));
 		bf.intercept("ReverseService", "BeforeInterceptorA");
 		bf.intercept("ReverseService", "BeforeInterceptorB");
 		bf.intercept("ReverseService", "BeforeInterceptorC");
@@ -50,9 +50,9 @@ component extends="mxunit.framework.TestCase"{
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
 		//Need to create different Before interceptors
 
-		bf.addBean("AfterInterceptorA", new interceptors.aop.AfterInterceptor("afterA"));
-		bf.addBean("AfterInterceptorB", new interceptors.aop.AfterInterceptor("afterB"));
-		bf.addBean("AfterInterceptorC", new interceptors.aop.AfterInterceptor("afterC"));
+		bf.addBean("AfterInterceptorA", new tests.aop.interceptors.aop.AfterInterceptor("afterA"));
+		bf.addBean("AfterInterceptorB", new tests.aop.interceptors.aop.AfterInterceptor("afterB"));
+		bf.addBean("AfterInterceptorC", new tests.aop.interceptors.aop.AfterInterceptor("afterC"));
 		bf.intercept("ReverseService", "AfterInterceptorA");
 		bf.intercept("ReverseService", "AfterInterceptorB");
 		bf.intercept("ReverseService", "AfterInterceptorC");
@@ -71,9 +71,9 @@ component extends="mxunit.framework.TestCase"{
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
 		//Need to create different Before interceptors
 
-		bf.addBean("AroundInterceptorA", new interceptors.aop.AroundInterceptor("aroundA"));
-		bf.addBean("AroundInterceptorB", new interceptors.aop.AroundInterceptor("aroundB"));
-		bf.addBean("AroundInterceptorC", new interceptors.aop.AroundInterceptor("aroundC"));
+		bf.addBean("AroundInterceptorA", new tests.aop.interceptors.aop.AroundInterceptor("aroundA"));
+		bf.addBean("AroundInterceptorB", new tests.aop.interceptors.aop.AroundInterceptor("aroundB"));
+		bf.addBean("AroundInterceptorC", new tests.aop.interceptors.aop.AroundInterceptor("aroundC"));
 		bf.intercept("ReverseService", "AroundInterceptorA");
 		bf.intercept("ReverseService", "AroundInterceptorB");
 		bf.intercept("ReverseService", "AroundInterceptorC");
