@@ -23,12 +23,6 @@ component extends="framework.ioc" {
 
 	function init(){
 		super.init(argumentCollection=arguments);
-
-		//Also need to check if there is a "interceptors" folder, and add these as <componentName>Interceptor
-
-		//var InterceptorPath = expandPath("/interceptors");
-		//var Interceptors = directoryExists(InterceptorPath) ? directoryList(InterceptorPath,false,"query", "*.cfc") : [];
-
 		return this;
 	}
 
