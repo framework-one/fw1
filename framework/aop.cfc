@@ -40,8 +40,8 @@ component extends="framework.ioc" {
 		}
 
 		var InterceptionDefinition = {
-				name: arguments.interceptorName,
-				methods : arguments.methodNames
+				name = arguments.interceptorName,
+				methods = arguments.methodNames
 		};
 
 		ArrayAppend(variables.iStack[arguments.beanName], InterceptionDefinition);
