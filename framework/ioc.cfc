@@ -1,4 +1,4 @@
-﻿/*
+/*
 	Copyright (c) 2010-2014, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,14 @@ component {
 		variables.beanInfo = { };
 		variables.beanCache = { };
         variables.settersInfo = { };
-		variables.autoExclude = [ '/WEB-INF', '/Application.cfc',
-                                  'framework.cfc', 'ioc.cfc' ];
+		variables.autoExclude = [
+            '/WEB-INF', '/Application.cfc', // never manage these!
+            'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
+            // recent FW/1 + DI/1 + AOP/1 exclusions:
+            '/framework/aop.cfc', '/framework/beanProxy.cfc',
+            '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
+            '/framework/one.cfc'
+        ];
         variables.listeners = 0;
 		setupFrameworkDefaults();
 		return this;
