@@ -97,7 +97,7 @@ component output="false" displayname="beanProxy"  {
 		var total = 0;
 		for(var inter in variables.interceptors){
 			if(StructKeyExists(inter.bean, "around")){
-				total++
+				total++;
 			}
 		}
 		return total;
