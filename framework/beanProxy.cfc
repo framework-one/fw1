@@ -1,5 +1,5 @@
 /*
-	Copyright (c) 2013, Mark Drew
+	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ component output="false" displayname="beanProxy"  {
 		var positionCount = 1;
 		var p = "";
 		var targetArgInfo = getMetaData(variables.targetBean[arguments.methodName]).parameters;
-		loop collection="#arguments.args#" item="p"{
+        for ( p in arguments.args ) {
 			//They are usually numeric here
 			var keyName = positionCount;
 			if(isNumeric(p) && p LTE ArrayLen(targetArgInfo)){
