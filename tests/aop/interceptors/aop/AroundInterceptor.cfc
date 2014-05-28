@@ -14,7 +14,7 @@ component output="false" displayname="AroundInterceptor"  {
 	function proceed(method,args,target){
 		if(isLast()){
             // because ACF doesn't support direct invocation syntax :(
-			return evaluate("target[method](argumentCollection=args)");
+			return evaluate("target.#method#(argumentCollection=args)");
 		}
 		return "";
 	}
