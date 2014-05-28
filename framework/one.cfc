@@ -1952,8 +1952,11 @@ component {
 		}
 
         switch ( variables.framework.diEngine ) {
+        case "aop1":
         case "di1":
-            var ioc = new framework.ioc( variables.framework.diLocations );
+            var ioc = variables.framework.diEngine == "di1" ?
+                new framework.ioc( variables.framework.diLocations ) :
+                new framework.aop( variables.framework.diLocations );
             ioc.addBean( "fw", this ); // alias for controller constructor compatibility
             setBeanFactory( ioc );
             break;
@@ -2250,8 +2253,9 @@ component {
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
 			if ( !isSubsystemInitialized( subsystem ) ) {
 				application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
-                // we can only reliably automate D/I engine setup for DI/1
-                if ( variables.framework.diEngine == "di1" ) {
+                // we can only reliably automate D/I engine setup for DI/1 / AOP/1
+                if ( variables.framework.diEngine == "di1" ||
+                     variables.framework.diEngine == "aop1" ) {
                     var locations = listToArray( variables.framework.diLocations );
                     var subLocations = "";
                     for ( var loc in locations ) {
@@ -2261,7 +2265,9 @@ component {
                         }
                         subLocations = listAppend( subLocations, "./" & subsystem & "/" & relLoc );
                     }
-                    var ioc = new framework.ioc( subLocations );
+                    var ioc = variables.Framework.diEngine == "di1" ?
+                            new framework.ioc( subLocations ) :
+                            new framework.aop( subLocations );
                     ioc.setParent( getDefaultBeanFactory() );
                     setSubsystemBeanFactory( subsystem, ioc );
                 }
