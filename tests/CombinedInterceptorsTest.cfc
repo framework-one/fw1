@@ -116,6 +116,8 @@ component extends="mxunit.framework.TestCase"{
 	public function TestOnErrorInterceptors() {
 	
 		request.callstack = []; //reset
+		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
+        rs =  bf.getBean("ReverseService");
 		result2 = rs.doForward("Hello!");
 
 
