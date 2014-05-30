@@ -2260,8 +2260,11 @@ component {
                     var subLocations = "";
                     for ( var loc in locations ) {
                         var relLoc = trim( loc );
+                        // make a relative location:
                         if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
                             relLoc = right( relLoc, len( relLoc ) - 2 );
+                        } else if ( len( relLoc ) > 1 && left( relLoc, 2 ) == "/" ) {
+                            relLoc = right( relLoc, len( relLoc ) - 1 );
                         }
                         subLocations = listAppend( subLocations, "./" & subsystem & "/" & relLoc );
                     }
