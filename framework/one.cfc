@@ -1955,13 +1955,15 @@ component {
         case "aop1":
         case "di1":
             var ioc = variables.framework.diEngine == "di1" ?
-                new framework.ioc( variables.framework.diLocations ) :
-                new framework.aop( variables.framework.diLocations );
+                new framework.ioc( variables.framework.diLocations,
+                                   variables.framework.diConfig ) :
+                new framework.aop( variables.framework.diLocations,
+                                   variables.framework.diConfig );
             ioc.addBean( "fw", this ); // alias for controller constructor compatibility
             setBeanFactory( ioc );
             break;
         case "wirebox":
-            var wb = new framework.WireBoxAdapter();
+            var wb = new framework.WireBoxAdapter( properties = variables.framework.diConfig );
             wb.getBinder().scanLocations( variables.framework.diLocations );
             setBeanFactory( wb );
             break;
@@ -2122,6 +2124,9 @@ component {
         }
         if ( !structKeyExists( variables.framework, 'diLocations' ) ) {
             variables.framework.diLocations = 'model,controller';
+        }
+        if ( !structKeyExists( variables.framework, 'diConfig' ) ) {
+            variables.framework.diConfig = { };
         }
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
