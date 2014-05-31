@@ -1,3 +1,5 @@
+component {
+    variables._di1_version = "1.0_snapshot";
 /*
 	Copyright (c) 2010-2014, Sean Corfield
 
@@ -13,7 +15,6 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-component {
 
 	// CONSTRUCTOR
 	
@@ -630,7 +631,7 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 				
-		variables.config.version = '1.0.0_snapshot';
+		variables.config.version = variables._di1_version;
 	}
 	
 	
