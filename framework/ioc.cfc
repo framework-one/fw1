@@ -96,7 +96,8 @@ component {
 	}
 	
 	// convenience API for metaprogramming perhaps?
-	public any function getBeanInfo( string beanName = '', boolean flatten = false ) {
+	public any function getBeanInfo( string beanName = '', boolean flatten = false,
+                                     string regex = '' ) {
 		discoverBeans( variables.folders );
 		if ( len( beanName ) ) {
             // ask about a specific bean:
@@ -107,21 +108,30 @@ component {
                 return parentBeanInfo( beanName );
 			}
 			throw 'bean not found: #beanName#';
-		} else if ( structKeyExists( variables, 'parent' ) ) {
-            if ( flatten ) {
-                var flatInfo = { };
-                structAppend( flatInfo, parentBeanInfoList( flatten ) );
-                structAppend( flatInfo, variables.beanInfo );
-                return flatInfo;
-            } else {
-                return {
-                    beanInfo = variables.beanInfo,
-                    parent = parentBeanInfoList( flatten )
-                };
-            }
 		} else {
-			return { beanInfo = variables.beanInfo };
-		}
+            var result = { beanInfo = { } };
+            if ( structKeyExists( variables, 'parent' ) ) {
+                if ( flatten || len( regex ) ) {
+                    structAppend( result.beanInfo, parentBeanInfoList( flatten ).beanInfo );
+                    structAppend( result.beanInfo, variables.beanInfo );
+                } else {
+                    result.beanInfo = variables.beanInfo;
+                    result.parent = parentBeanInfoList( flatten );
+                };
+            } else {
+			    result.beanInfo = variables.beanInfo;
+		    }
+            if ( len( regex ) ) {
+                var matched = { };
+                for ( var name in result.beanInfo ) {
+                    if ( REFind( regex, name ) ) {
+                        matched[ name ] = result.beanInfo[ name ];
+                    }
+                }
+                result.beanInfo = matched;
+            }
+            return result;
+        }
 	}
 
 

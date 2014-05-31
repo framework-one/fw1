@@ -35,4 +35,9 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( variables.parent.getBeanInfo(), info.parent );
     }
 
+    function shouldNotHaveParentWithRegex() {
+        var info = variables.factory.getBeanInfo( regex = "X" );
+        assertFalse( structKeyExists( info, "parent" ) );
+    }
+
 }

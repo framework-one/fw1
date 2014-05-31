@@ -37,4 +37,41 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( structKeyExists( info.beaninfo, "father" ) );
     }
 
+    function shouldMatchRegex() {
+        variables.factory.addBean( "father", "figure" );
+        variables.factory.addBean( "mother", "figure" );
+        var info = variables.factory.getBeanInfo( regex = "her$" );
+        assertEquals( 2, structCount( info.beaninfo ) );
+        assertTrue( structKeyExists( info.beaninfo, "father" ) );
+        assertTrue( structKeyExists( info.beaninfo, "mother" ) );
+        info = variables.factory.getBeanInfo( regex = "^f" );
+        assertEquals( 1, structCount( info.beaninfo ) );
+        assertTrue( structKeyExists( info.beaninfo, "father" ) );
+        assertFalse( structKeyExists( info.beaninfo, "mother" ) );
+        info = variables.factory.getBeanInfo( regex = "child" );
+        assertEquals( 0, structCount( info.beaninfo ) );
+        assertFalse( structKeyExists( info.beaninfo, "father" ) );
+        assertFalse( structKeyExists( info.beaninfo, "mother" ) );
+    }
+
+
+    function shouldMatchRegexWithParent() {
+        variables.factory.addBean( "father", "figure" );
+        var parent = new framework.ioc( "" );
+        variables.factory.setParent( parent );
+        parent.addBean( "mother", "figure" );
+        var info = variables.factory.getBeanInfo( regex = "her$" );
+        assertEquals( 2, structCount( info.beaninfo ) );
+        assertTrue( structKeyExists( info.beaninfo, "father" ) );
+        assertTrue( structKeyExists( info.beaninfo, "mother" ) );
+        info = variables.factory.getBeanInfo( regex = "^f" );
+        assertEquals( 1, structCount( info.beaninfo ) );
+        assertTrue( structKeyExists( info.beaninfo, "father" ) );
+        assertFalse( structKeyExists( info.beaninfo, "mother" ) );
+        info = variables.factory.getBeanInfo( regex = "child" );
+        assertEquals( 0, structCount( info.beaninfo ) );
+        assertFalse( structKeyExists( info.beaninfo, "father" ) );
+        assertFalse( structKeyExists( info.beaninfo, "mother" ) );
+    }
+
 }
