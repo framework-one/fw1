@@ -19,4 +19,22 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( info.isSingleTon );
     }
 
+    function shouldContainParent() {
+        var parent = new framework.ioc( "" );
+        variables.factory.setParent( parent );
+        var info = variables.factory.getBeanInfo();
+        assertTrue( structKeyExists( info, "parent" ) );
+        assertTrue( structKeyExists( info.parent, "beaninfo" ) );
+    }
+
+    function shouldBeFlat() {
+        var parent = new framework.ioc( "" );
+        parent.addBean( "father", "figure" );
+        variables.factory.setParent( parent );
+        var info = variables.factory.getBeanInfo( flatten = true );
+        assertFalse( structKeyExists( info, "parent" ) );
+        assertTrue( structKeyExists( info, "beaninfo" ) );
+        assertTrue( structKeyExists( info.beaninfo, "father" ) );
+    }
+
 }

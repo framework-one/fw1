@@ -96,7 +96,7 @@ component {
 	}
 	
 	// convenience API for metaprogramming perhaps?
-	public any function getBeanInfo( string beanName = '' ) {
+	public any function getBeanInfo( string beanName = '', boolean flatten = false ) {
 		discoverBeans( variables.folders );
 		if ( len( beanName ) ) {
             // ask about a specific bean:
@@ -108,10 +108,17 @@ component {
 			}
 			throw 'bean not found: #beanName#';
 		} else if ( structKeyExists( variables, 'parent' ) ) {
-			return {
-                beanInfo = variables.beanInfo,
-                parent = parentBeanInfoList()
-            };
+            if ( flatten ) {
+                var flatInfo = { };
+                structAppend( flatInfo, parentBeanInfoList( flatten ) );
+                structAppend( flatInfo, variables.beanInfo );
+                return flatInfo;
+            } else {
+                return {
+                    beanInfo = variables.beanInfo,
+                    parent = parentBeanInfoList( flatten )
+                };
+            }
 		} else {
 			return { beanInfo = variables.beanInfo };
 		}
@@ -469,11 +476,11 @@ component {
     }
 
 
-    private any function parentBeanInfoList() {
+    private any function parentBeanInfoList( boolean flatten ) {
         // intended to be adaptable to whatever the parent is:
         if ( structKeyExists( variables.parent, 'getBeanInfo' ) ) {
             // smells like DI/1 or compatible:
-            return variables.parent.getBeanInfo();
+            return variables.parent.getBeanInfo( flatten = flatten );
         }
         if ( structKeyExists( variables.parent, 'getBeanDefinitionList' ) ) {
             // smells like ColdSpring or compatible:
