@@ -2253,9 +2253,11 @@ component {
 		lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
 			if ( !isSubsystemInitialized( subsystem ) ) {
 				application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
-                // we can only reliably automate D/I engine setup for DI/1 / AOP/1
-                if ( variables.framework.diEngine == "di1" ||
-                     variables.framework.diEngine == "aop1" ) {
+                // Application.cfc does not get a subsystem bean factory!
+                if ( subsystem != variables.magicApplicationSubsystem &&
+                     ( variables.framework.diEngine == "di1" ||
+                       variables.framework.diEngine == "aop1" ) ) {
+                    // we can only reliably automate D/I engine setup for DI/1 / AOP/1
                     var locations = listToArray( variables.framework.diLocations );
                     var subLocations = "";
                     for ( var loc in locations ) {
