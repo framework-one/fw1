@@ -915,8 +915,7 @@ component {
 		return cfc;
 	}
 
-	public struct function processRoutes( string path, array routes = getRoutes(),
-                                          string httpMethod = request._fw1.cgiRequestMethod ) {
+	public struct function processRoutes( string path, array routes, string httpMethod = request._fw1.cgiRequestMethod ) {
 		for ( var routePack in routes ) {
 			for ( var route in routePack ) {
 				if ( route == 'hint' ) continue;
@@ -2165,15 +2164,20 @@ component {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
-            var routeMatch = processRoutes( pathInfo );
-						if ( routeMatch.matched ) {
-							pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
-							if ( routeMatch.redirect ) {
-								location( pathInfo, false, routeMatch.statusCode ); 
-							} else {
-								request._fw1.route = routeMatch.route;
-							}
-						}
+            var routes = getRoutes();
+            if ( arrayLen( routes ) ) {
+                internalFrameworkTrace( 'processRoutes() called' );
+                var routeMatch = processRoutes( pathInfo, routes );
+                if ( routeMatch.matched ) {
+                    internalFrameworkTrace( 'route matched - #routeMatch.route# - #pathInfo#' );
+                    pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                    if ( routeMatch.redirect ) {
+                        location( pathInfo, false, routeMatch.statusCode ); 
+                    } else {
+                        request._fw1.route = routeMatch.route;
+                    }
+                }
+            }
             try {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
                 // any system that doesn't support .split() just in case (empty items won't work there!)
