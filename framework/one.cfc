@@ -1648,7 +1648,7 @@ component {
 
 	}
 	
-	private struct function processRouteMatch( string route, string target, string path ) {
+	private struct function processRouteMatch( string route, string target, string path, string httpMethod ) {
 		var regExCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.regex : { };
 		var cacheKey = hash( route & target );
 		if ( !structKeyExists( regExCache, cacheKey ) ) {
@@ -1703,7 +1703,7 @@ component {
 		var routeMatch = { matched = false };
 		structAppend( routeMatch, regExCache[ cacheKey ] );
 		if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
-		var matched = len( routeMatch.method ) ? ( '$' & request._fw1.cgiRequestMethod == routeMatch.method ) : true;
+		var matched = len( routeMatch.method ) ? ( '$' & httpMethod == routeMatch.method ) : true;
 		if ( matched && reFind( routeMatch.pattern, path ) ) {
 			routeMatch.matched = true;
 			routeMatch.route = route;
@@ -1767,21 +1767,6 @@ component {
 			resourceCache[ cacheKey ] = routes;
 		}
 		return resourceCache[ cacheKey ];
-	}
-
-	private struct function processRoutes( string path, array routes = getRoutes() ) {
-		for ( var routePack in routes ) {
-			for ( var route in routePack ) {
-				if ( route == 'hint' ) continue;
-				if ( route == '$RESOURCES' ) {
-					var routeMatch = processRoutes( path, getResourceRoutes( routePack[ route ] ) );
-				} else {
-					var routeMatch = processRouteMatch( route, routePack[ route ], path );
-				}
-				if ( routeMatch.matched ) return routeMatch;
-			}
-		}
-		return { matched = false };
 	}
 
 	private void function raiseException( string type, string message, string detail ) {
