@@ -915,25 +915,20 @@ component {
 		return cfc;
 	}
 
-	private void function setProperty( struct cfc, string property, struct args ) {
-		if ( listLen( property, '.' ) > 1 ) {
-			var firstObjName = listFirst( property, '.' );
-			var newProperty = listRest( property,  '.' );
-
-			args[ newProperty ] = args[ property ];
-			structDelete( args, property );
-
-			if ( structKeyExists( cfc , 'get' & firstObjName ) ) {
-				var obj = getProperty( cfc, firstObjName );
-				if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
+	public struct function processRoutes( string path, array routes = getRoutes(),
+                                          string httpMethod = request._fw1.cgiRequestMethod ) {
+		for ( var routePack in routes ) {
+			for ( var route in routePack ) {
+				if ( route == 'hint' ) continue;
+				if ( route == '$RESOURCES' ) {
+					var routeMatch = processRoutes( path, getResourceRoutes( routePack[ route ] ), httpMethod );
+				} else {
+					var routeMatch = processRouteMatch( route, routePack[ route ], path, httpMethod );
+				}
+				if ( routeMatch.matched ) return routeMatch;
 			}
-		} else {
-			evaluate( 'cfc.set#property#( argumentCollection = args )' );
 		}
-	}
-	
-	private any function getProperty( struct cfc, string property ) {
-		if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+		return { matched = false };
 	}
 
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
@@ -1544,6 +1539,10 @@ component {
 		return '__fw1' & preserveKey;
 	}
 	
+	private any function getProperty( struct cfc, string property ) {
+		if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+	}
+
 	private string function getSubsystemDirPrefix( string subsystem ) {
 
 		if ( subsystem eq '' ) {
@@ -1918,6 +1917,23 @@ component {
 			request.failedCfcName = meta.name;
 		}
 		request.failedMethod = method;
+	}
+	
+	private void function setProperty( struct cfc, string property, struct args ) {
+		if ( listLen( property, '.' ) > 1 ) {
+			var firstObjName = listFirst( property, '.' );
+			var newProperty = listRest( property,  '.' );
+
+			args[ newProperty ] = args[ property ];
+			structDelete( args, property );
+
+			if ( structKeyExists( cfc , 'get' & firstObjName ) ) {
+				var obj = getProperty( cfc, firstObjName );
+				if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
+			}
+		} else {
+			evaluate( 'cfc.set#property#( argumentCollection = args )' );
+		}
 	}
 	
 	private void function setupApplicationWrapper() {
