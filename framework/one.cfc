@@ -1954,17 +1954,19 @@ component {
         switch ( variables.framework.diEngine ) {
         case "aop1":
         case "di1":
-            var ioc = variables.framework.diEngine == "di1" ?
-                new framework.ioc( variables.framework.diLocations,
-                                   variables.framework.diConfig ) :
-                new framework.aop( variables.framework.diLocations,
-                                   variables.framework.diConfig );
+            var ioc = new "#variables.framework.diComponent#"(
+                variables.framework.diLocations,
+                variables.framework.diConfig
+            );
             ioc.addBean( "fw", this ); // alias for controller constructor compatibility
             setBeanFactory( ioc );
             break;
         case "wirebox":
-            var wb = new framework.WireBoxAdapter( properties = variables.framework.diConfig );
+            var wb = new "#variables.framework.diComponent#"(
+                properties = variables.framework.diConfig
+            );
             wb.getBinder().scanLocations( variables.framework.diLocations );
+            // we do not provide fw alias for controller constructor here!
             setBeanFactory( wb );
             break;
         }
@@ -2128,6 +2130,21 @@ component {
         if ( !structKeyExists( variables.framework, 'diConfig' ) ) {
             variables.framework.diConfig = { };
         }
+        if ( !structKeyExists( variables.framework, 'diComponent' ) ) {
+            var diComponent = 'framework.ioc';
+            switch ( variables.framework.diEngine ) {
+                case 'aop1':
+                    diComponent = 'framework.aop';
+                    break;
+                case 'wirebox':
+                    diComponent = 'framework.WireBoxAdapter';
+                    break;
+                default:
+                    // assume DI/1
+                    break;
+            }
+            variables.framework.diComponent = diComponent;
+        }
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
 	}
@@ -2280,9 +2297,7 @@ component {
                         }
                         subLocations = listAppend( subLocations, "./" & subsystem & "/" & relLoc );
                     }
-                    var ioc = variables.Framework.diEngine == "di1" ?
-                            new framework.ioc( subLocations ) :
-                            new framework.aop( subLocations );
+                    var ioc = new "#variables.framework.diComponent#"( subLocations );
                     ioc.setParent( getDefaultBeanFactory() );
                     setSubsystemBeanFactory( subsystem, ioc );
                 }
