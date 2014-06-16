@@ -41,6 +41,27 @@ component extends="tests.InjectableTest" {
 
     }
     
+    public void function testProcessRoutesExplicit() {
+
+        request._fw1.cgiRequestMethod = 'FOO';
+
+        var routeMatch = variables.fw.processRoutes( '/no/match', variables.fw.getRoutes(), 'GET' );
+        assertFalse( routeMatch.matched );
+
+        routeMatch = variables.fw.processRoutes( '/old/path/foo', variables.fw.getRoutes(), 'GET' );
+        assertTrue( routeMatch.matched );
+        assertEquals( '/new/path/foo/', rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target ) );
+
+        routeMatch = variables.fw.processRoutes( '/dogs/42', variables.fw.getRoutes(), 'GET' );
+        assertTrue( routeMatch.matched );
+        assertEquals( '/dogs/show/id/42/', rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target ) );
+
+        routeMatch = variables.fw.processRoutes( '/dogs/42', variables.fw.getRoutes(), 'PUT' );
+        assertTrue( routeMatch.matched );
+        assertEquals( '/dogs/update/id/42/', rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target ) );
+
+    }
+    
     // PRIVATE
 
     private boolean function isFrameworkInitialized() {
