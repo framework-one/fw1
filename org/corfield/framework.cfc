@@ -825,7 +825,11 @@ component {
 			    out = internalLayout( request._fw1.layouts[i], out );
 		    }
         }
-		writeOutput( out );
+        if( isImage( out ) ) {
+            content type= "image/" & lcase(trim(right(out.source,3)))  variable = out reset=true;
+        } else {
+            writeOutput( out );
+        }
 		setupResponseWrapper();
 	}
 
@@ -1898,6 +1902,17 @@ component {
         case 'json':
             contentType = 'application/json; charset=utf-8';
             out = serializeJSON( data );
+            break;
+        case 'image':
+            if( IsImage( data ) ) {
+                var image = ImageInfo(data);
+                contentType = 'image/' & lcase(trim(right(image.source,3))) & "; charset=utf-8";
+                out = data;
+            } else {
+                throw( type = 'FW1.UnsupportedImageInput',
+                message = 'Data is not an image object.',
+                detail = 'renderData() called with "image" type but unrecognized image data format' );
+            }
             break;
         case 'xml':
             contentType = 'text/xml; charset=utf-8';
