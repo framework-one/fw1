@@ -108,7 +108,7 @@ component accessors=true {
 
         // validate password for new or existing user
         if ( !user.getId() && !len( password ) ) {
-            arrayAppend( aErrors, "Please enter a password for the user" )
+            arrayAppend( aErrors, "Please enter a password for the user" );
         } else if ( len( password ) ) {
             aErrors = checkPassword( user = user, newPassword = password, retypePassword = password );
         }
