@@ -1973,6 +1973,12 @@ component {
             // we do not provide fw alias for controller constructor here!
             setBeanFactory( wb );
             break;
+        case "custom":
+            var ioc = new "#variables.framework.diComponent#"(
+                variables.framework.diConfig
+            );
+            setBeanFactory( ioc );
+            break;
         }
 		
 		// this will recreate the main bean factory on a reload:
@@ -2145,6 +2151,10 @@ component {
                     break;
                 case 'wirebox':
                     diComponent = 'framework.WireBoxAdapter';
+                    break;
+                case 'custom':
+                    throw( type="FW1.IllegalConfiguration",
+                           message="If you specify diEngine='custom' you must specify a component path for diComponent." );
                     break;
                 default:
                     // assume DI/1
