@@ -27,4 +27,22 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 2, application.itemCount );
     }
 
+    function shouldNotInjectTypedProperty() {
+        structDelete( application, "itemCount" );
+        variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
+                                     { singulars = { sheep = "lamb" },
+                                       omitTypedProperties = true } );
+        assertTrue( variables.factory.containsBean( "item" ) );
+        assertTrue( variables.factory.isSingleton( "item" ) );
+        assertTrue( variables.factory.containsBean( "itemLamb" ) );
+        assertTrue( variables.factory.isSingleton( "itemLamb" ) );
+        var user = variables.factory.getBean( "user" );
+        var item = user.itemTest();
+        assertFalse( isSimpleValue( item ) );
+        assertEquals( 1, application.itemCount );
+        var lamb = user.getItemLamb();
+        assertTrue( isNull( lamb ) );
+        assertEquals( 1, application.itemCount );
+    }
+
 }

@@ -259,10 +259,15 @@ component {
 				var n = arrayLen( md.properties );
 				for ( var i = 1; i <= n; ++i ) {
 					var property = md.properties[ i ];
-					if ( implicitSetters &&
+                    if ( implicitSetters &&
 						 ( !structKeyExists( property, 'setter' ) ||
                            isBoolean( property.setter ) && property.setter ) ) {
-						iocMeta.setters[ property.name ] = 'implicit';
+						if ( structKeyExists( property, 'type' ) &&
+                             property.type != 'any' ) {
+                            iocMeta.setters[ property.name ] = 'typed';
+                        } else {
+                            iocMeta.setters[ property.name ] = 'implicit';
+                        }
 					}
 				}
 			}
@@ -410,7 +415,9 @@ component {
 					// ignore properties that we know to be transients...
 					continue;
 				}
-				liveMeta.setters[ property ] = 'explicit';
+                if ( !structKeyExists( liveMeta.setters, property ) ) {
+                    liveMeta.setters[ property ] = 'explicit';
+                }
 			}
 		}
 		return liveMeta;
@@ -509,6 +516,11 @@ component {
 		for ( var name in partialBean.injection ) {
 			var injection = partialBean.injection[ name ];
 			for ( var property in injection.setters ) {
+                if ( injection.setters[ property ] == 'typed' &&
+                     variables.config.omitTypedProperties ) {
+                    // we do not inject typed properties!
+                    continue;
+                }
 				var args = { };
                 if ( structKeyExists( injection.overrides, property ) ) {
                     args[ property ] = injection.overrides[ property ];
@@ -646,6 +658,10 @@ component {
         if ( structKeyExists( variables.config, 'singletonPattern' ) &&
              structKeyExists( variables.config, 'transientPattern' ) ) {
             throw 'singletonPattern and transientPattern are mutually exclusive';
+        }
+
+        if ( !structKeyExists( variables.config, 'omitTypedProperties' ) ) {
+            variables.config.omitTypedProperties = false;
         }
 				
 		variables.config.version = variables._di1_version;
