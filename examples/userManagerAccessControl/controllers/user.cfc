@@ -17,7 +17,8 @@ component accessors=true {
 
     function form( rc ) {
         if ( !structKeyExists( rc, "user" ) ) {
-            rc.user = variables.userService.get( variables.fw.getRCValue( "id", 0 ) );
+            param name="rc.id" default="0";
+            rc.user = variables.userService.get( rc.id );
         }
         rc.departments = variables.departmentService.list();
         rc.roles = variables.roleService.list();
@@ -28,7 +29,8 @@ component accessors=true {
     }
 
     function save( rc ) {
-        rc.user = variables.userService.get( variables.fw.getRCValue( "id", 0 ) );
+        param name="rc.id" default="0";
+        rc.user = variables.userService.get( rc.id );
         rc.message = variables.userService.validate( argumentCollection = rc );
 
         // if there were validation errors, populate a blank user and redisplay the form
