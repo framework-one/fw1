@@ -1388,7 +1388,7 @@ component {
              !structKeyExists( request._fw1, 'renderData' ) ) {
             var startTime = request._fw1.trace[1].tick;
             var font = 'font-family: verdana, helvetica;';
-            writeOutput( '<hr /><div style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
+            writeOutput( '<hr /><div id="fw1_trace" style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
             var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">' &
                       '<tr><th style="text-align:right;" width="5%">time</th><th style="text-align:right;" width="5%">delta</th>' &
