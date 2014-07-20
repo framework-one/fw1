@@ -1362,15 +1362,17 @@ component {
 			// on every controller call; fixed in Railo 3.3)
 			baseMetadata.__fw1_setters = setters;
 		}
-		// gather up explicit setters as well
-		for ( var member in cfc ) {
-			var method = cfc[ member ];
-			var n = len( member );
-			if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
-				var property = right( member, n - 3 );
-				setters[ property ] = 'explicit';
-			}
-		}
+        if ( !structKeyExists( cfc, '__fw1_version' ) ) {
+            // gather up explicit setters as well - except for FW/1 / Application.cfc
+            for ( var member in cfc ) {
+                var method = cfc[ member ];
+                var n = len( member );
+                if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
+                    var property = right( member, n - 3 );
+                    setters[ property ] = 'explicit';
+                }
+            }
+        }
 		return setters;
 	}
 
@@ -2164,6 +2166,8 @@ component {
         }
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
+        // add this as a fingerprint so autowire can detect FW/1 CFC:
+        this.__fw1_version = variables.framework.version;
 	}
 
     private string function setupFrameworkEnvironments() {
