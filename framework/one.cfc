@@ -74,10 +74,20 @@ component {
      * to a resolvedBaseURL() value
      */
     public string function buildCustomURL( string uri ) {
+        var triggers = '[/=&\?]';
+        if ( reFind( '#triggers#:', uri ) ) {
+            // perform variables substitution from request.context
+            var rc = request.context;
+            for ( var key in rc ) {
+                if ( !isNull( rc[key] ) && isSimpleValue( rc[key] ) ) {
+                    uri = REReplaceNoCase( uri, '(#triggers#):#key#', '\1\U\E#rc[key]#', 'all' );
+                }
+            }
+        }
         var baseData = resolveBaseURL();
         return baseData.path & uri;
     }
-	
+
 	/*
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future

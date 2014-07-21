@@ -97,4 +97,24 @@ component extends="tests.InjectableTest" {
         uri = REReplace( uri, "^.*\.cf[cm]", "" );
         assertEquals( "/product/123", uri );
     }
+
+    public void function testCustomURLWithVariables() {
+        variables.fw.onApplicationStart();
+        // setup our RC:
+        request.context = { id = 123, type = "string", ignore = { notSimple = 123 } };
+        // since we are not running FW/1 "properly", get the stem of the
+        // test suite file as the prefix, so lets strip anything up to the .cfm
+        var uri = variables.fw.buildCustomURL( "/product/:id" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
+        assertEquals( "/product/123", uri );
+        var uri = variables.fw.buildCustomURL( "/product/hide:id" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
+        assertEquals( "/product/hide:id", uri );
+        var uri = variables.fw.buildCustomURL( "/test?:id=:type" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
+        assertEquals( "/test?123=string", uri );
+        var uri = variables.fw.buildCustomURL( "/product/:ignore" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
+        assertEquals( "/product/:ignore", uri );
+    }
 }
