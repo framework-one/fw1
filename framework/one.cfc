@@ -2197,7 +2197,7 @@ component {
             variables.framework.diEngine = 'di1';
         }
         if ( !structKeyExists( variables.framework, 'diLocations' ) ) {
-            variables.framework.diLocations = 'model,controller';
+            variables.framework.diLocations = 'model,controllers';
         }
         if ( !structKeyExists( variables.framework, 'diConfig' ) ) {
             variables.framework.diConfig = { };
