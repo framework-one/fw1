@@ -36,14 +36,15 @@ component output="false" displayname="beanProxy"  {
 				runBeforeStack(arguments.missingMethodName, organizedArgs, variables.targetBean);
                 // because ACF doesn't support direct method invocation :(
 				result = evaluate("variables.targetBean.#arguments.missingMethodName#(argumentCollection=organizedArgs)");
-				runAfterStack(local.result , arguments.missingMethodName, local.organizedArgs, variables.targetBean);
+                runAfterStack(isNull(local.result) ? javaCast("null",0) : local.result,
+                              arguments.missingMethodName, local.organizedArgs, variables.targetBean);
 
 			}
 			else{
 				result = runAroundStack(arguments.missingMethodName, local.organizedArgs, variables.targetBean);
 			}
 
-			return result;
+			if ( !isNull(result) ) return result;
 		}catch(Any e){
 
 			if(!hasErrorStack()){ rethrow; }
@@ -144,7 +145,7 @@ component output="false" displayname="beanProxy"  {
 			}
 		}
 		
-		return result;
+        if ( !isNull(result) ) return result;
 	}
 
 	private function runAfterStack(result, methodName, args, targetBean) {
@@ -154,13 +155,16 @@ component output="false" displayname="beanProxy"  {
 					continue;
 				}
 
-				var retvar = inter.bean.after(arguments.result, arguments.methodName, arguments.args, arguments.targetBean);
+				var retvar = inter.bean.after(
+                    isNull(arguments.result) ? javaCast("null",0) : arguments.result,
+                    arguments.methodName, arguments.args, arguments.targetBean
+                );
 			}
 		}
 	}
 
 	private function runOnErrorStack(methodName, organizedArgs, targetBean, error) {
-
+        var result = "";
 		for(var inter in variables.interceptors){
 			if(StructKeyExists(inter.bean, "onError")){
 				if(!methodMatches(arguments.methodName, inter.methods)){
