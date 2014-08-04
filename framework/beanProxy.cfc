@@ -101,7 +101,7 @@ component {
     /*
 	Functions that run all the interceptors
     */
-    private function runBeforeStack( string methodName, string args, any targetBean ) {
+    private function runBeforeStack( string methodName, struct args, any targetBean ) {
         for ( var inter in variables.interceptors ) {
             if ( structKeyExists( inter.bean, "before" ) ) {
                 if ( methodMatches( methodName, inter.methods ) )  {
