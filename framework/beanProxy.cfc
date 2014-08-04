@@ -94,10 +94,11 @@ component output="false" displayname="beanProxy"  {
 		return false;
 	}
 
-	private function getAroundInterceptorCount(){
+	private function getAroundInterceptorCount( string methodName ){
 		var total = 0;
 		for(var inter in variables.interceptors){
-			if(StructKeyExists(inter.bean, "around")){
+			if(StructKeyExists(inter.bean, "around") &&
+               methodMatches( methodName , inter.methods ) ) {
 				total++;
 			}
 		}
@@ -122,7 +123,7 @@ component output="false" displayname="beanProxy"  {
 
 	private function runAroundStack(methodName, args, targetBean) {
 		var result = "";
-		var totalInterceptors = getAroundInterceptorCount();
+		var totalInterceptors = getAroundInterceptorCount(methodName);
 
 		//count around intercept
 		var hitCount = 1;
@@ -140,7 +141,7 @@ component output="false" displayname="beanProxy"  {
 					
 				}
 				result = inter.bean.around(arguments.methodName, arguments.args, arguments.targetBean);
-				hitCount++;
+                hitCount++;
 				
 			}
 		}
