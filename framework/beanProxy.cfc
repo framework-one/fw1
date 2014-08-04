@@ -142,7 +142,7 @@ component {
         }
     }
 
-    private function runOnErrorStack( string methodName, string organizedArgs, any targetBean, any error ) {
+    private function runOnErrorStack( string methodName, struct organizedArgs, any targetBean, any error ) {
         for ( var inter in variables.interceptors ) {
             if ( structKeyExists( inter.bean, "onError" ) ) {
                 if ( !methodMatches( methodName, inter.methods ) ) {
