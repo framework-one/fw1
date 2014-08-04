@@ -384,11 +384,16 @@ component {
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
 			};
 			if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                if ( variables.config.omitDirectoryAliases ) {
+                    throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+                }
 				structDelete( variables.beanInfo, beanName );
 				variables.beanInfo[ beanName & singleDir ] = metadata;
 			} else {
 				variables.beanInfo[ beanName ] = metadata;
-				variables.beanInfo[ beanName & singleDir ] = metadata;
+                if ( !variables.config.omitDirectoryAliases ) {
+                    variables.beanInfo[ beanName & singleDir ] = metadata;
+                }
 			}
 		}
 	}
@@ -662,6 +667,9 @@ component {
 
         if ( !structKeyExists( variables.config, 'omitTypedProperties' ) ) {
             variables.config.omitTypedProperties = false;
+        }
+        if ( !structKeyExists( variables.config, 'omitDirectoryAliases' ) ) {
+            variables.config.omitDirectoryAliases = false;
         }
 				
 		variables.config.version = variables._di1_version;
