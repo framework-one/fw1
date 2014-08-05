@@ -34,6 +34,9 @@ component {
         ];
         variables.listeners = 0;
 		setupFrameworkDefaults();
+        if ( structKeyExists( variables.config, 'loadListener' ) ) {
+            this.onLoad( variables.config.loadListener );
+        }
 		return this;
 	}
 	

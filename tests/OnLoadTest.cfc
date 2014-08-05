@@ -45,4 +45,12 @@ component extends="mxunit.framework.TestCase" {
         ++application.loadCount;
     }
 
+    function shouldBeAbleToListenViaConfig() {
+        var listener = new tests.model.services.listener();
+        var bf = new framework.ioc( "", { loadListener = listener } );
+        assertFalse( listener.isLoaded() );
+        var q = bf.containsBean( "foo" );
+        assertTrue( listener.isLoaded() );
+    }
+
 }
