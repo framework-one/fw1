@@ -14,7 +14,7 @@ component extends="mxunit.framework.TestCase" {
         assertFalse( structKeyExists( b, "name" ) );
     }
 
-    function shouldResolveCircular() {
+    function shouldResolveAndConfigureCircular() {
         var bf = new framework.ioc( "/tests/circular", { initMethod = "configure" } );
         var a = bf.getBean( "a" );
         var b = bf.getBean( "b" );
