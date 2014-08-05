@@ -15,80 +15,63 @@
 */
 component extends="framework.ioc" {
 
-	variables.bf = ""; // our beanFactory
+    variables.bf = ""; // our beanFactory
+    variables.iStack = { }; //Interceptor stack. This keeps a list of who is intercepting what
+    variables.proxies = { };
 
-	variables.iStack = {}; //Interceptor stack. This keeps a list of who is intercepting what
+    function init() {
+        super.init( argumentCollection = arguments );
+        return this;
+    }
 
-	variables.proxies = {};
-
-	function init(){
-		super.init(argumentCollection=arguments);
-		return this;
-	}
-
-	/*
+    /*
 		returns the original beanFactory
 	*/
-	function getIOC(){
-		return variables.bf;
-	}
+    function getIOC() {
+        return variables.bf;
+    }
 
-	function intercept(beanName, interceptorName, methodnames=""){
+    function intercept( beanName, interceptorName, methodnames = "" ) {
+        if ( !structKeyExists( variables.iStack, beanName ) )  {
+            variables.iStack[ beanName ] = arrayNew(1);
+        }
+        var interceptionDefinition = {
+            name = interceptorName,
+            methods = methodNames
+        };
+        arrayAppend( variables.iStack[ beanName ], interceptionDefinition );
+        return this;
+    }
 
-		if(!StructKeyExists(variables.iStack, arguments.beanName)){
-			variables.iStack[arguments.beanName] = ArrayNew(1);
-		}
+    function hasInterceptors( string beanName ) {
+        return structKeyExists( variables.iStack, beanName ) &&
+               arrayLen( variables.iStack[ beanName ] );
+    }
 
-		var InterceptionDefinition = {
-				name = arguments.interceptorName,
-				methods = arguments.methodNames
-		};
+    function getInterceptors( string beanName ) {
+        if ( structKeyExists( variables.iStack, beanName ) ) {
+            return variables.iStack[ beanName ];
+        }
+        return [];
+    }
 
-		ArrayAppend(variables.iStack[arguments.beanName], InterceptionDefinition);
-
-
-		return this;
-	}
-
-	function hasInterceptors(String BeanName){
-
-		if(StructKeyExists(variables.iStack, arguments.BeanName) && ArrayLen(variables.iStack[arguments.BeanName])){
-			return true;
-		}
-
-		return false;
-	}
-
-
-	function getInterceptors(String BeanName){
-		if(StructKeyExists(variables.iStack, arguments.BeanName)){
-			return variables.iStack[arguments.BeanName];
-		}
-		return [];
-	}
-
-
-	function getBean(BeanName){
-		//IF it doesn't have Interceptors just call it au-naturel
-		if(!hasInterceptors(arguments.BeanName)){
-			return super.getBean(arguments.BeanName);
-		}
-		
-		//It has interceptors so return the beanProxy
-		var targetBean = super.getBean(arguments.BeanName);
-
-		//let's go get and instantiate the interceptors!
-		var interceptors= [];
-
-		for(var inter in getInterceptors(arguments.BeanName)){
-
-			var interceptorPacket = {bean = super.getBean(inter.name), methods = inter.methods} ;
-			ArrayAppend(interceptors,interceptorPacket);
-		}
-		var beanProxy = new framework.beanProxy(targetBean, interceptors);
-
-		return beanProxy ;
-
-	}
+    function getBean( string beanName ) {
+        // if it doesn't have Interceptors just call it au-naturel
+        if ( !hasInterceptors( beanName ) ) {
+            return super.getBean( beanName );
+        }		
+        // it has interceptors so return the beanProxy
+        var targetBean = super.getBean( beanName );
+        // let's go get and instantiate the interceptors!
+        var interceptors = [];
+        for ( var inter in getInterceptors( beanName ) ) {
+            var interceptorPacket = {
+                bean = super.getBean( inter.name ),
+                methods = inter.methods
+            };
+            arrayAppend( interceptors, interceptorPacket );
+        }
+        return new framework.beanProxy( targetBean, interceptors );
+    }
 
 }
