@@ -520,9 +520,15 @@ component {
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
 		var partialBean = resolveBeanCreate( beanName, { injection = { } } );
+        var postInjectionNeeded = false;
+        var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
+        var initMethod = checkForPostInjection ? variables.config.initMethod : '';
 		// now perform all of the injection:
 		for ( var name in partialBean.injection ) {
 			var injection = partialBean.injection[ name ];
+            if ( checkForPostInjection && structKeyExists( injection.bean, initMethod ) ) {
+                postInjectionNeeded = true;
+            }
 			for ( var property in injection.setters ) {
                 if ( injection.setters[ property ] == 'typed' &&
                      variables.config.omitTypedProperties ) {
@@ -543,6 +549,15 @@ component {
 				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
 			}
 		}
+        // see if anything needs post-injection
+        if ( postInjectionNeeded ) {
+            for ( var postName in partialBean.injection ) {
+                var postInjection = partialBean.injection[ postName ];
+                if ( structKeyExists( postInjection.bean, initMethod ) ) {
+                    evaluate( 'postInjection.bean.#initMethod#()' );
+                }
+            }
+        }
 		return partialBean.bean;
 	}
 	
