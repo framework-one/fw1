@@ -1,1 +1,3 @@
-component {}
+component {
+    this.stamp = "fava";
+}
