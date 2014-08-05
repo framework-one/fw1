@@ -86,6 +86,17 @@ component {
 		variables.beanInfo[ beanName ] = metadata;
         return this;
 	}
+
+    public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
+        discoverBeans( variables.folders );
+        var metadata = {
+            name = beanName, isSingleton = false, // really?
+            factory = factory, method = methodName, args = args,
+            overrides = overrides
+        };
+        variables.beanInfo[ beanName ] = metadata;
+        return this;
+    }
 	
 	
 	// return the requested bean, fully populated
