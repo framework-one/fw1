@@ -650,7 +650,21 @@ component {
 				accumulator.bean = bean;
 			} else if ( structKeyExists( info, 'value' ) ) {
 				accumulator.bean = info.value;
-				accumulator.injection[ beanName ] = { bean = info.value, setters = { } }; 
+				accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
+            } else if ( structKeyExists( info, 'factory' ) ) {
+                var fmBean = isSimpleValue( info.factory ) ? this.getBean( info.factory ) : info.factory;
+                var nArgs = arrayLen( info.args );
+                var argStruct = { };
+                for ( var i = 1; i <= nArgs; ++i ) {
+                    var argName = info.args[ i ];
+                    if ( structKeyExists( info.overrides, argName ) ) {
+                        argStruct[ i ] = info.overrides[ argName ];
+                    } else {
+                        argStruct[ i ] = this.getBean( argName );
+                    }
+                }
+                accumulator.bean = evaluate( 'fmBean.#info.method#(argumentCollection=argStruct)' );
+                accumulator.injection[ beanName ] = { bean = accumulator.bean, setters = { } };
 			} else {
 				throw 'internal error: invalid metadata for #beanName#';
 			}
