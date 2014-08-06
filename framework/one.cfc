@@ -1506,42 +1506,37 @@ component {
         }
     }
 
-	private any function getCachedComponent( string type, string subsystem, string section ) {
+	private any function getCachedController( string subsystem, string section ) {
 
 		setupSubsystemWrapper( subsystem );
 		var cache = application[variables.framework.applicationKey].cache;
-		var types = type & 's';
 		var cfc = 0;
 		var subsystemDir = getSubsystemDirPrefix( subsystem );
 		var subsystemDot = replace( subsystemDir, '/', '.', 'all' );
 		var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
 		var componentKey = subsystemUnderscore & section;
-		var beanName = section & type;
+		var beanName = section & "controller";
 		
-		if ( !structKeyExists( cache[ types ], componentKey ) ) {
-			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
-				if ( !structKeyExists( cache[ types ], componentKey ) ) {
+		if ( !structKeyExists( cache.controllers, componentKey ) ) {
+			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#componentKey#" type="exclusive" timeout="30" {
+				if ( !structKeyExists( cache.controllers, componentKey ) ) {
 					if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
 						cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
 					} else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
 						cfc = getDefaultBeanFactory().getBean( beanName );
 					} else {
-						if ( type == 'controller' && section == variables.magicApplicationController ) {
+						if ( section == variables.magicApplicationController ) {
 							// treat this (Application.cfc) as a controller:
 							cfc = this;
-						} else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & types & '/' & section & '.cfc' ) ) {
+						} else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.cfc' ) ) {
 							// we call createObject() rather than new so we can control initialization:
 							if ( request.cfcbase == '' ) {
-								cfc = createObject( 'component', subsystemDot & types & '.' & section );
+								cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
 							} else {
-								cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & types & '.' & section );
+								cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
 							}
 							if ( structKeyExists( cfc, 'init' ) ) {
-								if ( type == 'controller' ) {
-									cfc.init( this );
-								} else {
-									cfc.init();
-								}
+                                cfc.init( this );
 							}
 						}
 						if ( isObject( cfc ) && ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) ) {
@@ -1549,21 +1544,21 @@ component {
 						}
 					}
 					if ( isObject( cfc ) ) {
-                        if ( type == 'controller' ) injectFramework( cfc );
-						cache[ types ][ componentKey ] = cfc;
+                        injectFramework( cfc );
+						cache.controllers[ componentKey ] = cfc;
 					}
 				}
 			}
 		}
 
-		if ( structKeyExists( cache[ types ], componentKey ) ) {
-			return cache[ types ][ componentKey ];
+		if ( structKeyExists( cache.controllers, componentKey ) ) {
+			return cache.controllers[ componentKey ];
 		}
 		// else "return null" effectively
 	}
 	
 	private any function getController( string section, string subsystem = getDefaultSubsystem() ) {
-		var _controller_fw1 = getCachedComponent( 'controller', subsystem, section );
+		var _controller_fw1 = getCachedController( subsystem, section );
 		if ( !isNull( _controller_fw1 ) ) {
 			return _controller_fw1;
 		}
