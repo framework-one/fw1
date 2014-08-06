@@ -329,7 +329,8 @@ component {
 			}
 		} else {
 			var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
-			if ( path.startsWith( webroot ) ) {
+			if ( len( path ) >= len( webroot ) &&
+                 left( path, len( webroot ) ) == webroot ) {
 				var rootRelativePath = right( path, len( path ) - len( webroot ) );
 				return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
 			} else {
@@ -357,7 +358,8 @@ component {
 	private void function discoverBeansInFolder( string mapping ) {
 		var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
 		var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
-		if ( mapping.startsWith( webroot ) ) {
+        if ( len( mapping ) >= len( webroot ) &&
+             left( mapping, len( webdoot ) ) == webroot ) {
 			// must be an already expanded path!
 			folder = mapping;
 		}
