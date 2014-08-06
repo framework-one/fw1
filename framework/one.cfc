@@ -1068,6 +1068,8 @@ component {
 	public void function setBeanFactory( any beanFactory ) {
 
 		application[ variables.framework.applicationKey ].factory = beanFactory;
+        // to address #276 flush controller cache when bean factory is reset:
+        application[ variables.framework.applicationKey ].cache.controllers = { };
 
 	}
 
