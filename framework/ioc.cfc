@@ -359,7 +359,7 @@ component {
 		var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
 		var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
         if ( len( mapping ) >= len( webroot ) &&
-             left( mapping, len( webdoot ) ) == webroot ) {
+             left( mapping, len( webroot ) ) == webroot ) {
 			// must be an already expanded path!
 			folder = mapping;
 		}
