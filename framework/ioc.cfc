@@ -372,7 +372,7 @@ component {
 			for ( var pattern in variables.config.exclude ) {
 				if ( findNoCase( pattern, cfcPath ) ) {
 					excludePath = true;
-					continue;
+					break;
 				}
 			}
 			if ( excludePath ) continue;
