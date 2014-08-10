@@ -315,31 +315,29 @@ component {
 	}
 	
 	
-	private string function deduceDottedPath( string path, string truePath, string mapping, boolean rootRelative ) {
-		if ( rootRelative ) {
-			var remaining = right( path, len( path ) - len( truePath ) );
-			// strip leading / if present and strip trailing .cfc:
-			if ( left( remaining, 1 ) == '/' ) remaining = right( remaining, len( remaining ) - 1 );
-			remaining = left( remaining, len( remaining ) - 4 );
-			remaining = replace( remaining, '/', '.', 'all' );
-			if ( len( mapping ) ) {
-				return mapping & '.' & remaining;
-			} else {
-				return remaining;
-			}
-		} else {
-			var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
-			if ( len( path ) >= len( webroot ) &&
-                 left( path, len( webroot ) ) == webroot ) {
-				var rootRelativePath = right( path, len( path ) - len( webroot ) );
-				return replace( left( rootRelativePath, len( rootRelativePath ) - 4 ), '/', '.', 'all' );
-			} else {
-				throw 'unable to deduce dot-relative paths outside webroot: #path#';
-			}
-		}
-	}
-	
-	
+    private string function deduceDottedPath( string baseMapping, string basePath ) {
+        var cfcPath = baseMapping;
+        var expPath = basePath;
+        if ( left( cfcPath, 1 ) == '/' ) cfcPath = right( cfcPath, len( cfcPath ) - 1 );
+        var dotted = '';
+        do {
+            var mapped = '/' & cfcPath;
+            var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
+            if ( mappedPath == basePath ) {
+                dotted = replace( cfcPath, '/', '.', 'all' );
+                break;
+            }
+            expPath = getDirectoryFromPath( expPath );
+            var piece = listLast( expPath, '/' );
+            cfcPath = piece & '/' & cfcPath;
+        } while ( listLen( expPath, '/' ) > 0 );
+        if ( dotted == '' ) {
+            throw 'unable to deduce dot-relative path for: ';
+        }
+        return dotted;
+    }
+
+
 	private void function discoverBeans( string folders ) {
 		if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
 		lock name="#application.applicationName#_ioc1_#folders#" type="exclusive" timeout="30" {
@@ -357,23 +355,7 @@ component {
 	
 	private void function discoverBeansInFolder( string mapping ) {
 		var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
-		var webroot = replace( expandPath( '/' ), chr(92), '/', 'all' );
-        if ( len( mapping ) >= len( webroot ) &&
-             left( mapping, len( webroot ) ) == webroot ) {
-			// must be an already expanded path!
-			folder = mapping;
-		}
-		// treat absolute file paths as not (web)root-relative:
-		var rootRelative = left( mapping, 1 ) == '/' && folder != mapping;
-		while ( left( mapping, 1 ) == '.' || left( mapping, 1 ) == '/' ) {
-			if ( len( mapping ) > 1 ) {
-				mapping = right( mapping, len( mapping ) - 1 );
-			} else {
-				mapping = '';
-			}
-		}
-		mapping = replace( mapping, '/', '.', 'all' );
-		// find all the CFCs here:
+        var dotted = deduceDottedPath( mapping, folder );
         var cfcs = [ ];
         try {
 		    cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
@@ -391,12 +373,12 @@ component {
 				}
 			}
 			if ( excludePath ) continue;
-			var dirPath = getDirectoryFromPath( cfcPath );
-			var dir = listLast( dirPath, '/' );
+            var relPath = right( cfcPath, len( cfcPath ) - len( folder ) );
+            relPath = left( relPath, len( relPath ) - 4 );
+			var dir = listLast( getDirectoryFromPath( cfcPath ), '/' );
 			var singleDir = singular( dir );
-			var file = listLast( cfcPath, '/' );
-			var beanName = left( file, len( file ) - 4 );
-			var dottedPath = deduceDottedPath( cfcPath, folder, mapping, rootRelative );
+			var beanName = listLast( relPath, '/' );
+            var dottedPath = dotted & replace( relPath, '/', '.', 'all' );
 			var metadata = { 
 				name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ), 
 				path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
