@@ -323,7 +323,8 @@ component {
         do {
             var mapped = '/' & cfcPath;
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
-            if ( mappedPath == basePath ) {
+            var relMappedPath = replace( expandpath( "." & mapped ), chr(92), '/', 'all' );
+            if ( mappedPath == basePath || relMappedPath == basePath ) {
                 dotted = replace( cfcPath, '/', '.', 'all' );
                 break;
             }
