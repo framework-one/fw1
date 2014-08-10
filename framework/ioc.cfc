@@ -327,10 +327,12 @@ component {
                 dotted = replace( cfcPath, '/', '.', 'all' );
                 break;
             }
+            var prevPath = expPath;
             expPath = getDirectoryFromPath( expPath );
+            var progress = prevPath != expPath;
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
-        } while ( listLen( expPath, '/' ) > 1 );
+        } while ( progress );
         if ( dotted == '' ) {
             throw 'unable to deduce dot-relative path for: ';
         }
