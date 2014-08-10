@@ -330,7 +330,7 @@ component {
             expPath = getDirectoryFromPath( expPath );
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
-        } while ( listLen( expPath, '/' ) > 0 );
+        } while ( listLen( expPath, '/' ) > 1 );
         if ( dotted == '' ) {
             throw 'unable to deduce dot-relative path for: ';
         }
