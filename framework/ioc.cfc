@@ -334,7 +334,7 @@ component {
             cfcPath = piece & '/' & cfcPath;
         } while ( progress );
         if ( dotted == '' ) {
-            throw 'unable to deduce dot-relative path for: ';
+            throw 'unable to deduce dot-relative path for: #baseMapping# (#basePath#)';
         }
         return dotted;
     }
