@@ -16,8 +16,8 @@
 component {
 
     variables.interceptors = [];
-    variables.targetBean = ""; //the actual bean 
-    variables.methodList = ""; //A list of methods. if blank defaults to * (which means all);
+    variables.targetBean = "";
+    variables.aroundCache = { };
 
     function init( any targetBean, array interceptors = [] ) {
         variables.targetBean = targetBean;
@@ -53,10 +53,11 @@ component {
         var organizedArgs = { };
         var positionCount = 1;
         var targetArgInfo = getMetaData( variables.targetBean[ methodName ] ).parameters;
+        var nArgs = arrayLen( targetArgInfo );
         for ( var p in args ) {
             //They are usually numeric here
             var keyName = positionCount;
-            if ( isNumeric( p ) && p <= arrayLen( targetArgInfo ) ) {
+            if ( isNumeric( p ) && p <=  nArgs ) {
                 keyname = targetArgInfo[ p ].name;
             }
             organizedArgs[ keyname ] = args[ p ];
@@ -70,24 +71,37 @@ component {
 	SEARCHING functions
     */
     private boolean function hasAround() {
+        if ( structKeyExists( variables, "hasAroundCache" ) ) {
+            return variables.hasAroundCache;
+        }
         for ( var inter in variables.interceptors ) {
             if ( structKeyExists( inter.bean, "around" ) ) {
+                variables.hasAroundCache = true;
                 return true;
             }
         }
+        variables.hasAroundCache = false;
         return false;
     }
 
     private boolean function hasErrorStack() {
+        if ( structKeyExists( variables, "hasErrorStackCache" ) ) {
+            return variables.hasErrorStackCache;
+        }
         for ( var inter in variables.interceptors ) {
             if ( structKeyExists( inter.bean, "onError" ) )  {
+                variables.hasErrorStackCache = true;
                 return true;
             }
         }
+        variables.hasErrorStackCache = false;
         return false;
     }
 
-    private function getAroundInterceptorCount( string methodName ) {
+    private numeric function getAroundInterceptorCount( string methodName ) {
+        if ( structKeyExists( variables.aroundCache, methodName ) ) {
+            return variables.aroundCache[ methodName ];
+        }
         var total = 0;
         for ( var inter in variables.interceptors ) {
             if ( structKeyExists( inter.bean, "around" ) &&
@@ -95,6 +109,7 @@ component {
                 ++total;
             }
         }
+        variables.aroundCache[ methodName ] = total;
         return total;
     }
 
@@ -153,17 +168,10 @@ component {
         }
     }
 
-    public boolean function methodMatches( string methodName, string matchers ) {
-        if ( !listLen( matchers ) ) {
-            return true;
-        }
-        if ( methodName == matchers ) {
-            return true;
-        }
-        if ( listFindNoCase( matchers, methodName, ",", false ) ) {
-            return true;
-        }
-        return false;
+    private boolean function methodMatches( string methodName, string matchers ) {
+        return !listLen( matchers ) ||
+               methodName == matchers ||
+               listFindNoCase( matchers, methodName, ",", false );
     }
 
 }
