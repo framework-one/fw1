@@ -39,11 +39,31 @@ component extends="framework.ioc" {
         return variables;
     }
 
-    private void function moveBeanTo( any oldBean, any newBean ) {
+    private void function moveBeanTo( any oldBean, any newBean, boolean skipFNs ) {
+        newBean._v = liftVariablesScope;
         oldBean._v = liftVariablesScope;
-        structAppend( newBean, oldBean ); // copy THIS scope
-        // then copy VARIABLES scope
-        structAppend( newBean._v(), oldBean._v() );
+        // copy THIS scope (non-functions):
+        for ( var publicItem in oldBean ) {
+            var publicValue = oldBean[ publicItem ];
+            if ( skipFNs &&
+                 isCustomFunction( publicValue ) ) {
+                // don't copy methods (or null values)
+            } else {
+                newBean[ publicItem ] = publicValue;
+            }
+        }
+        // then copy VARIABLES scope (non-functions):
+        var target = newBean._v();
+        var source = oldBean._v();
+        for ( var privateItem in source ) {
+            var privateValue = source[ privateItem ];
+            if ( skipFNS &&
+                 isCustomFunction( privateValue ) ) {
+                // don't copy methods (or null values)
+            } else {
+                target[ privateItem ] = privateValue;
+            }
+        }
         // then clear old VARIABLES scope
         structClear( oldBean._v() );
         // then clear old THIS scope
@@ -60,7 +80,7 @@ component extends="framework.ioc" {
         }
         // create the new state/method holder:
         var newBean = construct( variables.beanInfo[ beanName ].cfc );
-        moveBeanTo( bean, newBean );
+        moveBeanTo( bean, newBean, true );
         // build the interceptor array:
         var interceptors = [];
         for ( var inter in variables.interceptInfo[ beanName ] ) {
@@ -71,7 +91,7 @@ component extends="framework.ioc" {
             arrayAppend( interceptors, interceptorPacket );
         }
         var proxy = new framework.beanProxy( newBean, interceptors );
-        moveBeanTo( proxy, bean );
+        moveBeanTo( proxy, bean, false );
     }
 
 }
