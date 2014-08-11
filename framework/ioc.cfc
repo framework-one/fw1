@@ -560,7 +560,7 @@ component {
         // post-injection, pre-init-method phase:
         for ( name in partialBean.injection ) {
             injection = partialBean.injection[ name ];
-            setupInitMethod( name, injection );
+            setupInitMethod( name, injection.bean );
         }
         // see if anything needs post-injection, init-method calls:
         for ( var postName in postInjectables ) {
