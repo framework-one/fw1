@@ -15,63 +15,63 @@
 */
 component extends="framework.ioc" {
 
-    variables.bf = ""; // our beanFactory
-    variables.iStack = { }; //Interceptor stack. This keeps a list of who is intercepting what
-    variables.proxies = { };
+    // ADDITIONAL INTERNAL STATE
+    variables.interceptInfo = { };
 
-    function init() {
-        super.init( argumentCollection = arguments );
-        return this;
-    }
+    // PUBLIC METHODS
 
-    /*
-		returns the original beanFactory
-	*/
-    function getIOC() {
-        return variables.bf;
-    }
-
-    function intercept( beanName, interceptorName, methodnames = "" ) {
-        if ( !structKeyExists( variables.iStack, beanName ) )  {
-            variables.iStack[ beanName ] = arrayNew(1);
+    public any function intercept( string beanName, string interceptorName, string methodNames = "" ) {
+        if ( !structKeyExists( variables.interceptInfo, beanName ) )  {
+            variables.interceptInfo[ beanName ] = [ ];
         }
         var interceptionDefinition = {
             name = interceptorName,
             methods = methodNames
         };
-        arrayAppend( variables.iStack[ beanName ], interceptionDefinition );
+        arrayAppend( variables.interceptInfo[ beanName ], interceptionDefinition );
         return this;
     }
 
-    function hasInterceptors( string beanName ) {
-        return structKeyExists( variables.iStack, beanName ) &&
-               arrayLen( variables.iStack[ beanName ] );
+    // PRIVATE IMPLEMENTATION
+
+    // used to pull beans apart for transgenesis
+    public struct function liftVariablesScope() {
+        return variables;
     }
 
-    function getInterceptors( string beanName ) {
-        if ( structKeyExists( variables.iStack, beanName ) ) {
-            return variables.iStack[ beanName ];
+    private void function moveBeanTo( any oldBean, any newBean ) {
+        oldBean._v = liftVariablesScope;
+        structAppend( newBean, oldBean ); // copy THIS scope
+        // then copy VARIABLES scope
+        structAppend( newBean._v(), oldBean._v() );
+        // then clear old VARIABLES scope
+        structClear( oldBean._v() );
+        // then clear old THIS scope
+        structClear( oldBean );
+    }
+
+    private void function setupInitMethod( string beanName, any bean ) {
+        // if it doesn't have a dotted path for us to create a new instance
+        // or it has no interceptors, we have to leave it alone
+        if ( !structKeyExists( variables.beanInfo, beanName ) ||
+             !structKeyExists( variables.beanInfo[ beanName ], 'cfc' ) ||
+             !structKeyExists( variables.interceptInfo, beanName ) ) {
+            return;
         }
-        return [];
-    }
-
-    function getBean( string beanName ) {
-        // if it doesn't have Interceptors just call it au-naturel
-        if ( !hasInterceptors( beanName ) ) {
-            return super.getBean( beanName );
-        }		
-        // it has interceptors so return the beanProxy
-        var targetBean = super.getBean( beanName );
-        // let's go get and instantiate the interceptors!
+        // create the new state/method holder:
+        var newBean = construct( variables.beanInfo[ beanName ].cfc );
+        moveBeanTo( bean, newBean );
+        // build the interceptor array:
         var interceptors = [];
-        for ( var inter in getInterceptors( beanName ) ) {
+        for ( var inter in variables.interceptInfo[ beanName ] ) {
             var interceptorPacket = {
-                bean = super.getBean( inter.name ),
+                bean = getBean( inter.name ),
                 methods = inter.methods
             };
             arrayAppend( interceptors, interceptorPacket );
         }
-        return new framework.beanProxy( targetBean, interceptors );
+        var proxy = new framework.beanProxy( newBean, interceptors );
+        moveBeanTo( proxy, bean );
     }
 
 }
