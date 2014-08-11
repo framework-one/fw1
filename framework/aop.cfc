@@ -1,5 +1,5 @@
 component extends="framework.ioc" {
-    version._aop1_version = "1.0b1";
+    variables._aop1_version = "1.0b1";
 /*
 	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
