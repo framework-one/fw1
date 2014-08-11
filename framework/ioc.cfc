@@ -1,5 +1,5 @@
 component {
-    variables._di1_version = "1.0_snapshot";
+    variables._di1_version = "1.0b1";
 /*
 	Copyright (c) 2010-2014, Sean Corfield
 

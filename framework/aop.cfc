@@ -1,3 +1,5 @@
+component extends="framework.ioc" {
+    version._aop1_version = "1.0b1";
 /*
 	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
@@ -13,7 +15,6 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-component extends="framework.ioc" {
 
     // ADDITIONAL INTERNAL STATE
     variables.interceptInfo = { };
@@ -68,6 +69,13 @@ component extends="framework.ioc" {
         structClear( oldBean._v() );
         // then clear old THIS scope
         structClear( oldBean );
+    }
+
+	private void function setupFrameworkDefaults() {
+        super.setupFrameworkDefaults();
+        variables.config.version =
+            variables._aop1_version & " (" &
+            variables._di1_version & ")";
     }
 
     private void function setupInitMethod( string beanName, any bean ) {
