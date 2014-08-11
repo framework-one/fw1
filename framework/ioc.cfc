@@ -560,7 +560,7 @@ component {
         // post-injection, pre-init-method phase:
         for ( name in partialBean.injection ) {
             injection = partialBean.injection[ name ];
-            setupInitMethod( injection );
+            setupInitMethod( name, injection );
         }
         // see if anything needs post-injection, init-method calls:
         for ( var postName in postInjectables ) {
@@ -721,7 +721,7 @@ component {
 
     // hook for extension points to process beans after they have been
     // constructed and injected, but before init-method is called on anything
-    private void function setupInitMethod( any bean ) {
+    private void function setupInitMethod( string name, any bean ) {
     }
 	
 	
