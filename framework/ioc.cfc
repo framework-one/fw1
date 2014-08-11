@@ -179,7 +179,7 @@ component {
 	public any function injectProperties( any bean, struct properties ) {
 		if ( isSimpleValue( bean ) ) {
             if ( containsBean( bean ) ) bean = getBean( bean );
-            else bean = createObject( 'component', bean );
+            else bean = construct( bean );
         }
 		for ( var property in properties ) {
 			if ( !isNull( properties[ property ] ) ) {
@@ -244,12 +244,12 @@ component {
 			    qualifiedName = info.name & info.qualifier;
 			}
 			if ( !structKeyExists( variables.beanCache, qualifiedName ) ) {
-			    variables.beanCache[ qualifiedName ] = createObject( 'component', info.cfc );
+			    variables.beanCache[ qualifiedName ] = construct( info.cfc );
 				newObject = true;
 			}
 			return { bean = variables.beanCache[ qualifiedName ], newObject = newObject };
 		} else {
-		    return { bean = createObject( 'component', info.cfc ), newObject = true };
+		    return { bean = construct( info.cfc ), newObject = true };
 		}
 	}
 
@@ -313,6 +313,12 @@ component {
 		} while ( structKeyExists( md, 'extends' ) );
 		return iocMeta;
 	}
+
+
+    // in case an extension point wants to override actual construction:
+    private any function construct( string dottedPath ) {
+        return createObject( 'component', dottedPath );
+    }
 	
 	
     private string function deduceDottedPath( string baseMapping, string basePath ) {
