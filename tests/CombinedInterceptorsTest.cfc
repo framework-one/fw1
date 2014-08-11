@@ -106,14 +106,14 @@ component extends="mxunit.framework.TestCase"{
 	}
 
 
-	function TestMethoMatches(){
+	function TestMethodMatches(){
 
 		proxy = new framework.beanProxy('');
         makePublic( proxy, "methodMatches" );
-		AssertEquals(proxy.methodMatches("doForward", "doReverse"), false);
-		AssertEquals(proxy.methodMatches("doForward", ""), true);
-		AssertEquals(proxy.methodMatches("doForward", "doReverse,"), false);
-		AssertEquals(proxy.methodMatches("doForward", "doReverse,doForward"), true);
+		AssertFalse(proxy.methodMatches("doForward", "doReverse"));
+		AssertTrue(proxy.methodMatches("doForward", ""));
+		AssertFalse(proxy.methodMatches("doForward", "doReverse,"));
+		AssertTrue(proxy.methodMatches("doForward", "doReverse,doForward"));
 
 	}
 
