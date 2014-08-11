@@ -97,18 +97,23 @@ component extends="mxunit.framework.TestCase"{
 		bf.intercept("ReverseService", "BeforeInterceptor", "doReverse");
 
 		rs = bf.getBean("ReverseService");
-
-		AssertEquals(rs.methodMatches("doForward", "doReverse"), false);
-		AssertEquals(rs.methodMatches("doForward", ""), true);
-		AssertEquals(rs.methodMatches("doForward", "doReverse,"), false);
-		AssertEquals(rs.methodMatches("doForward", "doReverse,doForward"), true);
-		
-
 		result = rs.doReverse("Hello!");
 		
 		AssertEquals(result, Reverse("beforeHello!"));
 		AssertEquals(ArrayLen(request.callstack),2);
 		AssertEquals(ArrayToList(request.callstack),"before,doReverse");
+
+	}
+
+
+	function TestMethoMatches(){
+
+		proxy = new framework.beanProxy('');
+        makePublic( proxy, "methodMatches" );
+		AssertEquals(proxy.methodMatches("doForward", "doReverse"), false);
+		AssertEquals(proxy.methodMatches("doForward", ""), true);
+		AssertEquals(proxy.methodMatches("doForward", "doReverse,"), false);
+		AssertEquals(proxy.methodMatches("doForward", "doReverse,doForward"), true);
 
 	}
 
