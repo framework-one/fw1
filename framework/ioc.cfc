@@ -525,15 +525,17 @@ component {
 	private any function resolveBean( string beanName ) {
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
+        // construction phase:
 		var partialBean = resolveBeanCreate( beanName, { injection = { } } );
-        var postInjectionNeeded = false;
         var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
         var initMethod = checkForPostInjection ? variables.config.initMethod : '';
+        var postInjectables = { };
+        // injection phase:
 		// now perform all of the injection:
 		for ( var name in partialBean.injection ) {
 			var injection = partialBean.injection[ name ];
             if ( checkForPostInjection && structKeyExists( injection.bean, initMethod ) ) {
-                postInjectionNeeded = true;
+                postInjectables[ name ] = true;
             }
 			for ( var property in injection.setters ) {
                 if ( injection.setters[ property ] == 'typed' &&
@@ -555,13 +557,16 @@ component {
 				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
 			}
 		}
-        // see if anything needs post-injection
-        if ( postInjectionNeeded ) {
-            for ( var postName in partialBean.injection ) {
-                var postInjection = partialBean.injection[ postName ];
-                if ( structKeyExists( postInjection.bean, initMethod ) ) {
-                    evaluate( 'postInjection.bean.#initMethod#()' );
-                }
+        // post-injection, pre-init-method phase:
+        for ( name in partialBean.injection ) {
+            injection = partialBean.injection[ name ];
+            setupInitMethod( injection );
+        }
+        // see if anything needs post-injection, init-method calls:
+        for ( var postName in postInjectables ) {
+            var postInjection = partialBean.injection[ postName ];
+            if ( structKeyExists( postInjection.bean, initMethod ) ) {
+                evaluate( 'postInjection.bean.#initMethod#()' );
             }
         }
 		return partialBean.bean;
@@ -712,6 +717,12 @@ component {
 				
 		variables.config.version = variables._di1_version;
 	}
+
+
+    // hook for extension points to process beans after they have been
+    // constructed and injected, but before init-method is called on anything
+    private void function setupInitMethod( any bean ) {
+    }
 	
 	
 	private string function singular( string plural ) {
