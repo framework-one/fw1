@@ -526,7 +526,7 @@ component {
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-		var partialBean = resolveBeanCreate( beanName, { injection = { } } );
+		var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } } );
         var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
         var initMethod = checkForPostInjection ? variables.config.initMethod : '';
         var postInjectables = { };
@@ -564,19 +564,35 @@ component {
         }
         // see if anything needs post-injection, init-method calls:
         for ( var postName in postInjectables ) {
-            var postInjection = partialBean.injection[ postName ];
-            if ( structKeyExists( postInjection.bean, initMethod ) ) {
-                evaluate( 'postInjection.bean.#initMethod#()' );
-            }
+            callInitMethod( postName, postInjectables, partialBean, initMethod );
         }
 		return partialBean.bean;
 	}
+
+
+    private void function callInitMethod( string name, struct injectables, struct info, string method ) {
+        if ( injectables[ name ] ) {
+            injectables[ name ] = false; // this ensures we don't try to init the same
+            // bean twice - and also breaks circular dependencies...
+            if ( structKeyExists( info.dependencies, name ) ) {
+                for ( var depName in info.dependencies[ name ] ) {
+                    if ( structKeyExists( injectables, depName ) &&
+                         injectables[ depName ] ) {
+                        callInitMethod( depName, injectables, info, method );
+                    }
+                }
+            }
+            var bean = info.injection[ name ].bean;
+            evaluate( 'bean.#method#()' );
+        }
+    }
 	
 	
 	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
 		var bean = 0;
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			var info = variables.beanInfo[ beanName ];
+            accumulator.dependencies[ beanName ] = { };
 			if ( structKeyExists( info, 'cfc' ) ) {
 				var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
@@ -585,6 +601,7 @@ component {
 				    if ( structKeyExists( info.metadata, 'constructor' ) ) {
 					    var args = { };
 						for ( var arg in info.metadata.constructor ) {
+                            accumulator.dependencies[ beanName ][ arg ] = true;
                             var argBean = { };
                             // handle known required arguments
                             if ( info.metadata.constructor[ arg ] ) {
@@ -638,6 +655,7 @@ component {
                     };
 				    accumulator.injection[ beanName ] = setterMeta; 
 				    for ( var property in setterMeta.setters ) {
+                        accumulator.dependencies[ beanName ][ property ] = true;
                         if ( structKeyExists( overrides, property ) ) {
                             // skip resolution because we'll inject override
                         } else {
