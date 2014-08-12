@@ -1,5 +1,7 @@
 component {
     variables._di1_version = "1.0b1";
+//variables.out = createObject("java","java.lang.System").out;
+//variables.out.println("constructing DI/1");
 /*
 	Copyright (c) 2010-2014, Sean Corfield
 
@@ -23,6 +25,7 @@ component {
 		variables.config = config;
 		variables.beanInfo = { };
 		variables.beanCache = { };
+        variables.resolutionCache = { };
         variables.settersInfo = { };
 		variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
@@ -200,7 +203,8 @@ component {
 	public any function load() {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
-		for ( var key in variables.beanInfo ) {
+        variables.resolutionCache = { };
+        for ( var key in variables.beanInfo ) {
 			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
         return this;
@@ -523,54 +527,64 @@ component {
 	
 	
 	private any function resolveBean( string beanName ) {
+//variables.out.println("resolveBean(#beanName#)");
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
 		var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } } );
-        var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
-        var initMethod = checkForPostInjection ? variables.config.initMethod : '';
-        var postInjectables = { };
-        // injection phase:
-		// now perform all of the injection:
-		for ( var name in partialBean.injection ) {
-			var injection = partialBean.injection[ name ];
-            if ( checkForPostInjection && structKeyExists( injection.bean, initMethod ) ) {
-                postInjectables[ name ] = true;
-            }
-			for ( var property in injection.setters ) {
-                if ( injection.setters[ property ] == 'typed' &&
-                     variables.config.omitTypedProperties ) {
-                    // we do not inject typed properties!
-                    continue;
+        if ( structKeyExists( variables.resolutionCache, beanName ) &&
+             variables.resolutionCache[ beanName ] ) {
+            // fully resolved, no action needed this time
+        } else {
+            var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
+            var initMethod = checkForPostInjection ? variables.config.initMethod : '';
+            var postInjectables = { };
+            // injection phase:
+            // now perform all of the injection:
+            for ( var name in partialBean.injection ) {
+                var injection = partialBean.injection[ name ];
+                if ( checkForPostInjection && structKeyExists( injection.bean, initMethod ) ) {
+                    postInjectables[ name ] = true;
                 }
-				var args = { };
-                if ( structKeyExists( injection.overrides, property ) ) {
-                    args[ property ] = injection.overrides[ property ];
-				} else if ( structKeyExists( partialBean.injection, property ) ) {
-					args[ property ] = partialBean.injection[ property ].bean;
-				} else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
-					args[ property ] = variables.parent.getBean( property );
-				} else {
-					missingBean( property, beanName );
-					continue;
-				}
-				evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
-			}
-		}
-        // post-injection, pre-init-method phase:
-        for ( name in partialBean.injection ) {
-            injection = partialBean.injection[ name ];
-            setupInitMethod( name, injection.bean );
+                for ( var property in injection.setters ) {
+                    if ( injection.setters[ property ] == 'typed' &&
+                        variables.config.omitTypedProperties ) {
+                        // we do not inject typed properties!
+                        continue;
+                    }
+                    var args = { };
+                    if ( structKeyExists( injection.overrides, property ) ) {
+                        args[ property ] = injection.overrides[ property ];
+                    } else if ( structKeyExists( partialBean.injection, property ) ) {
+                        args[ property ] = partialBean.injection[ property ].bean;
+                    } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
+                        args[ property ] = variables.parent.getBean( property );
+                    } else {
+                        missingBean( property, beanName );
+                        continue;
+                    }
+                    evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
+                }
+            }
+            // post-injection, pre-init-method phase:
+            for ( name in partialBean.injection ) {
+                injection = partialBean.injection[ name ];
+                setupInitMethod( name, injection.bean );
+            }
+            // see if anything needs post-injection, init-method calls:
+            for ( var postName in postInjectables ) {
+                callInitMethod( postName, postInjectables, partialBean, initMethod );
+            }
+            variables.resolutionCache[ beanName ] = isSingleton( beanName );
         }
-        // see if anything needs post-injection, init-method calls:
-        for ( var postName in postInjectables ) {
-            callInitMethod( postName, postInjectables, partialBean, initMethod );
-        }
+//variables.out.println("bean #beanName# has been resolved");
 		return partialBean.bean;
 	}
 
 
     private void function callInitMethod( string name, struct injectables, struct info, string method ) {
+//variables.out.println("callInitMethod(#name#, .., .., #method#)");
+
         if ( injectables[ name ] ) {
             injectables[ name ] = false; // this ensures we don't try to init the same
             // bean twice - and also breaks circular dependencies...
@@ -583,17 +597,20 @@ component {
                 }
             }
             var bean = info.injection[ name ].bean;
+//variables.out.println("invoking #method# on #name#");
             evaluate( 'bean.#method#()' );
         }
     }
 	
 	
 	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
+//variables.out.println("resolveBeanCreate(#beanName#, ..)");
 		var bean = 0;
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			var info = variables.beanInfo[ beanName ];
             accumulator.dependencies[ beanName ] = { };
 			if ( structKeyExists( info, 'cfc' ) ) {
+//variables.out.println("calling cachable(#beanName#)");
 				var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
 				bean = metaBean.bean;
@@ -691,6 +708,7 @@ component {
 		} else {
 			missingBean( beanName );
 		}
+//variables.out.println("created #beanName#");
 		return accumulator;
 	}
 	

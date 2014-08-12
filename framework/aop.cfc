@@ -1,5 +1,7 @@
 component extends="framework.ioc" {
     variables._aop1_version = "1.0b1";
+//variables.out = createObject("java","java.lang.System").out;
+//variables.out.println("constructing AOP/1");
 /*
 	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
@@ -22,6 +24,7 @@ component extends="framework.ioc" {
     // PUBLIC METHODS
 
     public any function intercept( string beanName, string interceptorName, string methodNames = "" ) {
+//variables.out.println("add intercept(#beanName#, #interceptorName#, #methodNames#)");
         if ( !structKeyExists( variables.interceptInfo, beanName ) )  {
             variables.interceptInfo[ beanName ] = [ ];
         }
@@ -79,11 +82,13 @@ component extends="framework.ioc" {
     }
 
     private void function setupInitMethod( string beanName, any bean ) {
+//variables.out.println("setupInitMethod(#beanName#) called");
         // if it doesn't have a dotted path for us to create a new instance
         // or it has no interceptors, we have to leave it alone
         if ( !structKeyExists( variables.beanInfo, beanName ) ||
              !structKeyExists( variables.beanInfo[ beanName ], 'cfc' ) ||
              !structKeyExists( variables.interceptInfo, beanName ) ) {
+//variables.out.println("...skipping #beanName#");
             return;
         }
         // create the new state/method holder:
@@ -100,6 +105,7 @@ component extends="framework.ioc" {
         }
         var proxy = new framework.beanProxy( newBean, interceptors );
         moveBeanTo( proxy, bean, false );
+//variables.out.println("bean #beanName# has been proxied");
     }
 
 }
