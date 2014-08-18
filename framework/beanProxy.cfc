@@ -1,3 +1,6 @@
+component {
+    variables._fw1_version  = "3.0b1";
+    variables._aop1_version = "1.0b1";
 /*
 	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
@@ -13,7 +16,6 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-component {
 
     variables.interceptors = [];
     variables.targetBean = "";
