@@ -1,7 +1,5 @@
 component {
     variables._di1_version = "1.0b1";
-//variables.out = createObject("java","java.lang.System").out;
-//variables.out.println("constructing DI/1");
 /*
 	Copyright (c) 2010-2014, Sean Corfield
 
@@ -527,7 +525,6 @@ component {
 	
 	
 	private any function resolveBean( string beanName ) {
-//variables.out.println("resolveBean(#beanName#)");
 		// do enough resolution to create and initialization this bean
 		// returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
@@ -577,13 +574,11 @@ component {
             }
             variables.resolutionCache[ beanName ] = isSingleton( beanName );
         }
-//variables.out.println("bean #beanName# has been resolved");
 		return partialBean.bean;
 	}
 
 
     private void function callInitMethod( string name, struct injectables, struct info, string method ) {
-//variables.out.println("callInitMethod(#name#, .., .., #method#)");
 
         if ( injectables[ name ] ) {
             injectables[ name ] = false; // this ensures we don't try to init the same
@@ -597,20 +592,17 @@ component {
                 }
             }
             var bean = info.injection[ name ].bean;
-//variables.out.println("invoking #method# on #name#");
             evaluate( 'bean.#method#()' );
         }
     }
 	
 	
 	private struct function resolveBeanCreate( string beanName, struct accumulator ) {
-//variables.out.println("resolveBeanCreate(#beanName#, ..)");
 		var bean = 0;
 		if ( structKeyExists( variables.beanInfo, beanName ) ) {
 			var info = variables.beanInfo[ beanName ];
             accumulator.dependencies[ beanName ] = { };
 			if ( structKeyExists( info, 'cfc' ) ) {
-//variables.out.println("calling cachable(#beanName#)");
 				var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
 				bean = metaBean.bean;
@@ -708,7 +700,6 @@ component {
 		} else {
 			missingBean( beanName );
 		}
-//variables.out.println("created #beanName#");
 		return accumulator;
 	}
 	
