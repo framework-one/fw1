@@ -2394,6 +2394,10 @@ component {
 	}
 
 	private void function viewNotFound() {
+        // request.missingView should always be set after issue #280
+        // but this will prevent an exception while attempting to throw
+        // the exception we actually want to throw!
+        param name="request.missingView" default="<unknown.view>";
 		raiseException( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
 	}
