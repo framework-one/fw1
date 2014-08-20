@@ -1178,6 +1178,7 @@ component {
             return missingView;
 		} else if ( structKeyExists(request._fw1, 'omvInProgress') ) {
             internalFrameworkTrace( 'view( #path# ) called - viewNotFound() called' );
+            request.missingView = path;
             viewNotFound();
         } else {
             request._fw1.omvInProgress = true;
