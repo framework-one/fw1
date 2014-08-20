@@ -25,6 +25,7 @@ component {
 		variables.beanInfo = { };
 		variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.initMethodCache = { };
         variables.settersInfo = { };
 		variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
@@ -203,6 +204,7 @@ component {
 		discoverBeans( variables.folders );
 		variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.initMethodCache = { };
         for ( var key in variables.beanInfo ) {
 			if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
 		}
@@ -592,8 +594,13 @@ component {
                     }
                 }
             }
-            var bean = info.injection[ name ].bean;
-            evaluate( 'bean.#method#()' );
+            if ( structKeyExists( variables.initMethodCache, name ) &&
+                 variables.initMethodCache[ name ] ) {
+            } else {
+                variables.initMethodCache[ name ] = isSingleton( name );
+                var bean = info.injection[ name ].bean;
+                evaluate( 'bean.#method#()' );
+            }
         }
     }
 	
