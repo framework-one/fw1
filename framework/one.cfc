@@ -1183,6 +1183,7 @@ component {
         } else {
             request._fw1.omvInProgress = true;
             internalFrameworkTrace( 'view( #path# ) called - onMissingView() called' );
+            request.missingView = path;
             return onMissingView( request.context );
         }
 	}
