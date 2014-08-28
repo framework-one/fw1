@@ -1,2 +1,0 @@
-component extends="framework.one" {
-}
