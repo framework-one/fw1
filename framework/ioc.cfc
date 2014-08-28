@@ -334,13 +334,15 @@ component {
         do {
             var mapped = '/' & cfcPath;
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
-            var relMappedPath = replace( expandpath( "." & mapped ), chr(92), '/', 'all' );
-            if ( mappedPath == basePath || relMappedPath == basePath ) {
+            if ( mappedPath == basePath ) {
                 dotted = replace( cfcPath, '/', '.', 'all' );
                 break;
             }
             var prevPath = expPath;
-            expPath = getDirectoryFromPath( expPath );
+            expPath = replace( getDirectoryFromPath( expPath ), chr(92), '/', 'all' );
+            if ( right( expPath, 1 ) == '/' && len( expPath ) > 1 ) {
+                expPath = left( expPath, len( expPath ) - 1 );
+            }
             var progress = prevPath != expPath;
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
