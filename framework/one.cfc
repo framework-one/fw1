@@ -2033,6 +2033,7 @@ component {
             break;
         case "custom":
             var ioc = new "#variables.framework.diComponent#"(
+                variables.framework.diLocations,
                 variables.framework.diConfig
             );
             setBeanFactory( ioc );
