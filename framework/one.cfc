@@ -2086,7 +2086,11 @@ component {
 			}
 		}
 		if ( !structKeyExists(variables.framework, 'usingSubsystems') ) {
-			variables.framework.usingSubsystems = structKeyExists(variables.framework,'defaultSubsystem') || structKeyExists(variables.framework,'sitewideLayoutSubsystem');
+			variables.framework.usingSubsystems =
+                structKeyExists(variables.framework,'defaultSubsystem') ||
+                structKeyExists(variables.framework,'sitewideLayoutSubsystem') ||
+                structKeyExists(variables.framework,'subsystemDelimiter') ||
+                structKeyExists(variables.framework,'subsystems');
 		}
 		if ( !structKeyExists(variables.framework, 'defaultSubsystem') ) {
 			variables.framework.defaultSubsystem = 'home';
@@ -2102,6 +2106,9 @@ component {
 		}
 		if ( !structKeyExists(variables.framework, 'siteWideLayoutSubsystem') ) {
 			variables.framework.siteWideLayoutSubsystem = 'common';
+		}
+		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
+			variables.framework.subsystems = { };
 		}
 		if ( structKeyExists(variables.framework, 'home') ) {
             if (usingSubsystems()) {
@@ -2187,9 +2194,6 @@ component {
         if ( !structKeyExists( variables.framework, 'enableLegacyRCAccessors' ) ) {
             variables.framework.enableLegacyRCAccessors = false;
         }
-		if ( !structKeyExists( variables.framework, 'subsystems' ) ) {
-			variables.framework.subsystems = { };
-		}
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
