@@ -959,38 +959,6 @@ component {
 		return { matched = false };
 	}
 
-    // append and querystring are not supported here: you are providing the URI so
-    // you are responsible for all of its contents
-    public void function redirectCustomURL( string uri, string preserve = 'none', string statusCode = '302' ) {
-		var preserveKey = '';
-		if ( preserve != 'none' ) {
-			preserveKey = saveFlashContext( preserve );
-		}
-		var targetURL = buildCustomURL( uri );
-		if ( preserveKey != '' && variables.framework.maxNumContextsPreserved > 1 ) {
-			if ( find( '?', targetURL ) ) {
-				preserveKey = '&#variables.framework.preserveKeyURLKey#=#preserveKey#';
-			} else {
-				preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#';
-			}
-			if ( find( '##', targetURL ) ) {
-				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' );
-			} else {
-				targetURL = targetURL & preserveKey;
-			}
-		}
-		setupResponseWrapper();
-        if ( request._fw1.doTrace ) {
-            internalFrameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
-            try {
-                session._fw1_trace = request._fw1.trace;
-            } catch ( any _ ) {
-                // ignore exception if session is not enabled
-            }
-        }
-		location( targetURL, false, statusCode );
-    }
-
 	// call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
 	public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '', string statusCode = '302' ) {
 		if ( path == variables.magicBaseURL ) path = getBaseURL();
@@ -1053,6 +1021,38 @@ component {
         }
 		location( targetURL, false, statusCode );
 	}
+
+    // append and querystring are not supported here: you are providing the URI so
+    // you are responsible for all of its contents
+    public void function redirectCustomURL( string uri, string preserve = 'none', string statusCode = '302' ) {
+		var preserveKey = '';
+		if ( preserve != 'none' ) {
+			preserveKey = saveFlashContext( preserve );
+		}
+		var targetURL = buildCustomURL( uri );
+		if ( preserveKey != '' && variables.framework.maxNumContextsPreserved > 1 ) {
+			if ( find( '?', targetURL ) ) {
+				preserveKey = '&#variables.framework.preserveKeyURLKey#=#preserveKey#';
+			} else {
+				preserveKey = '?#variables.framework.preserveKeyURLKey#=#preserveKey#';
+			}
+			if ( find( '##', targetURL ) ) {
+				targetURL = listFirst( targetURL, '##' ) & preserveKey & '##' & listRest( targetURL, '##' );
+			} else {
+				targetURL = targetURL & preserveKey;
+			}
+		}
+		setupResponseWrapper();
+        if ( request._fw1.doTrace ) {
+            internalFrameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
+            try {
+                session._fw1_trace = request._fw1.trace;
+            } catch ( any _ ) {
+                // ignore exception if session is not enabled
+            }
+        }
+		location( targetURL, false, statusCode );
+    }
 
     // call this to render data rather than a view and layouts
     public void function renderData( string type, any data, numeric statusCode = 200 ) {
