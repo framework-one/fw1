@@ -534,17 +534,6 @@ component {
     public string function getSubsystemBase() {
         return request.subsystemBase;
     }
-	
-	/*
-	 * return the (optional) configuration for a subsystem
-	 */
-	public struct function getSubsystemConfig( string subsystem ) {
-		if ( structKeyExists( variables.framework.subsystems, subsystem ) ) {
-			// return a copy to make it read only from outside the framework:
-			return structCopy( variables.framework.subsystems[ subsystem ] );
-		}
-		return { };
-	}
 
 	/*
 	 * returns the bean factory set via setSubsystemBeanFactory
@@ -558,6 +547,17 @@ component {
 
 	}
 	
+	/*
+	 * return the (optional) configuration for a subsystem
+	 */
+	public struct function getSubsystemConfig( string subsystem ) {
+		if ( structKeyExists( variables.framework.subsystems, subsystem ) ) {
+			// return a copy to make it read only from outside the framework:
+			return structCopy( variables.framework.subsystems[ subsystem ] );
+		}
+		return { };
+	}
+
 	/*
 	 * returns true iff a call to getBeanFactory() will successfully return a bean factory
 	 * previously set via setBeanFactory or setSubsystemBeanFactory
