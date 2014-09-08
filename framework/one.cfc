@@ -1139,7 +1139,7 @@ component {
 
     /*
      * override this if you wish to intercept the tracing logic
-     * and handle it yourself - you can 
+     * and handle it yourself
      */
     public void function setupTraceRender() { }
 	
