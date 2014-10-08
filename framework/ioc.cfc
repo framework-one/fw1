@@ -491,8 +491,6 @@ component {
             } else if ( isSimpleValue( head.listener ) &&
                         containsBean( head.listener ) ) {
                 getBean( head.listener ).onLoad( this );
-            } else if ( listFirst(server.coldfusion.productVersion) >= 10 && isClosure(head.listener) ) {
-				head.listener(this);
             } else {
                 throw "invalid onLoad listener registered: #head.listener.toString()#";
             }
