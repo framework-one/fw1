@@ -41,20 +41,6 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( bf.getBean( "listener" ).isLoaded() );
     }
 
-     function shouldBeAbleToUseFunctionExpressionListener() {
-        
-        if (listFirst(server.coldfusion.productVersion) >= 10) {
-
-            var onLoadHasFired = false;
-            var bf = new framework.ioc("/tests/model").onLoad(function(beanFactory){
-                    onLoadHasFired = true;
-                });
-            var q = bf.containsBean( "foo" );
-            assertTrue( onLoadHasFired );    
-        }
-        
-    }
-
     private void function loader( any factory ) {
         ++application.loadCount;
     }
