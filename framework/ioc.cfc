@@ -484,7 +484,9 @@ component {
     private void function onLoadEvent() {
         var head = variables.listeners;
         while ( isStruct( head ) ) {
-            if ( isCustomFunction( head.listener ) ) {
+            if ( isCustomFunction( head.listener ) ||
+                 ( listFirst( server.coldfusion.productVersion ) >= 10 &&
+                   isClosure( head.listener ) ) ) {
                 head.listener( this );
             } else if ( isObject( head.listener ) ) {
                 head.listener.onLoad( this );
