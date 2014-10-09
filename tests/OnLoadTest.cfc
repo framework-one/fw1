@@ -41,6 +41,15 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( bf.getBean( "listener" ).isLoaded() );
     }
 
+     function shouldBeAbleToUseFunctionExpressionListener() {
+        
+        if (listFirst(server.coldfusion.productVersion) >= 10) {
+            //splitting this out so that it doesnt break the tests when running on cf9
+            include "OnLoadTest-cf10.cfm";   
+        }
+        
+    }
+
     private void function loader( any factory ) {
         ++application.loadCount;
     }
