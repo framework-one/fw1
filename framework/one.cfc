@@ -2377,7 +2377,7 @@ component {
                         } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
                             relLoc = right( relLoc, len( relLoc ) - 1 );
                         }
-                        subLocations = listAppend( subLocations, "./" & subsystem & "/" & relLoc );
+                        subLocations = listAppend( subLocations, variables.framework.base & "/" & subsystem & "/" & relLoc );
                     }
                     var ioc = new "#variables.framework.diComponent#"( subLocations );
                     ioc.setParent( getDefaultBeanFactory() );
