@@ -1494,7 +1494,7 @@ component {
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;padding-left: 5px;" width="10%">#action#</td>' );
                 var color =
                     trace.msg.startsWith( 'no ' ) ? '##cc8888' :
-                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##0000';
+                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##000';
                 writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#' );
                 if ( structKeyExists( trace, 'v' ) ) {
                     writeOutput( '<br />' );
