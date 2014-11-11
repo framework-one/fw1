@@ -396,6 +396,15 @@ component {
     }
 
     /*
+     * convenience function to look up environment variables
+     * expected to be used without your own getEnvironment()
+     * function along with / instead of getHostname()
+     */
+    public string function getEnvVar( string name ) {
+        return createObject( "java", "java.lang.System" ).getenv( name );
+    }
+
+    /*
      * return the contents of the framework trace array (if you wish to process the
      * trace data yourself either prior to display or instead of display - in which
      * case call disableFrameworkTrace() to prevent display).
