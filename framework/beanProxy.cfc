@@ -2,19 +2,19 @@ component {
     variables._fw1_version  = "3.0b1";
     variables._aop1_version = "1.0b1";
 /*
-	Copyright (c) 2013-2014, Mark Drew, Sean Corfield
+    Copyright (c) 2013-2014, Mark Drew, Sean Corfield
 
-	Licensed under the Apache License, Version 2.0 (the "License");
-	you may not use this file except in compliance with the License.
-	You may obtain a copy of the License at
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-		http://www.apache.org/licenses/LICENSE-2.0
+        http://www.apache.org/licenses/LICENSE-2.0
 
-	Unless required by applicable law or agreed to in writing, software
-	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-	See the License for the specific language governing permissions and
-	limitations under the License.
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 */
 
     variables.interceptors = [];
@@ -70,7 +70,7 @@ component {
     }
 
     /*
-	SEARCHING functions
+    SEARCHING functions
     */
     private boolean function hasAround() {
         if ( structKeyExists( variables, "hasAroundCache" ) ) {
@@ -116,7 +116,7 @@ component {
     }
 
     /*
-	Functions that run all the interceptors
+    Functions that run all the interceptors
     */
     private function runBeforeStack( string methodName, struct args, any targetBean ) {
         for ( var inter in variables.interceptors ) {
