@@ -457,6 +457,11 @@ component {
         }
     }
 
+
+    private boolean function isConstant ( string beanName ) {
+        return structKeyExists( variables.beanInfo[ beanName ], 'value');
+    }
+
     
     private void function logMissingBean( string beanName, string resolvingBeanName = '' ) {
         var sys = createObject( 'java', 'java.lang.System' );
@@ -547,7 +552,7 @@ component {
             // now perform all of the injection:
             for ( var name in partialBean.injection ) {
                 var injection = partialBean.injection[ name ];
-                if ( checkForPostInjection && structKeyExists( injection.bean, initMethod ) ) {
+                if ( checkForPostInjection && !isConstant( name ) && structKeyExists( injection.bean, initMethod ) ) {
                     postInjectables[ name ] = true;
                 }
                 for ( var property in injection.setters ) {
@@ -685,7 +690,7 @@ component {
                     }
                 }
                 accumulator.bean = bean;
-            } else if ( structKeyExists( info, 'value' ) ) {
+            } else if ( isConstant( beanName ) ) {
                 accumulator.bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
             } else if ( structKeyExists( info, 'factory' ) ) {
