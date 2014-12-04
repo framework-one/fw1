@@ -284,10 +284,24 @@ component {
     }
 
     /*
+     * call this to disable rendering of the layout
+     */
+    public void function disableLayout() {
+        request.layout = false;
+    }
+
+    /*
      * call this to (re-)enable tracing
      */
     public void function enableFrameworkTrace() {
         request._fw1.doTrace = true;
+    }
+
+    /*
+     * call this to (re-)enable rendering of the layout
+     */
+    public void function enableLayout() {
+        request.layout = true;
     }
 
     public void function frameworkTrace( string message ) {
