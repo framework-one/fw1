@@ -11,7 +11,7 @@ in your admin - you can't just use a per-application mapping.
 
 **Documentation wiki:** http://github.com/framework-one/fw1/wiki
 
-**Blog:** http://corfield.org/blog/archives.cfm/category/fw1
+**Blog:** http://framework-one.github.io
 
 **Support:** http://groups.google.com/group/framework-one/
 
