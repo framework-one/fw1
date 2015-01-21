@@ -2037,7 +2037,6 @@ component {
         }
 
         switch ( variables.framework.diEngine ) {
-        case "aop1":
         case "di1":
             var ioc = new "#variables.framework.diComponent#"(
                 variables.framework.diLocations,
@@ -2232,9 +2231,6 @@ component {
         if ( !structKeyExists( variables.framework, 'diComponent' ) ) {
             var diComponent = 'framework.ioc';
             switch ( variables.framework.diEngine ) {
-                case 'aop1':
-                    diComponent = 'framework.aop';
-                    break;
                 case 'wirebox':
                     diComponent = 'framework.WireBoxAdapter';
                     break;
@@ -2387,9 +2383,8 @@ component {
                 application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
                 // Application.cfc does not get a subsystem bean factory!
                 if ( subsystem != variables.magicApplicationSubsystem &&
-                     ( variables.framework.diEngine == "di1" ||
-                       variables.framework.diEngine == "aop1" ) ) {
-                    // we can only reliably automate D/I engine setup for DI/1 / AOP/1
+                     ( variables.framework.diEngine == "di1" ) ) {
+                    // we can only reliably automate D/I engine setup for DI/1
                     var locations = listToArray( variables.framework.diLocations );
                     var subLocations = "";
                     for ( var loc in locations ) {
