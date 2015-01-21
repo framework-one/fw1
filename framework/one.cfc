@@ -455,29 +455,6 @@ component {
     
     
     /*
-     * return the current request context structure
-     */
-    public struct function getRC() {
-        deprecated( !variables.framework.enableLegacyRCAccessors,
-                    'getRC() is deprecated - use Application.before(rc) instead of setupRequest() to manipulate the RC at the start of a request; otherwise just use rc where it is available!' );
-        return request.context;
-    }
-    
-    /*
-     * return the specified property from the request context or a default value
-     */
-    public any function getRCValue( string propName, any defaultValue = '' ) {
-        deprecated( !variables.framework.enableLegacyRCAccessors,
-                    'getRCValue() is deprecated - use Application.before(rc) instead of setupRequest() to manipulate the RC at the start of a request; otherwise just use rc where it is available, with ''param name="rc.#propName#" default="...";'' as needed!' );
-        if ( structKeyExists( request, 'context' ) &&
-             structKeyExists( request.context, propName ) ) {
-            return request.context[ propName ];
-        } else {
-            return defaultValue;
-        }
-    }
-    
-    /*
      * return the current route (if any)
      */
     public string function getRoute() {
@@ -2212,9 +2189,6 @@ component {
         }
         if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
             variables.framework.noLowerCase = false;
-        }
-        if ( !structKeyExists( variables.framework, 'enableLegacyRCAccessors' ) ) {
-            variables.framework.enableLegacyRCAccessors = false;
         }
         if ( !structKeyExists( variables.framework, 'trace' ) ) {
             variables.framework.trace = false;
