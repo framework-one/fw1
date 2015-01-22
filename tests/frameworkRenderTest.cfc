@@ -7,6 +7,9 @@ component extends="mxunit.framework.TestCase" {
         request.fw = new framework.one();
         request.fw.enableTracing = _enableTracing;
         request.fw.enableTracing();
+        variables.fwExtended = new traceRender.one();
+        variables.fwExtended.enableTracing = _enableTracing;
+        variables.fwExtended.enableTracing();
     }
 
     private void function _enableTracing() {
@@ -60,5 +63,25 @@ component extends="mxunit.framework.TestCase" {
         }
         assertFalse( output contains "framework lifecycle trace" );
     }
+
+    public void function testSetupTraceRenderHtml() {
+        variables.fwExtended.onApplicationStart();
+        var output = "";
+        savecontent variable="output" {
+            variables.fwExtended.onRequestEnd();
+        }
+        assertTrue( output contains "framework lifecycle trace" );
+    }
+
+    public void function testSetupTraceRenderData() {
+        variables.fwExtended.onApplicationStart();
+        variables.fwExtended.renderData( "text", "test" );
+        var output = "";
+        savecontent variable="output" {
+            variables.fwExtended.onRequestEnd();
+        }
+        assertEquals( output, "custom trace render" );
+    }
+
 
 }
