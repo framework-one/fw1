@@ -2158,16 +2158,22 @@ component {
             variables.framework.unhandledExtensions = 'cfc';
         }
         // NOTE: you can provide a comma delimited list of paths.  Since comma is the delim, it can not be part of your path URL to exclude
-        if ( !structKeyExists(variables.framework, 'unhandledPaths') ) {
+        if ( structKeyExists(variables.framework, 'unhandledPaths') ) {
+            // convert unhandledPaths to regex:
+            var escapes = '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)';
+            var slashMarker = '@@@@@'; // should be something that will never appear in a filename
+            variables.framework.unhandledPathRegex = replace(
+                replace(
+                    REReplace( variables.framework.unhandledPaths, escapes, slashMarker & '\1', 'all' ),
+                    slashMarker, chr(92), 'all' ),
+                ',', '|', 'all' );
+        } else {
             variables.framework.unhandledPaths = '/flex2gateway';
+            variables.framework.unhandledPathRegex = '/flex2gateway';
         }               
         if ( !structKeyExists( variables.framework, 'unhandledErrorCaught' ) ) {
             variables.framework.unhandledErrorCaught = false;
         }
-        // convert unhandledPaths to regex:
-        variables.framework.unhandledPathRegex = replaceNoCase(
-            REReplace( variables.framework.unhandledPaths, '(\+|\*|\?|\.|\[|\^|\$|\(|\)|\{|\||\\)', '\\\1', 'all' ),
-            ',', '|', 'all' );
         if ( !structKeyExists(variables.framework, 'applicationKey') ) {
             variables.framework.applicationKey = 'framework.one';
         }
