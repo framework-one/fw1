@@ -1141,7 +1141,7 @@ component {
      * override this if you wish to intercept the tracing logic
      * and handle it yourself
      */
-    public void function setupTraceRender() { }
+    public void function setupTraceRender( string output = 'html' ) { }
     
     /*
      * override this to provide pre-rendering logic, e.g., to
@@ -1441,9 +1441,8 @@ component {
         // do not output trace information if we are rendering data as opposed
         // to rendering HTML views - see #226 and #232
         if ( request._fw1.doTrace &&
-             arrayLen( request._fw1.trace ) &&
-             !structKeyExists( request._fw1, 'renderData' ) ) {
-            setupTraceRender();
+             arrayLen( request._fw1.trace ) ) {
+            setupTraceRender( structKeyExists( request._fw1, 'renderData' ) ? 'data' : 'html' );
         }
         // re-test to allow for setupTraceRender() handling / disabling tracing
         if ( request._fw1.doTrace &&
