@@ -21,8 +21,7 @@ component extends=framework.ioc {
     
     public any function init( string folders, struct config = { } ) {
         // find the first folder that includes project.clj - that's our project
-        // TODO: use first folder for now
-        variables.project = replace( expandPath( trim( listFirst( folders, ',' ))), chr(92), '/', 'all' );
+        variables.project = findProjectFile( folders );
         // if none contain it, then we're just like DI/1
         // if we find a project, scan src for .clj files and stash those ???
         variables.cljBeans = {
@@ -99,6 +98,20 @@ component extends=framework.ioc {
         } else {
             core.require( core.symbol( ns ), core.keyword( "reload-all" ) );
         }
+    }
+
+    // PRIVATE HELPERS
+
+    private string function findProjectFile( string folderList ) {
+        var folders = listToArray( folderList );
+        for ( var folder in folders ) {
+            var path = replace( expandPath( trim( folder ) ), chr(92), '/', 'all' );
+            if ( fileExists( path & "/project.clj" ) ) {
+                // found our Clojure project, return it
+                return path;
+            }
+        }
+        throw "Unable to find project.clj in any of: #folderList#";
     }
 
 }
