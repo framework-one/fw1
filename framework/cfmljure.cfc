@@ -1,4 +1,6 @@
 component {
+    variables._fw1_version = "3.0_snapshot";
+    variables._cfmljure_version = "1.0_snapshot";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -85,8 +87,10 @@ component {
             // promote API:
             this.install = this._install;
             this.read = this._read;
-            // auto-load clojure.core
-            _install( "clojure.core", this );
+            this.toCFML = this._toCFML;
+            this.toClojure = this._toClojure;
+            // auto-load clojure.core and clojure.walk for clients
+            _install( "clojure.core, clojure.walk", this );
         } else if ( !isSimpleValue( v ) ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -121,6 +125,17 @@ component {
     public any function _read( string expr ) {
         var args = [ expr ];
         return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
+    }
+
+    public any function _toCFML( any expr ) {
+        return this.clojure.walk.stringify_keys( expr );
+    }
+
+    public any function _toClojure( any expr ) {
+        return this.clojure.walk.keywordize_keys(
+            isStruct( expr ) ?
+                this.clojure.core.into( this.clojure.core.hash_map(), expr ) : expr
+        );
     }
 
     // helper functions:
