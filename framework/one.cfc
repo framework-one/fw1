@@ -1066,8 +1066,11 @@ component {
      * - getBean(name) - returns the named bean
      */
     public void function setBeanFactory( any beanFactory ) {
-
-        application[ variables.framework.applicationKey ].factory = beanFactory;
+        if ( isObject( beanFactory ) ) {
+            application[ variables.framework.applicationKey ].factory = beanFactory;
+        } else {
+            structDelete( application[variables.framework.applicationKey], "factory" );
+        }
         // to address #276 flush controller cache when bean factory is reset:
         application[ variables.framework.applicationKey ].cache.controllers = { };
 
@@ -2001,7 +2004,6 @@ component {
                 application[variables.framework.applicationKey].cache = frameworkCache;
                 application[variables.framework.applicationKey].subsystems = { };
                 application[variables.framework.applicationKey].subsystemFactories = { };
-                structDelete( application[variables.framework.applicationKey], "factory" );
             } else {
                 // must be first request so we need to set up the entire structure
                 isReload = false;
