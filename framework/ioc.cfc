@@ -331,7 +331,8 @@ component {
         if ( left( cfcPath, 1 ) == '/' ) cfcPath = right( cfcPath, len( cfcPath ) - 1 );
         var dotted = '';
         do {
-            var mapped = '/' & cfcPath;
+            var mapped = cfcPath;
+            if ( len( mapped ) && left( mapped, 1 ) != '.' ) mapped = '/' & mapped;
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
             if ( mappedPath == basePath ) {
                 dotted = replace( cfcPath, '/', '.', 'all' );
