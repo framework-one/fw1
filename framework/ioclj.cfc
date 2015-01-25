@@ -82,7 +82,7 @@ component extends=framework.ioc {
         if ( ns == "all" ) {
             for ( var beanName in variables.cljBeans ) {
                 var info = variables.cljBeans[ beanName ];
-                core.require( core.symbol( info.ns ), core.keyword( "require" ) );
+                core.require( core.symbol( info.ns ), core.keyword( "reload" ) );
             }
         } else {
             core.require( core.symbol( ns ), core.keyword( "reload-all" ) );
