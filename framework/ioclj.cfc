@@ -121,7 +121,6 @@ component extends=framework.ioc {
                 }
             }
         }
-        writedump( variables.cljbeans );
     }
 
     private string function findProjectFile( string folderList ) {
