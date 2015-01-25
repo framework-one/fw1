@@ -36,7 +36,8 @@ component {
                 structAppend( rc, result );
                 // post-process special keys in rc for abort / redirect etc
                 var core = variables.cfmljure.clojure.core;
-                if ( structKeyExists( rc, "abort" ) && rc.abort == core.keyword( "controller" ) ) {
+                if ( structKeyExists( rc, "abort" ) && core.keyword_qmark_( rc.abort ) &&
+                    core.name( rc.abort ) == "controller" ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.abortController();
                     } else {
@@ -46,14 +47,25 @@ component {
                            structKeyExists( rc.redirect, "action" ) ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.redirect(
-                            action = rc.redirect.action,
-                            preserve = structKeyExists( rc.redirect, "preserve" ) ? rc.redirect.preserve : "none",
-                            append = structKeyExists( rc.redirect, "append" ) ? rc.redirect.append : "none",
-                            queryString = structKeyExists( rc.redirect, "queryString" ) ? rc.redirect.queryString : "",
-                            statusCode = structKeyExists( rc.redirect, "statusCode" ) ? rc.redirect.statusCode : "302"
+                            action = rc.redirect["action"],
+                            preserve = structKeyExists( rc.redirect, "preserve" ) ? rc.redirect["preserve"] : "none",
+                            append = structKeyExists( rc.redirect, "append" ) ? rc.redirect["append"] : "none",
+                            queryString = structKeyExists( rc.redirect, "queryString" ) ? rc.redirect["queryString"] : "",
+                            statusCode = structKeyExists( rc.redirect, "statusCode" ) ? rc.redirect["statusCode"] : "302"
                         );
                     } else {
-                        throw "Unable to abortController() due to lack of injected FW/1";
+                        throw "Unable to redirect() due to lack of injected FW/1";
+                    }
+                } else if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
+                           structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
+                    if ( isObject( variables.fw ) ) {
+                        variables.fw.renderData(
+                            type = core.name( rc.render["type"] ),
+                            data = rc.render["data"],
+                            statusCode = structKeyExists( rc.render, "statusCode" ) ? rc.render["statusCode"] : "200"
+                        );
+                    } else {
+                        throw "Unable to renderData() due to lack of injected FW/1";
                     }
                 }
             } catch ( java.lang.IllegalStateException e ) {
