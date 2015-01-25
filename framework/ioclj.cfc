@@ -28,7 +28,7 @@ component extends=framework.ioc {
         // list of namespaces to expose:
         var ns = [ ];
         for ( var beanName in variables.cljBeans ) {
-            arrayAppend( ns, variables.cljBeans[ beanName ].ns );
+            arrayAppend( ns, replace( variables.cljBeans[ beanName ].ns, "-", "_", "all" ) );
         }
         // and create a cfmljure instance
         var timeout = structKeyExists( config, "timeout" ) ? config.timeout : 300;
@@ -105,7 +105,7 @@ component extends=framework.ioc {
             var cljPath = replace( cljOSPath, chr(92), "/", "all" );
             cljPath = right( cljPath, len( cljPath ) - n );
             cljPath = left( cljPath, len( cljPath ) - 4 );
-            var ns = replace( cljPath, "/", ".", "all" );
+            var ns = replace( replace( cljPath, "/", ".", "all" ), "_", "-", "all" );
             var parts = listToArray( cljPath, "/" );
             var nParts = arrayLen( parts );
             if ( nParts >= 3 ) {
