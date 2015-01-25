@@ -32,7 +32,10 @@ component {
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
             // recent FW/1 + DI/1 exclusions:
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc'
+            '/framework/one.cfc',
+            // and Clojure-related exclusions:
+            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
+            '/framework/ioclj.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
