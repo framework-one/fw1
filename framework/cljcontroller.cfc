@@ -35,6 +35,27 @@ component {
                 structClear( rc );
                 structAppend( rc, result );
                 // post-process special keys in rc for abort / redirect etc
+                var core = variables.cfmljure.clojure.core;
+                if ( structKeyExists( rc, "abort" ) && rc.abort == core.keyword( "controller" ) ) {
+                    if ( isObject( variables.fw ) ) {
+                        variables.fw.abortController();
+                    } else {
+                        throw "Unable to abortController() due to lack of injected FW/1";
+                    }
+                } else if ( structKeyExists( rc, "redirect" ) && isStruct( rc.redirect ) &&
+                           structKeyExists( rc.redirect, "action" ) ) {
+                    if ( isObject( variables.fw ) ) {
+                        variables.fw.redirect(
+                            action = rc.redirect.action,
+                            preserve = structKeyExists( rc.redirect, "preserve" ) ? rc.redirect.preserve : "none",
+                            append = structKeyExists( rc.redirect, "append" ) ? rc.redirect.append : "none",
+                            queryString = structKeyExists( rc.redirect, "queryString" ) ? rc.redirect.queryString : "",
+                            statusCode = structKeyExists( rc.redirect, "statusCode" ) ? rc.redirect.statusCode : "302"
+                        );
+                    } else {
+                        throw "Unable to abortController() due to lack of injected FW/1";
+                    }
+                }
             } catch ( java.lang.IllegalStateException e ) {
                 if ( e.message.startsWith( "Attempting to call unbound fn" ) ) {
                     // no such controller method - ignore it
