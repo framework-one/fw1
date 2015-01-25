@@ -22,22 +22,13 @@ component extends=framework.ioc {
     public any function init( string folders, struct config = { } ) {
         // find the first folder that includes project.clj - that's our project
         variables.project = findProjectFile( folders );
-        // if none contain it, then we're just like DI/1
-        // if we find a project, scan src for .clj files and stash those ???
-        variables.cljBeans = {
-            mainController : {
-                ns : "hello.controllers.main",
-                nsx : [ "hello", "controllers", "main" ],
-                type : "controller"
-            }
-        };
-        // we expose just the controllers to CFML (at the moment)
+        // initialize DI/1 parent
+        super.init( folders, config );
+        discoverClojureFiles();
+        // list of namespaces to expose:
         var ns = [ ];
         for ( var beanName in variables.cljBeans ) {
-            var info = variables.cljBeans[ beanName ];
-            if ( info.type == "controller" ) {
-                arrayAppend( ns, info.ns );
-            }
+            arrayAppend( ns, variables.cljBeans[ beanName ].ns );
         }
         // and create a cfmljure instance
         var timeout = structKeyExists( config, "timeout" ) ? config.timeout : 300;
@@ -47,8 +38,6 @@ component extends=framework.ioc {
         cfmljure.install( ns, app );
         variables.clojureApp = app;
         variables.cfmljure = cfmljure;
-        // initialize DI/1 parent
-        super.init( folders, config );
         return this;
     }
     
@@ -102,10 +91,43 @@ component extends=framework.ioc {
 
     // PRIVATE HELPERS
 
+    private void function discoverClojureFiles() {
+        var cljs = [ ];
+        var src = variables.project & "/src";
+        var n = len( src ) + 1; // allow for trailing /
+        try {
+            cljs = directoryList( src, true, "path", "*.clj" );
+        } catch ( any e ) {
+            // assume bad path and ignore it
+        }
+        variables.cljBeans = { };
+        for ( var cljOSPath in cljs ) {
+            var cljPath = replace( cljOSPath, chr(92), "/", "all" );
+            cljPath = right( cljPath, len( cljPath ) - n );
+            cljPath = left( cljPath, len( cljPath ) - 4 );
+            var ns = replace( cljPath, "/", ".", "all" );
+            var parts = listToArray( cljPath, "/" );
+            var nParts = arrayLen( parts );
+            if ( nParts >= 3 ) {
+                var lbo = parts[ nParts - 1 ];
+                var lbo1 = singular( lbo );
+                if ( lbo1 != lbo ) {
+                    var beanName = parts[ nParts ] & lbo1;
+                    if ( structKeyExists( variables.cljBeans, beanName ) ) {
+                        throw "#beanName# is not unique (from #cljPath#)";
+                    } else {
+                        variables.cljBeans[ beanName ] = { ns : ns, nsx : parts, type : lbo1 };
+                    }
+                }
+            }
+        }
+        writedump( variables.cljbeans );
+    }
+
     private string function findProjectFile( string folderList ) {
         var folders = listToArray( folderList );
         for ( var folder in folders ) {
-            var path = replace( expandPath( trim( folder ) ), chr(92), '/', 'all' );
+            var path = replace( expandPath( trim( folder ) ), chr(92), "/", "all" );
             if ( fileExists( path & "/project.clj" ) ) {
                 // found our Clojure project, return it
                 return path;
