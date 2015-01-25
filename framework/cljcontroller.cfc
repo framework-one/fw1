@@ -36,14 +36,7 @@ component {
                 structAppend( rc, result );
                 // post-process special keys in rc for abort / redirect etc
                 var core = variables.cfmljure.clojure.core;
-                if ( structKeyExists( rc, "abort" ) && core.keyword_qmark_( rc.abort ) &&
-                    core.name( rc.abort ) == "controller" ) {
-                    if ( isObject( variables.fw ) ) {
-                        variables.fw.abortController();
-                    } else {
-                        throw "Unable to abortController() due to lack of injected FW/1";
-                    }
-                } else if ( structKeyExists( rc, "redirect" ) && isStruct( rc.redirect ) &&
+                if ( structKeyExists( rc, "redirect" ) && isStruct( rc.redirect ) &&
                            structKeyExists( rc.redirect, "action" ) ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.redirect(
@@ -56,16 +49,33 @@ component {
                     } else {
                         throw "Unable to redirect() due to lack of injected FW/1";
                     }
-                } else if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
+                }
+                if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
                            structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.renderData(
-                            type = core.name( rc.render["type"] ),
-                            data = rc.render["data"],
-                            statusCode = structKeyExists( rc.render, "statusCode" ) ? rc.render["statusCode"] : "200"
+                            core.name( rc.render["type"] ),
+                            rc.render["data"],
+                            structKeyExists( rc.render, "statusCode" ) ? rc.render["statusCode"] : "200"
                         );
                     } else {
                         throw "Unable to renderData() due to lack of injected FW/1";
+                    }
+                }
+                if ( structKeyExists( rc, "view" ) && isStruct( rc.view ) &&
+                           structKeyExists( rc.view, "action" ) ) {
+                    if ( isObject( variables.fw ) ) {
+                        variables.fw.setView( rc.view["action"] );
+                    } else {
+                        throw "Unable to renderData() due to lack of injected FW/1";
+                    }
+                }
+                if ( structKeyExists( rc, "abort" ) && core.keyword_qmark_( rc.abort ) &&
+                    core.name( rc.abort ) == "controller" ) {
+                    if ( isObject( variables.fw ) ) {
+                        variables.fw.abortController();
+                    } else {
+                        throw "Unable to abortController() due to lack of injected FW/1";
                     }
                 }
             } catch ( java.lang.IllegalStateException e ) {
