@@ -1,4 +1,5 @@
-(ns hello.controllers.main)
+(ns hello.controllers.main
+  (:require [hello.greet :as greet]))
 
 (defn default [rc]
-  (assoc rc :greeting (str "Hello " (:name rc "anonymous") "!")))
+  (assoc rc :greeting (greet/hello (:name rc "anonymous"))))
