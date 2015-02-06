@@ -13,3 +13,4 @@ settings.xml
 *.idea
 .ant-targets-build.xml
 run-tests.sh
+/examples/6helloclojure/target/stale/extract-native.dependencies
