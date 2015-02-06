@@ -2074,7 +2074,8 @@ component {
         }
         if ( !structKeyExists(variables.framework, 'base') ) {
             variables.framework.base = getDirectoryFromPath( variables.cgiScriptName );
-        } else if ( right( variables.framework.base, 1 ) != '/' ) {
+        }
+        if ( right( variables.framework.base, 1 ) != '/' ) {
             variables.framework.base = variables.framework.base & '/';
         }
         variables.framework.base = replace( variables.framework.base, chr(92), '/', 'all' );
@@ -2376,7 +2377,7 @@ component {
                         } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
                             relLoc = right( relLoc, len( relLoc ) - 1 );
                         }
-                        subLocations = listAppend( subLocations, variables.framework.base & "/" & subsystem & "/" & relLoc );
+                        subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
                     }
                     var ioc = new "#variables.framework.diComponent#"( subLocations );
                     ioc.setParent( getDefaultBeanFactory() );
