@@ -326,9 +326,10 @@ component {
     
     
     private string function deduceDottedPath( string baseMapping, string basePath ) {
-        var cfcPath = baseMapping;
+        var cfcPath = left( baseMapping, 1 ) == '/' ?
+            ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
+            getFileFromPath( baseMapping );
         var expPath = basePath;
-        if ( left( cfcPath, 1 ) == '/' ) cfcPath = right( cfcPath, len( cfcPath ) - 1 );
         var dotted = '';
         do {
             var mapped = cfcPath;
