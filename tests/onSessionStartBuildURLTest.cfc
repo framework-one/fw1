@@ -2,7 +2,7 @@ component extends="tests.InjectableTest" {
 
     public void function setUp() {
         clearFrameworkFromRequest();
-        variables.fw = new org.corfield.framework();
+        variables.fw = new framework.one();
         variables.fwvars = getVariablesScope( variables.fw );
         variables.fwvars.framework = {
             generateSES = true,

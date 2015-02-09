@@ -1,7 +1,8 @@
 component{
 	this.name = 'fw1 test';
-
-	this.mappings['/mxunit'] = getDirectoryFromPath(getCurrentTemplatePath()) & "../../mxunit";	
-	this.mappings['/org'] = getDirectoryFromPath(getCurrentTemplatePath()) & "../org";
-	this.mappings['/tests'] = getDirectoryFromPath(getCurrentTemplatePath());
+    variables.here = getDirectoryFromPath(getCurrentTemplatePath());
+	this.mappings['/mxunit'] = variables.here & "../../mxunit";	
+	this.mappings['/framework'] = variables.here & "../framework";
+	this.mappings['/tests'] = variables.here;
+    this.mappings['/goldfish/trumpets'] = variables.here & "extrabeans";
 }

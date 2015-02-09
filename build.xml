@@ -74,6 +74,7 @@ Valid values are:
   <property name="server.port" value="8888"/>
   <property name="stop.port" value="8887"/>
   <property name="context.root" value="/fw1"/>
+  <property name="test.path.root" value="${context.root}"/>
   <property name="output.dir" value="tests/ci/results/"/>
 
   <!-- mxunit properties -->
@@ -138,7 +139,7 @@ Valid values are:
         <directory
           componentPath="tests"
           packageName="fw1"
-          path="${context.root}/tests/"
+          path="${test.path.root}/tests/"
           recurse="false"
           remoteMethod="run"/>
     </mxunittask>

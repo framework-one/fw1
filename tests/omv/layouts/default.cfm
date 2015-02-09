@@ -1,0 +1,1 @@
+<cfoutput>[#trim(body)#]</cfoutput>

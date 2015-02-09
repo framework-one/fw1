@@ -1,4 +1,4 @@
-﻿component extends="org.corfield.framework" {
+component extends="framework.one" {
 
 	this.sessionManagement = true;
 	

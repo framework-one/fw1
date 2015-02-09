@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	
 	this.mappings["/userManager"] = getDirectoryFromPath(getCurrentTemplatePath());
 	this.name = 'fw1-userManager';
@@ -8,11 +8,5 @@ component extends="org.corfield.framework" {
 		home = "user.default",
         trace = true
 	};
-	
-	function setupApplication() 
-	{
-        var beanFactory = new framework.ioc( "model" );
-        setBeanFactory( beanFactory );
-	}
 	
 }

@@ -1,9 +1,8 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 
-    function setupApplication() {
-        var bf = new framework.WireBoxAdapter();
-        bf.getBinder().scanLocations( "examples.wirebox.model" );
-        setBeanFactory( bf );
-    }
+    variables.framework = {
+        diEngine = "wirebox",
+        diLocations = "examples.wirebox.model"
+    };
 
 }

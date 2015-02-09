@@ -108,7 +108,7 @@ component accessors=true {
 
         // validate password for new or existing user
         if ( !user.getId() && !len( password ) ) {
-            arrayAppend( aErrors, "Please enter a password for the user" )
+            arrayAppend( aErrors, "Please enter a password for the user" );
         } else if ( len( password ) ) {
             aErrors = checkPassword( user = user, newPassword = password, retypePassword = password );
         }
@@ -124,7 +124,7 @@ component accessors=true {
             arrayAppend( aErrors, "Please enter the user's email address" );
         } else if ( len( email ) && !isEmail( email ) ) {
             arrayAppend( aErrors, "Please enter a valid email address" );
-        } else if ( len( email ) && !compare( email, userByEmail.getEmail() ) ) {
+        } else if ( !user.getId() && len( email ) && !compare( email, userByEmail.getEmail() ) ) {
             arrayAppend( aErrors, "A user already exists with this email address, please enter a new address." );
         }
         // validate department ID

@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html ng-app="todoApp" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>ToDo System</title>
+	
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">	
+	<script src="jquery/js/jquery-1.7.2.min.js" type="text/javascript"></script>
+    <script src="bootstrap/js/bootstrap.js"></script>    
+	<script src="angular/angular.min.js" type="text/javascript"></script>	
+	<script>
+	var todoApp = angular.module('todoApp', []);	
+	</script>	
+	
+</head>
+<body ng-controller="todoCtrl">
+<nav class="navbar navbar-inverse navbar-static-top" role="navigation">
+  <!-- Brand and toggle get grouped for better mobile display -->
+  <div class="navbar-header">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+	<span class="navbar-brand">
+	ToDo System				
+    </span>
+  </div>
+
+</nav>
+<div class="container">	
+	<div class="page-header">
+	  <h1>Simple ToDo using CFML, FW1, Angularjs and Bootstrap</h1>
+	</div>
+
+	<div class="panel panel-default form-horizontal" >
+		<div class="panel-heading">
+			<h3 class="panel-title">List</h3>		
+		</div>
+		<div class="panel-body">
+		<p>
+			<button class="btn button btn-default" ng-click="newTodo()"><span class="glyphicon glyphicon-plus"></span> New</button>
+		</p>
+		<table class="table table-striped table-bordered table-valign-middle">
+			<thead>
+			<tr>
+				<th class="col-md-7">Item</th>		
+				<th>Status</th>
+				<th class="col-md-3"></th>
+			</tr>
+			</thead>					
+			<tbody>
+			<tr class="align-top" ng-form name="myForm" ng-repeat="key in keylist">
+				<td>
+					<input type="text" class="form-control" ng-model="todos[key].title" >
+				</td>
+				<td>
+				<select type="select" style="background:#fff;" class="form-control" ng-model="todos[key].status">
+					<option value="New">New</option>
+					<option value="Pending">Pending</option>
+					<option value="Complete">Complete</option>
+				</select>
+				</td>
+				<td>
+					<button class="btn button btn-default" ng-class="{'btn-success': !myForm.$pristine }" ng-disabled="myForm.$pristine" ng-click="saveTodo(key , todos[key]);myForm.$setPristine(true)" ><span class="glyphicon glyphicon-ok"></span> Save</button>
+					<button class="btn button btn-default" ng-class="{'btn-warning': !myForm.$pristine }" ng-disabled="myForm.$pristine" ng-click="resetTodo(key);myForm.$setPristine(true)" ><span class="glyphicon glyphicon-remove"></span> Cancel</button>
+					<button class="btn button btn-default" ng-click="deleteTodo(key)"><span class="glyphicon glyphicon-plus"></span> Delete</button>
+				</td>
+			</tr>					
+			</tbody>	
+		</table>
+		
+		</div>
+	</div>
+</div>	
+</body>
+
+<script>
+
+todoApp.controller( 'todoCtrl' , function ( $scope , $http  ) {
+
+	$http.get( 'index.cfm/todo/' ).success( function( data ) { 
+
+		$scope.todos = data; 
+
+		$scope.keylist = Object.keys($scope.todos).sort(function(a, b){return b-a});		
+
+		} );
+
+	$scope.saveTodo = function( key , data ) { 
+
+		$http({
+			method: 'POST',
+			url: 'index.cfm/todo/',
+			data: $.param( data ) + "&id=" + key, // pass in data as strings
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			} // set the headers so angular passing info as form data (not request payload)
+		}).success( function( data ){
+
+			// Do something here if you want
+
+		});			
+				
+	};
+
+	$scope.deleteTodo = function( id ) { 
+		
+		$http({
+			method: 'DELETE',
+			url: 'index.cfm/todo/' + id
+		}).success( function( data ){
+
+			delete $scope.todos[ id ];
+	
+			//for modern browsers ( > IE8 )
+	
+			$scope.keylist.splice( $scope.keylist.indexOf(id) , 1 );		
+	
+			//Otherwise
+			/*for(var i = 0; i <= keylist.length; i++) {
+			    if(keylist[i] === id) {
+			       keylist.splice(i, 1);
+			    }
+			}*/		
+
+		});			
+	
+				
+		};
+
+	$scope.newTodo = function( ) { 
+		console.log($scope.todos);
+		if ( $scope.keylist.length ) {
+			var newid = parseInt( $scope.keylist[0] ) + 1;
+		}
+		else var newid = parseInt(1);
+		
+		$scope.todos[ newid ] = { "title" : "" , "status":"New" };
+
+		$scope.keylist.unshift( newid );
+
+	};
+
+ 
+	$scope.resetTodo = function( id ) {
+
+		$http.get( 'index.cfm/todo/' + id ).success( function( data ) 
+			{ 
+
+				if ( data == 0 ) {
+					delete $scope.todos[ id ];
+					
+					// for modern browsers ( > IE8)
+					
+					$scope.keylist.splice( $scope.keylist.indexOf(id) , 1 );		
+			
+					//Otherwise
+					/*for(var i = 0; i <= keylist.length; i++) {
+					    if(keylist[i] === id) {
+					       keylist.splice(i, 1);
+					    }
+					}*/		
+					
+				}
+
+				else $scope.todos[ id ] = data;
+				
+			} );		
+
+	}
+
+
+	
+});
+	
+</script>
+</html>

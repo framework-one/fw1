@@ -1,1 +1,0 @@
-<cfcontent type="text/xml"><cfoutput>#body#</cfoutput><cfset request.layout = false /><!--- no layout cascade --->

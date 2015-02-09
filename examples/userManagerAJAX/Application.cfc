@@ -1,4 +1,4 @@
-component extends="org.corfield.framework" {
+component extends="framework.one" {
 	
 	this.mappings["/userManagerAJAX"] = getDirectoryFromPath(getCurrentTemplatePath());
 	this.name = 'fw1-userManagerAJAX';
@@ -8,13 +8,7 @@ component extends="org.corfield.framework" {
 		home = "user.default"
 	};
 	
-	function setupApplication() 
-	{
-        setBeanFactory( new framework.ioc( "model" ) );
-	}
-	
-	function setupRequest()
-	{
+	function setupRequest() {
 		controller( 'user.checkAjaxRequest' );
 	}
     

@@ -1,7 +1,7 @@
-﻿component extends="tests.InjectableTest" {
+component extends="tests.InjectableTest" {
 
     public void function setUp() {
-        variables.fw = new org.corfield.framework();
+        variables.fw = new framework.one();
         injectMethod( variables.fw, this, 'isFrameworkInitialized', 'isFrameworkInitialized' );
         variables.fwVars = getVariablesScope( variables.fw );
         variables.fw.getResourceRoutes = variables.fwVars.getResourceRoutes;

@@ -8,6 +8,9 @@
 				<cfif rc.files.name is 'remote' or rc.files.name is 'litepost'>
 					- will not work with a non-empty context root!
 				</cfif>
+                <cfif rc.files.name is 'todos'>
+                    - requires /examples/todos/index.cfm/* as a wildcard pattern for Tomcat!
+                </cfif>
 			</li>
 		</cfif>
 	</cfoutput>

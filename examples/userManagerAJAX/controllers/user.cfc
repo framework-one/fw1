@@ -18,7 +18,8 @@ component accessors=true {
     }
 
     function form( rc ) {
-        rc.user = variables.userService.get( variables.fw.getRCValue( "id" ) );
+        param name="rc.id" default="0";
+        rc.user = variables.userService.get( rc.id );
         rc.departments = variables.departmentService.list();
     }
 
@@ -27,7 +28,8 @@ component accessors=true {
     }
 
     function save( rc ) {
-        var user = variables.userService.get( variables.fw.getRCValue( "id" ) );
+        param name="rc.id" default="0";
+        var user = variables.userService.get( rc.id );
         variables.fw.populate( cfc = user, trim = true );
         if ( structKeyExists( rc, "departmentId" ) && len( rc.departmentId ) ) {
             user.setDepartmentId( rc.departmentId );
