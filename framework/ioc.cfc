@@ -259,7 +259,7 @@ component {
 
     
     private struct function cleanMetadata( string cfc ) {
-        var baseMetadata = getComponentMetadata( cfc );
+        var baseMetadata = metadata( cfc );
         var iocMeta = { setters = { }, pruned = false };
         var md = { extends = baseMetadata };
         do {
@@ -322,6 +322,12 @@ component {
     // in case an extension point wants to override actual construction:
     private any function construct( string dottedPath ) {
         return createObject( 'component', dottedPath );
+    }
+    
+    
+    // in case an extension point wants to override actual metadata retrieval:
+    private any function metadata( string dottedPath ) {
+        return getComponentMetadata( dottedPath );
     }
     
     
