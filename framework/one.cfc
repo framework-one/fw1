@@ -74,6 +74,7 @@ component {
      * to a resolvedBaseURL() value
      */
     public string function buildCustomURL( string uri ) {
+        uri = replace( uri, chr(92), '/', 'all' );
         var triggers = '[/=&\?]';
         if ( reFind( '#triggers#:', uri ) ) {
             // perform variables substitution from request.context
@@ -1903,7 +1904,7 @@ component {
                 omitIndex = true;
             }
         }
-        return { path = path, omitIndex = omitIndex };
+        return { path = replace( path, chr(92), '/', 'all' ), omitIndex = omitIndex };
     }
 
     private void function restoreFlashContext() {
