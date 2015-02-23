@@ -27,8 +27,12 @@ component extends="tests.InjectableTest" {
     public void function testURLandURI() {
         variables.fw.onRequestStart("/index.cfm");
         assertEquals( "useCgiScriptName", variables.fw.getBaseURL() );
-        assertEquals( "/tests/ci/", variables.fw.buildURL( action = 'main.default' ) );
-        assertEquals( "/tests/ci/main/default", variables.fw.buildCustomURL( uri = '/main/default' ) );
+        var suffix = "/tests/ci/";
+        assertEquals( suffix,
+                      right( variables.fw.buildURL( action = 'main.default' ), len( suffix ) ) );
+        suffix &= "main/default";
+        assertEquals( suffix,
+                      right( variables.fw.buildCustomURL( uri = '/main/default' ), len( suffix ) ) );
     }
 
     public void function testURLandURIempty() {
