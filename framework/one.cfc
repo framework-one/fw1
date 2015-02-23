@@ -86,6 +86,11 @@ component {
             }
         }
         var baseData = resolveBaseURL();
+        if ( len( baseData.path ) && right( baseData.path, 1 ) == '/' &&
+             len( uri ) && left( uri, 1 ) == '/' ) {
+            if ( len( baseData.path ) == 1 ) baseData.path = '';
+            else baseData.path = left( baseData.path, len( baseData.path ) - 1 );
+        }
         return baseData.path & uri;
     }
 
