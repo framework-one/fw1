@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.0_rc2";
-    variables._di1_version = "1.0_rc2";
+    variables._fw1_version = "3.0";
+    variables._di1_version = "1.0";
 /*
     Copyright (c) 2010-2015, Sean Corfield
 
@@ -262,7 +262,7 @@ component {
 
     
     private struct function cleanMetadata( string cfc ) {
-        var baseMetadata = getComponentMetadata( cfc );
+        var baseMetadata = metadata( cfc );
         var iocMeta = { setters = { }, pruned = false };
         var md = { extends = baseMetadata };
         do {
@@ -325,6 +325,12 @@ component {
     // in case an extension point wants to override actual construction:
     private any function construct( string dottedPath ) {
         return createObject( 'component', dottedPath );
+    }
+    
+    
+    // in case an extension point wants to override actual metadata retrieval:
+    private any function metadata( string dottedPath ) {
+        return getComponentMetadata( dottedPath );
     }
     
     

@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "3.0_rc2";
+    variables._fw1_version = "3.0";
 /*
     Copyright (c) 2009-2015, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -74,6 +74,7 @@ component {
      * to a resolvedBaseURL() value
      */
     public string function buildCustomURL( string uri ) {
+        uri = replace( uri, chr(92), '/', 'all' );
         var triggers = '[/=&\?]';
         if ( reFind( '#triggers#:', uri ) ) {
             // perform variables substitution from request.context
@@ -85,6 +86,11 @@ component {
             }
         }
         var baseData = resolveBaseURL();
+        if ( len( baseData.path ) && right( baseData.path, 1 ) == '/' &&
+             len( uri ) && left( uri, 1 ) == '/' ) {
+            if ( len( baseData.path ) == 1 ) baseData.path = '';
+            else baseData.path = left( baseData.path, len( baseData.path ) - 1 );
+        }
         return baseData.path & uri;
     }
 
@@ -1903,7 +1909,7 @@ component {
                 omitIndex = true;
             }
         }
-        return { path = path, omitIndex = omitIndex };
+        return { path = replace( path, chr(92), '/', 'all' ), omitIndex = omitIndex };
     }
 
     private void function restoreFlashContext() {
