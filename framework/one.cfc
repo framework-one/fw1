@@ -2386,7 +2386,13 @@ component {
                         }
                         subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
                     }
-                    var ioc = new "#variables.framework.diComponent#"( subLocations );
+                    var subsystemConfig = getSubsystemConfig( subsystem );
+                    var ioc = new "#variables.framework.diComponent#"(
+                        subLocations,
+                        ( structKeyExists( subsystemConfig, 'diConfig' ) ?
+                              subsystemConfig.diConfig :
+                              variables.framework.diConfig )
+                    );
                     ioc.setParent( getDefaultBeanFactory() );
                     setSubsystemBeanFactory( subsystem, ioc );
                 }
