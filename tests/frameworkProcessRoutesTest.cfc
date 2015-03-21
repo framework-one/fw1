@@ -16,6 +16,7 @@ component extends="tests.InjectableTest" {
             { 'hint' = 'Standard Route', '$GET/old/path' = '/new/path' },
             { 'hint' = 'Resource Routes', '$RESOURCES' = 'dogs' }
         ];
+        variables.fwVars.framework.routesCaseSensitive = true;
     }
 
     public void function testProcessRoutes() {
