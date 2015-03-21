@@ -1887,7 +1887,6 @@ component {
 
     private struct function resolveBaseURL( string action = '.', string path = variables.magicBaseURL ) {
         if ( path == variables.magicBaseURL ) path = getBaseURL();
-        var omitIndex = false;
         if ( path == 'useSubsystemConfig' ) {
             var subsystemConfig = getSubsystemConfig( getSubsystem( action ) );
             if ( structKeyExists( subsystemConfig, 'baseURL' ) ) {
@@ -1896,14 +1895,16 @@ component {
                 path = getBaseURL();
             }
         }
+        var omitIndex = false;
+        var optionalOmit = false;
         if ( path == 'useCgiScriptName' ) {
             path = request._fw1.cgiScriptName;
-            if ( variables.framework.SESOmitIndex ) {
-                path = getDirectoryFromPath( path );
-                omitIndex = true;
-            }
+            optionalOmit = true;
         } else if ( path == 'useRequestURI' ) {
             path = getPageContext().getRequest().getRequestURI();
+            optionalOmit = true;
+        }
+        if ( optionalOmit ) {
             if ( variables.framework.SESOmitIndex ) {
                 path = getDirectoryFromPath( path );
                 omitIndex = true;
