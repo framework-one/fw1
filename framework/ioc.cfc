@@ -466,7 +466,8 @@ component {
 
 
     private boolean function isConstant ( string beanName ) {
-        return structKeyExists( variables.beanInfo[ beanName ], 'value');
+        return structKeyExists( variables.beanInfo, beanName ) &&
+            structKeyExists( variables.beanInfo[ beanName ], 'value' );
     }
 
     
