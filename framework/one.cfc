@@ -1528,10 +1528,10 @@ component {
         var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
         var componentKey = subsystemUnderscore & section;
         var beanName = section & "controller";
-        
-        if ( !structKeyExists( cache.controllers, componentKey ) ) {
+        // per #310 we no longer cache the Application controller since it is new on each request
+        if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#componentKey#" type="exclusive" timeout="30" {
-                if ( !structKeyExists( cache.controllers, componentKey ) ) {
+                if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
                     if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
                         cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
                     } else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
