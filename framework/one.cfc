@@ -1773,12 +1773,20 @@ component {
         structAppend( routeMatch, regExCache[ cacheKey ] );
         if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
         var matched = len( routeMatch.method ) ? ( '$' & httpMethod == routeMatch.method ) : true;
-        if ( matched && reFind( routeMatch.pattern, path ) ) {
+        if ( matched && routeRegexFind( routeMatch.pattern, path ) ) {
             routeMatch.matched = true;
             routeMatch.route = route;
             routeMatch.path = path;
         }
         return routeMatch;
+    }
+
+    private numeric function routeRegexFind( string pattern, string path ) {
+        if ( variables.framework.routesCaseSensitive ) {
+            return reFind( pattern, path );
+        } else {
+            return REFindNoCase( pattern, path );
+        }
     }
 
     private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
@@ -2205,6 +2213,9 @@ component {
                 { method = 'update', httpMethods = [ '$PUT','$PATCH' ], includeId = true },
                 { method = 'destroy', httpMethods = [ '$DELETE' ], includeId = true }
             ];
+        }
+        if ( !structKeyExists( variables.framework, 'routesCaseSensitive' ) ) {
+            variables.framework.routesCaseSensitive = true;
         }
         if ( !structKeyExists( variables.framework, 'noLowerCase' ) ) {
             variables.framework.noLowerCase = false;
