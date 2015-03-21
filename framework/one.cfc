@@ -1853,6 +1853,10 @@ component {
             contentType = 'application/json; charset=utf-8';
             out = serializeJSON( data );
             break;
+        case 'rawjson':
+            contentType = 'application/json; charset=utf-8';
+            out = data;
+            break;
         case 'xml':
             contentType = 'text/xml; charset=utf-8';
             if ( isXML( data ) ) {
@@ -1875,7 +1879,7 @@ component {
             break;
         default:
             throw( type = 'FW1.UnsupportedRenderType',
-                   message = 'Only JSON, XML, and TEXT are supported',
+                   message = 'Only JSON, RAWJSON, XML, and TEXT are supported',
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
