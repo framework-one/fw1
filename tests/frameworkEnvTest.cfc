@@ -4,10 +4,13 @@ component extends="tests.InjectableTest" {
         clearFrameworkFromRequest();
         variables.fw = new framework.one();
         variables.fwvars = getVariablesScope( variables.fw );
-        variables.fwvars.framework = { };
+        variables.fwvars.framework = { diConfig = { constants = { one = 1 },
+                                                    exclude = [ "A" ] } };
         variables.fwcfg = variables.fwvars.framework;
         variables.fwcfg.environments = {
-            "dev" = { reloadApplicationOnEveryRequest = true },
+            "dev" = { reloadApplicationOnEveryRequest = true,
+                      diConfig = { constants = { two = 2 },
+                                   exclude = [ "B" ] } },
             "dev-one" = { oneNewOption = 1 },
             "dev-two" = { reloadApplicationOnEveryRequest = false },
             "prod" = { useSSL = true }
@@ -81,6 +84,10 @@ component extends="tests.InjectableTest" {
         assertTrue( variables.fwcfg.reloadApplicationOnEveryRequest, "Reload should be dev: true" );
         assertFalse( structKeyExists( variables.fwcfg, "oneNewOption" ), "OneNewOption should not have been added" );
         assertFalse( structKeyExists( variables.fwcfg, "useSSL" ), "UseSSL should not have been added" );
+        assertEquals( 1, variables.fwcfg.diConfig.constants.one );
+        assertEquals( 2, variables.fwcfg.diConfig.constants.two );
+        assertEquals( "b", variables.fwcfg.diConfig.exclude[1] );
+        assertEquals( "a", variables.fwcfg.diConfig.exclude[2] );
     }
 
     private string function returnTierDev() {

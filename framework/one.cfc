@@ -2260,13 +2260,56 @@ component {
             var envs = variables.framework.environments;
             var tier = listFirst( env, '-' );
             if ( structKeyExists( envs, tier ) ) {
-                structAppend( variables.framework, envs[ tier ] );
+                mergeConfig( variables.framework, envs[ tier ] );
             }
-            if ( structKeyExists( envs, env ) ) {
-                structAppend( variables.framework, envs[ env ] );
+            if ( env != tier && structKeyExists( envs, env ) ) {
+                mergeConfig( variables.framework, envs[ env ] );
             }
         }
         return env;
+    }
+
+    private void function mergeConfig( struct target, struct source ) {
+        // subsystems and diConfig should be merged
+        var subsystems = structKeyExists( target, 'subsystems' ) ? structCopy( target.subsystems ) : { };
+        var diConfig = structKeyExists( target, 'diConfig' ) ? structCopy( target.diConfig ) : { };
+        // and diConfig has constants, singulars as sub-structs
+        var constants = structKeyExists( diConfig, 'constants' ) ? structCopy( diConfig.constants ) : { };
+        var singulars = structKeyExists( diConfig, 'singulars' ) ? structCopy( diConfig.singulars ) : { };
+        // and diConfig has exclude, transients as sub-arrays
+        var exclude = [ ];
+        if ( structKeyExists( diConfig, 'exclude' ) )
+            for ( var ei in diConfig.exclude )
+                arrayAppend( exclude, ei );
+        var transients = [ ];
+        if ( structKeyExists( diConfig, 'transients' ) )
+            for ( var ti in diConfig.transients )
+                arrayAppend( transients, ti );
+        // subsystems might have its own diConfig but that's too complex to address right now
+
+        // merge top-level config destructively
+        structAppend( target, source );
+
+        // re-merge subsystems keys non-destructively
+        if ( structKeyExists( source, 'subsystems' ) ) {
+            structAppend( target.subsystems, subsystems, false );
+        }
+        // re-merge diConfig keys non-destructively and recurse in
+        if ( structKeyExists( source, 'diConfig' ) ) {
+            structAppend( target.diConfig, diConfig, false );
+            if ( structKeyExists( source.diConfig, 'constants' ) ) {
+                structAppend( target.diConfig.constants, constants, false );
+            }
+            if ( structKeyExists( source.diConfig, 'singulars' ) ) {
+                structAppend( target.diConfig.singulars, singulars, false );
+            }
+            if ( structKeyExists( source.diConfig, 'exclude' ) ) {
+                for ( ei in exclude ) arrayAppend( target.diConfig.exclude, ei );
+            }
+            if ( structKeyExists( source.diConfig, 'transients' ) ) {
+                for ( ti in transients ) arrayAppend( target.diConfig.transients, ti );
+            }
+        }
     }
 
     private void function setupRequestDefaults() {
