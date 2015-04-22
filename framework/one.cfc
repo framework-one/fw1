@@ -17,21 +17,19 @@ component {
 */
 
     this.name = hash( getBaseTemplatePath() );
-    if ( len( getContextRoot() ) ) {
-        variables.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
-        variables.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
-    } else {
-        variables.cgiScriptName = CGI.SCRIPT_NAME;
-        variables.cgiPathInfo = CGI.PATH_INFO;
-    }
     request._fw1 = {
         cgiScriptName = CGI.SCRIPT_NAME,
+        cgiPathInfo = CGI.PATH_INFO,
         cgiRequestMethod = CGI.REQUEST_METHOD,
         controllers = [ ],
         requestDefaultsInitialized = false,
         doTrace = false,
         trace = [ ]
     };
+    if ( len( getContextRoot() ) ) {
+        request._fw1.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
+        request._fw1.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
+    }
     // do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
     variables.magicApplicationController = '[]';
@@ -2092,7 +2090,7 @@ component {
             variables.framework.action = 'action';
         }
         if ( !structKeyExists(variables.framework, 'base') ) {
-            variables.framework.base = getDirectoryFromPath( variables.cgiScriptName );
+            variables.framework.base = getDirectoryFromPath( request._fw1.cgiScriptName );
         }
         if ( right( variables.framework.base, 1 ) != '/' ) {
             variables.framework.base = variables.framework.base & '/';
@@ -2314,7 +2312,7 @@ component {
 
     private void function setupRequestDefaults() {
         if ( !request._fw1.requestDefaultsInitialized ) {
-            var pathInfo = variables.cgiPathInfo;
+            var pathInfo = request._fw1.cgiPathInfo;
             request.base = variables.framework.base;
             request.cfcbase = variables.framework.cfcbase;
 
@@ -2322,10 +2320,10 @@ component {
                 request.context = { };
             }
             // SES URLs by popular request :)
-            if ( len( pathInfo ) > len( variables.cgiScriptName ) && left( pathInfo, len( variables.cgiScriptName ) ) == variables.cgiScriptName ) {
+            if ( len( pathInfo ) > len( request._fw1.cgiScriptName ) && left( pathInfo, len( request._fw1.cgiScriptName ) ) == request._fw1.cgiScriptName ) {
                 // canonicalize for IIS:
-                pathInfo = right( pathInfo, len( pathInfo ) - len( variables.cgiScriptName ) );
-            } else if ( len( pathInfo ) > 0 && pathInfo == left( variables.cgiScriptName, len( pathInfo ) ) ) {
+                pathInfo = right( pathInfo, len( pathInfo ) - len( request._fw1.cgiScriptName ) );
+            } else if ( len( pathInfo ) > 0 && pathInfo == left( request._fw1.cgiScriptName, len( pathInfo ) ) ) {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
