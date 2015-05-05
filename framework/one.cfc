@@ -1752,7 +1752,7 @@ component {
             if ( !len( routeRegEx.target ) || right( routeRegEx.target, 1) != '/' ) routeRegEx.target &= '/';
             // walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
             var n = 1;
-            var placeholders = rematch( '(:[^/]+)|(\([^\)]+)', routeRegEx.pattern );
+            var placeholders = rematch( '(:[-_a-zA-Z0-9]+)|(\([^\)]+)', routeRegEx.pattern );
             for ( var placeholder in placeholders ) {
                 if ( left( placeholder, 1 ) == ':') {
                     routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, '([^/]*)' );
