@@ -34,7 +34,7 @@ component {
 	variables.magicApplicationController = '[]';
 	variables.magicApplicationAction = '__';
 	variables.magicBaseURL = '-[]-';
-	
+
 	public void function abortController() {
 		request._fw1.abortController = true;
         frameworkTrace( 'abortController() called' );
@@ -49,11 +49,11 @@ component {
 		return listLen( action, variables.framework.subsystemDelimiter ) > 1 ||
 			right( action, 1 ) == variables.framework.subsystemDelimiter;
 	}
-	
+
 	public void function addRoute( any routes, string target, any methods = [ ], string statusCode = '' ) {
 		if ( !isArray( routes ) ) routes = [ routes ];
 		if ( !isArray( methods ) ) methods = [ methods ];
-		param name="variables.framework.routes" default="#[ ]#"; 
+		param name="variables.framework.routes" default="#[ ]#";
 		if ( len( statusCode ) ) target = statusCode & ':' & target;
 		for ( var route in routes ) {
 			if ( arrayLen( methods ) ) {
@@ -65,7 +65,7 @@ component {
 			}
 		}
 	}
-	
+
 	/*
 	 *	buildURL() should be used from views to construct urls when using subsystems or
 	 *	in order to provide a simpler transition to using subsystems in the future
@@ -87,7 +87,7 @@ component {
 			}
 		}
 		if ( path == 'useCgiScriptName' ) {
-			path = request._fw1.cgiScriptName;
+			path = getContextRoot() & request._fw1.cgiScriptName;
 			if ( variables.framework.SESOmitIndex ) {
 				path = getDirectoryFromPath( path );
 				omitIndex = true;
@@ -137,7 +137,7 @@ component {
 		var cosmeticAction = getFullyQualifiedAction( action );
 		var isHomeAction = cosmeticAction == getFullyQualifiedAction( variables.framework.home );
 		var isDefaultItem = getItem( cosmeticAction ) == variables.framework.defaultItem;
-		
+
 		var initialDelim = '?';
 		var varDelim = '&';
 		var equalDelim = '=';
@@ -163,11 +163,11 @@ component {
 			ses = true;
 		}
 		var curDelim = varDelim;
-		
+
 		if ( usingSubsystems() && getSubsystem( cosmeticAction ) == variables.framework.defaultSubsystem ) {
 			cosmeticAction = getSectionAndItem( cosmeticAction );
 		}
-		
+
 		if ( len( queryString ) ) {
 			// extract query part and anchor from query string:
 			q = find( '?', queryString );
@@ -201,7 +201,7 @@ component {
 				extraArgs = listChangeDelims( extraArgs, '/', '&=' );
 			}
 		}
-		
+
 		if ( ses ) {
 			if ( isHomeAction && extraArgs == '' ) {
 				basePath = path;
@@ -220,7 +220,7 @@ component {
 				basePath = path & initialDelim & variables.framework.action & equalDelim & cosmeticAction;
 			}
 		}
-		
+
 		if ( extraArgs != '' ) {
 			basePath = basePath & curDelim & extraArgs;
 			curDelim = varDelim;
@@ -280,7 +280,7 @@ component {
 	public string function getAction() {
 		return variables.framework.action;
 	}
-	
+
 	/*
 	 * returns the base URL for redirects and links etc
 	 * can be overridden if you need to modify this per-request
@@ -288,7 +288,7 @@ component {
 	public string function getBaseURL() {
 		return variables.framework.baseURL;
 	}
-	
+
 	/*
 	 *	returns whatever the framework has been told is a bean factory
 	 *	this will return a subsystem-specific bean factory if one
@@ -313,7 +313,7 @@ component {
 		}
 		return getDefaultBeanFactory();
 	}
-	
+
 	/*
 	 * return the framework configuration
 	 */
@@ -351,14 +351,14 @@ component {
 		return variables.framework.defaultSubsystem;
 
 	}
-	
+
     /*
      * override this to provide your environment selector
      */
     public string function getEnvironment() {
         return '';
     }
-	
+
 	/*
 	 * return an action with all applicable parts (subsystem, section, and item) specified
 	 * using defaults from the configuration or request where appropriate
@@ -377,45 +377,45 @@ component {
     public string function getHostname() {
         return createObject( 'java', 'java.net.InetAddress' ).getLocalHost().getHostName();
     }
-	
+
 	/*
 	 * return the item part of the action
 	 */
 	public string function getItem( string action = request.action ) {
 		return listLast( getSectionAndItem( action ), '.' );
 	}
-	
-	
+
+
 	/*
 	 * return the current route (if any)
 	 */
 	public string function getRoute() {
 		return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
 	}
-	
-	
+
+
 	/*
 	 * return the configured routes
 	 */
 	public array function getRoutes() {
 		return variables.framework.routes;
 	}
-	
+
 	/*
 	 * return the resource route templates
 	 */
 	public array function getResourceRouteTemplates() {
 		return variables.framework.resourceRouteTemplates;
 	}
-	
+
 	/*
 	 * return the section part of the action
 	 */
 	public string function getSection( string action = request.action ) {
 		return listFirst( getSectionAndItem( action ), '.' );
 	}
-	
-	
+
+
 	/*
 	 * return the action without the subsystem
 	 */
@@ -448,8 +448,8 @@ component {
 
 		return sectionAndItem;
 	}
-	
-	
+
+
 	/*
 	 * return the default service result key
 	 * override this if you want the default service result to be
@@ -459,7 +459,7 @@ component {
 	public string function getServiceKey( action ) {
 		return 'data';
 	}
-	
+
 	/*
 	 * return the subsystem part of the action
 	 */
@@ -476,7 +476,7 @@ component {
     public string function getSubsystemBase() {
         return request.subsystemBase;
     }
-	
+
 	/*
 	 * return the (optional) configuration for a subsystem
 	 */
@@ -499,7 +499,7 @@ component {
 		return application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ];
 
 	}
-	
+
 	/*
 	 * returns true iff a call to getBeanFactory() will successfully return a bean factory
 	 * previously set via setBeanFactory or setSubsystemBeanFactory
@@ -582,7 +582,7 @@ component {
 		      failure( exception, event, false, true );
 		      return;
 		    }
-		    
+
 			// record details of the exception:
 			if ( structKeyExists( request, 'action' ) ) {
 				request.failedAction = request.action;
@@ -608,7 +608,7 @@ component {
 			request._fw1.controllers = [ ];
             // reset services for this new action:
             request._fw1.services = [ ];
-			
+
 			if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
 				request.action = variables.framework.error;
 			} else {
@@ -746,7 +746,7 @@ component {
                 frameworkTrace( 'onMissingView() called' );
 			    out = onMissingView( request.context );
 		    }
-            
+
             buildLayoutQueue();
 		    for ( i = 1; i <= arrayLen(request._fw1.layouts); i = i + 1 ) {
 			    if ( structKeyExists(request, 'layout') && !request.layout ) {
@@ -788,14 +788,14 @@ component {
 		request.context[variables.framework.action] = request.action;
 
 		// allow configured extensions and paths to pass through to the requested template.
-		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.  
-		// Meaning /myexcludepath will match '/myexcludepath' and all subdirectories  
-		if ( listFindNoCase( variables.framework.unhandledExtensions, listLast( targetPath, '.' ) ) || 
-				REFindNoCase( '^(' & variables.framework.unhandledPathRegex & ')', targetPath ) ) {		
+		// NOTE: for unhandledPaths, we make the list into an escaped regular expression so we match on subdirectories.
+		// Meaning /myexcludepath will match '/myexcludepath' and all subdirectories
+		if ( listFindNoCase( variables.framework.unhandledExtensions, listLast( targetPath, '.' ) ) ||
+				REFindNoCase( '^(' & variables.framework.unhandledPathRegex & ')', targetPath ) ) {
 			structDelete(this, 'onRequest');
 			structDelete(variables, 'onRequest');
 			structDelete(this, 'onRequestEnd');
-			structDelete(variables, 'onRequestEnd');			
+			structDelete(variables, 'onRequestEnd');
             if ( !variables.framework.unhandledErrorCaught ) {
 			    structDelete(this, 'onError');
 			    structDelete(variables, 'onError');
@@ -816,7 +816,7 @@ component {
 		setupRequestDefaults();
 		setupSessionWrapper();
 	}
-	
+
 	// populate() may be invoked inside controllers
 	public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, deep = false ) {
 		if ( keys == '' ) {
@@ -827,7 +827,7 @@ component {
 						var args = { };
 						args[ property ] = request.context[ property ];
 						if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!						
+						// cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
 						setProperty( cfc, property, args );
 					} catch ( any e ) {
 						onPopulateError( cfc, property, request.context );
@@ -898,7 +898,7 @@ component {
 			evaluate( 'cfc.set#property#( argumentCollection = args )' );
 		}
 	}
-	
+
 	private any function getProperty( struct cfc, string property ) {
 		if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
 	}
@@ -925,10 +925,10 @@ component {
 						baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
 					}
 				}
-				
+
 			}
 		}
-		
+
 		if ( baseQueryString != '' ) {
 			if ( queryString != '' ) {
 				if ( left( queryString, 1 ) == '?' || left( queryString, 1 ) == '##' ) {
@@ -940,7 +940,7 @@ component {
 		} else {
 			baseQueryString = queryString;
 		}
-		
+
 		var targetURL = buildURL( action, path, baseQueryString );
 		if ( preserveKey != '' && variables.framework.maxNumContextsPreserved > 1 ) {
 			if ( find( '?', targetURL ) ) {
@@ -970,7 +970,7 @@ component {
     public void function renderData( string type, any data, numeric statusCode = 200 ) {
         request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
     }
-	
+
 	// call this from your controller to queue up additional services
 	public void function service( string action, string key, struct args = { }, boolean enforceExistence = true ) {
 		var subsystem = getSubsystem( action );
@@ -1017,7 +1017,7 @@ component {
 	public void function setLayout( string action ) {
 		request._fw1.overrideLayoutAction = validateAction( action );
 	}
-	
+
 	/*
 	 * call this from your setupSubsystem() method to tell the framework
 	 * about your subsystem-specific bean factory - only assumption is that it supports:
@@ -1073,14 +1073,14 @@ component {
 	 * you do not need to call super.setupSubsystem( subsystem )
 	 */
 	public void function setupSubsystem( string subsystem ) { }
-	
+
 	/*
 	 * override this to provide pre-rendering logic, e.g., to
 	 * populate the request context with globally required data
 	 * you do not need to call super.setupView()
 	 */
 	public void function setupView() { }
-	
+
 	/*
 	 * use this to override the default view
 	 */
@@ -1094,7 +1094,7 @@ component {
 	public boolean function usingSubsystems() {
 		return variables.framework.usingSubsystems;
 	}
-	
+
 	/*
 	 * view() may be invoked inside views and layouts
 	 * returns the UI generated by the named view
@@ -1112,9 +1112,9 @@ component {
             return onMissingView( request.context );
         }
 	}
-	
+
 	// THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE
-	
+
 	private void function autowire( any cfc, any beanFactory ) {
 		var setters = findImplicitAndExplicitSetters( cfc );
 		for ( var property in setters ) {
@@ -1126,7 +1126,7 @@ component {
 			}
 		}
 	}
-	
+
 	private void function buildLayoutQueue() {
 		var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
 		var testLayout = 0;
@@ -1135,9 +1135,9 @@ component {
 		var section = request.section;
 		var item = request.item;
 		var subsystembase = '';
-		
+
 		request._fw1.layouts = [ ];
-		
+
 		// has layout been overridden?
 		if ( structKeyExists( request._fw1, 'overrideLayoutAction' ) ) {
 			subsystem = getSubsystem( request._fw1.overrideLayoutAction );
@@ -1188,7 +1188,7 @@ component {
 		var section = request.section;
 		var item = request.item;
 		var subsystembase = '';
-		
+
 		// has view been overridden?
 		if ( structKeyExists( request._fw1, 'overrideViewAction' ) ) {
 			subsystem = getSubsystem( request._fw1.overrideViewAction );
@@ -1223,8 +1223,8 @@ component {
 		}
 		return cache.fileExists[ filePath ];
 	}
-	
-	
+
+
 	private string function cfcFilePath( string dottedPath ) {
 		if ( dottedPath == '' ) {
 			return '/';
@@ -1232,7 +1232,7 @@ component {
 			return '/' & replace( dottedPath, '.', '/', 'all' ) & '/';
 		}
 	}
-	
+
 	private void function doController( struct tuple, string method, string lifecycle ) {
         var cfc = tuple.controller;
 		if ( structKeyExists( cfc, method ) ) {
@@ -1256,7 +1256,7 @@ component {
             frameworkTrace( 'no #lifecycle# controller to call', tuple.subsystem, tuple.section, method );
         }
 	}
-	
+
 	private any function doService( struct tuple, string method, struct args, boolean enforceExistence ) {
         var cfc = tuple.service;
 		if ( structKeyExists( cfc, method ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
@@ -1276,11 +1276,11 @@ component {
 				detail="To have the execution of this service method be conditional based upon its existence, pass in a third parameter of 'false'." );
 		}
 	}
-	
+
 	private void function dumpException( any exception ) {
 		writeDump( var = exception, label = 'Exception' );
 	}
-	
+
 	private void function ensureNewFrameworkStructsExist() {
 
 		var framework = application[variables.framework.applicationKey];
@@ -1310,7 +1310,7 @@ component {
 			}
 			writeOutput( '<h#1+h#>#exception.message#</h#1+h#>' );
 		}
-		
+
 		writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
 		dumpException(exception);
 
@@ -1442,7 +1442,7 @@ component {
 		var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
 		var componentKey = subsystemUnderscore & section;
 		var beanName = section & type;
-		
+
 		if ( !structKeyExists( cache[ types ], componentKey ) ) {
 			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#type#_#componentKey#" type="exclusive" timeout="30" {
 				if ( !structKeyExists( cache[ types ], componentKey ) ) {
@@ -1486,14 +1486,14 @@ component {
 		}
 		// else "return null" effectively
 	}
-	
+
 	private any function getController( string section, string subsystem = getDefaultSubsystem() ) {
 		var _controller_fw1 = getCachedComponent( 'controller', subsystem, section );
 		if ( isDefined( '_controller_fw1' ) ) {
 			return _controller_fw1;
 		}
 	}
-	
+
 	private string function getNextPreserveKeyAndPurgeOld() {
 		var nextPreserveKey = '';
 		var oldKeyToPurge = '';
@@ -1521,18 +1521,18 @@ component {
 		}
 		return nextPreserveKey;
 	}
-	
+
 	private string function getPreserveKeySessionKey( string preserveKey ) {
 		return '__fw1' & preserveKey;
 	}
-	
+
 	private any function getService( string section, string subsystem = getDefaultSubsystem() ) {
 		var _service_fw1 = getCachedComponent( 'service', subsystem, section );
 		if ( isDefined( '_service_fw1' ) ) {
 			return _service_fw1;
 		}
 	}
-	
+
 	private string function getSubsystemDirPrefix( string subsystem ) {
 
 		if ( subsystem eq '' ) {
@@ -1541,7 +1541,7 @@ component {
 
 		return subsystem & '/';
 	}
-	
+
 	private void function injectFramework( any cfc ) {
 		var args = { };
 		if ( structKeyExists( cfc, 'setFramework' ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
@@ -1552,7 +1552,7 @@ component {
 			evaluate( 'cfc.setFramework( argumentCollection = args )' );
 		}
 	}
-	
+
 	private string function internalLayout( string layoutPath, string body ) {
 		var rc = request.context;
 		var $ = { };
@@ -1570,7 +1570,7 @@ component {
 		}
 		return response;
 	}
-	
+
 	private string function internalView( string viewPath, struct args = { } ) {
 		var rc = request.context;
 		var $ = { };
@@ -1590,7 +1590,7 @@ component {
 		}
 		return response;
 	}
-	
+
 	private boolean function isFrameworkInitialized() {
 		return structKeyExists( variables, 'framework' ) &&
             structKeyExists( application, variables.framework.applicationKey );
@@ -1627,7 +1627,7 @@ component {
 		return customizeViewOrLayoutPath( pathInfo, type, '#pathInfo.base##type#s/#pathInfo.path#.cfm' );
 
 	}
-	
+
 	private struct function processRouteMatch( string route, string target, string path ) {
 		var regExCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.regex : { };
 		var cacheKey = hash( route & target );
@@ -1730,7 +1730,7 @@ component {
 						var target = '/#subsystemResourceTarget#/#routeTemplate.method#';
 						if ( structKeyExists( routeTemplate, 'includeId' ) && routeTemplate.includeId ) target &= '/id/:id';
 						if ( structKeyExists( routeTemplate, 'targetSuffix' ) ) target &= routeTemplate.targetSuffix;
-						target &= targetAppend; 
+						target &= targetAppend;
 						routePack[ route ] = target;
 					}
 					arrayAppend( routes, routePack );
@@ -1838,7 +1838,7 @@ component {
 			// session scope not enabled, do nothing
 		}
 	}
-	
+
 	private string function saveFlashContext( string keys ) {
 		var curPreserveKey = getNextPreserveKeyAndPurgeOld();
 		var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
@@ -1870,7 +1870,7 @@ component {
 		}
 		request.failedMethod = method;
 	}
-	
+
 	private void function setupApplicationWrapper() {
 		/*
 			since this can be called on a reload, we need to lock it to prevent other threads
@@ -1896,20 +1896,20 @@ component {
 				isReload = false;
 				framework.cache = frameworkCache;
 				framework.subsystems = { };
-				framework.subsystemFactories = { }; 
+				framework.subsystemFactories = { };
 				application[variables.framework.applicationKey] = framework;
 			}
 		}
-		
+
 		// this will recreate the main bean factory on a reload:
         frameworkTrace( 'setupApplication() called' );
 		setupApplication();
-		
+
 		if ( isReload ) {
 			/*
 				it's possible that the cache got populated by another thread between resetting the cache above
 				and the factory getting recreated by the user code in setupApplication() so we flush the cache
-				again here to be safe / paranoid! 
+				again here to be safe / paranoid!
 			*/
 			frameworkCache = { };
 			frameworkCache.lastReload = now();
@@ -1920,9 +1920,9 @@ component {
 			application[variables.framework.applicationKey].cache = frameworkCache;
 			application[variables.framework.applicationKey].subsystems = { };
 		}
-	
+
 	}
-	
+
 	private void function setupFrameworkDefaults() {
 
 		// default values for Application::variables.framework structure:
@@ -2014,7 +2014,7 @@ component {
 		// NOTE: you can provide a comma delimited list of paths.  Since comma is the delim, it can not be part of your path URL to exclude
 		if ( !structKeyExists(variables.framework, 'unhandledPaths') ) {
 			variables.framework.unhandledPaths = '/flex2gateway';
-		}				
+		}
         if ( !structKeyExists( variables.framework, 'unhandledErrorCaught' ) ) {
             variables.framework.unhandledErrorCaught = false;
         }
@@ -2053,7 +2053,7 @@ component {
 		if ( !structKeyExists( variables.framework, 'trace' ) ) {
 			variables.framework.trace = false;
 		}
-	    variables.framework.version = '2.2.2';
+	    variables.framework.version = '2.2.3';
         setupFrameworkEnvironments();
 	}
 
@@ -2093,7 +2093,7 @@ component {
 						if ( routeMatch.matched ) {
 							pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
 							if ( routeMatch.redirect ) {
-								location( pathInfo, false, routeMatch.statusCode ); 
+								location( pathInfo, false, routeMatch.statusCode );
 							} else {
 								request._fw1.route = routeMatch.route;
 							}
@@ -2152,7 +2152,7 @@ component {
 		request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
 		request.section = getSection( request.action );
 		request.item = getItem( request.action );
-		
+
 		if ( runSetup ) {
 			rc = request.context;
             if ( usingSubsystems() ) {
@@ -2206,5 +2206,5 @@ component {
 		raiseException( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
 				detail="'#request.missingView#' does not exist." );
 	}
-	
+
 }
