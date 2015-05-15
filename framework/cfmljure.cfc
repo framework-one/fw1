@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.0_snapshot";
-    variables._cfmljure_version = "1.0_snapshot";
+    variables._fw1_version = "3.1-beta1";
+    variables._cfmljure_version = "0.2.3";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -17,11 +17,12 @@ component {
 	limitations under the License.
 
 */
-	
+
 	// constructor
     public any function init( string project = "", numeric timeout = 300,
                               string lein = "lein", // to allow default to be overridden
-                              string ns = "", any v = 0, any root = 0 ) {
+                              string ns = "", any root = 0 ) {
+        variables.refCache = { };
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
@@ -40,7 +41,7 @@ component {
             }
             fileWrite( script,
                        "#cmd.cd# #project#" & nl &
-                       "#lein# classpath" & nl );
+                       "#lein# with-profile production do clean, compile, classpath" & nl );
             var classpath = "";
             cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
             // could be multiple lines so clean it up:
@@ -86,18 +87,12 @@ component {
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
             // promote API:
-            this.install = this._install;
-            this.read = this._read;
-            this.toCFML = this._toCFML;
-            this.toClojure = this._toClojure;
+            this.install = this.__install;
+            this.read = this.__read;
+            this.toCFML = this.__toCFML;
+            this.toClojure = this.__toClojure;
             // auto-load clojure.core and clojure.walk for clients
-            _install( "clojure.core, clojure.walk", this );
-        } else if ( !isSimpleValue( v ) ) {
-            variables._clj_root = root;
-            variables._clj_ns = ns;
-            variables._clj_v = v;
-            // allow deref on value:
-            this.deref = this._deref;
+            __install( "clojure.core, clojure.walk", this );
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -108,31 +103,26 @@ component {
     }
 
     public any function _( string name ) {
-        var v = __( name );
-        return v._deref();
+        return __( name, true );
     }
 
-    public any function _deref() {
-        return variables._clj_root.clojure.core.deref( variables._clj_v );
-    }
-
-    public any function _install( any nsList, struct target ) {
+    public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         for ( var ns in nsList ) {
-            __install( trim( ns ), target );
+            __1_install( trim( ns ), target );
         }
     }
 
-    public any function _read( string expr ) {
+    public any function __read( string expr ) {
         var args = [ expr ];
         return variables._clj_root._clj_read.invoke( javaCast( "null", 0 ), args.toArray() );
     }
 
-    public any function _toCFML( any expr ) {
+    public any function __toCFML( any expr ) {
         return this.clojure.walk.stringify_keys( expr );
     }
 
-    public any function _toClojure( any expr ) {
+    public any function __toClojure( any expr ) {
         return this.clojure.walk.keywordize_keys(
             isStruct( expr ) ?
                 this.clojure.core.into( this.clojure.core.hash_map(), expr ) : expr
@@ -141,15 +131,15 @@ component {
 
     // helper functions:
 
-    public any function __( string name ) {
-        if ( !structKeyExists( variables, name ) ) {
-            variables[ name ] = new cfmljure(
-                v = _var( variables._clj_ns, name ),
-                ns = variables._clj_ns,
-                root = variables._clj_root
-            );
+    public any function __( string name, boolean autoDeref ) {
+        if ( !structKeyExists( variables.refCache, name ) ) {
+            if ( autoDeref ) {
+                variables.refCache[ name ] = variables._clj_root.clojure.core.deref( __var( variables._clj_ns, name ) );
+            } else {
+                variables.refCache[ name ] = __var( variables._clj_ns, name );
+            }
         }
-        return variables[ name ];
+        return variables.refCache[ name ];
     }
 
     public any function __classes( string name, numeric n = 1, string prefix = "java.lang" ) {
@@ -162,12 +152,12 @@ component {
         return result.toArray( arrayInstance );
     }
 
-    public any function __install( string ns, struct target ) {
-        _require( ns );
-        ___install( listToArray( ns, "." ), target );
+    public any function __1_install( string ns, struct target ) {
+        __require( ns );
+        __2_install( listToArray( ns, "." ), target );
     }
 
-    public any function ___install( array nsParts, struct target ) {
+    public any function __2_install( array nsParts, struct target ) {
         var first = replace( nsParts[ 1 ], "-", "_", "all" );
         var ns = replace( nsParts[ 1 ], "_", "-", "all" );
         var n = arrayLen( nsParts );
@@ -179,79 +169,79 @@ component {
         }
         if ( n > 1 ) {
             arrayDeleteAt( nsParts, 1 );
-            target[ first ].___install( nsParts, target[ first ] );
+            target[ first ].__2_install( nsParts, target[ first ] );
         }
     }
 
-    public any function _call( any argsArray ) {
+    public any function __call( any v, any argsArray ) {
         switch ( arrayLen( argsArray ) ) {
         case 0:
-            return variables._clj_v.invoke();
+            return v.invoke();
             break;
         case 1:
-            return variables._clj_v.invoke( argsArray[1] );
+            return v.invoke( argsArray[1] );
             break;
         case 2:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2] );
+            return v.invoke( argsArray[1], argsArray[2] );
             break;
         case 3:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3] );
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3] );
             break;
         case 4:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4] );
             break;
         case 5:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5] );
             break;
         case 6:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6] );
             break;
         case 7:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7] );
             break;
         case 8:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8] );
             break;
         case 9:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9] );
             break;
         case 10:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10] );
             break;
         case 11:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10], argsArray[11] );
             break;
         case 12:
-            return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3],
+            return v.invoke( argsArray[1], argsArray[2], argsArray[3],
                                             argsArray[4], argsArray[5], argsArray[6],
                                             argsArray[7], argsArray[8], argsArray[9],
                                             argsArray[10], argsArray[11], argsArray[12] );
             break;
 		case 13:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13] );
 		case 14:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13], argsArray[14] );
 		case 15:
-			return variables._clj_v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
+			return v.invoke( argsArray[1], argsArray[2], argsArray[3], argsArray[4], argsArray[5],
 											argsArray[6], argsArray[7], argsArray[8], argsArray[9], argsArray[10],
                                             argsArray[11], argsArray[12], argsArray[13], argsArray[14], argsArray[15] );
         default:
@@ -260,14 +250,14 @@ component {
         }
     }
 
-    public void function _require( string ns ) {
+    public void function __require( string ns ) {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
-            variables._clj_require = _var( "clojure.core", "require" );
+            variables._clj_require = __var( "clojure.core", "require" );
         }
         variables._clj_require.invoke( this.read( ns ) );
     }
 
-    public any function _var( string ns, string name ) {
+    public any function __var( string ns, string name ) {
         var encodes = [ "_qmark_", "_bang_", "_gt_", "_lt_", "_eq_", "_star_", "_" ];
         var decodes = [ "?",       "!",      ">",    "<",    "=",    "*",      "-" ];
         var n = encodes.len();
@@ -279,15 +269,10 @@ component {
     }
 
     public any function onMissingMethod( string missingMethodName, any missingMethodArguments ) {
-        var ref = left( missingMethodName, 1 ) == "_";
-        if ( ref ) {
-            missingMethodName = right( missingMethodName, len( missingMethodName ) - 1 );
-        }
-        var v = __( missingMethodName );
-        if ( ref ) {
-            return v._deref();
+        if ( left( missingMethodName, 1 ) == "_" ) {
+            return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {
-            return v._call( missingMethodArguments );
+            return __call( __( missingMethodName, false ), missingMethodArguments );
         }
     }
 
