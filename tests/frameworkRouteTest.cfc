@@ -2,10 +2,13 @@ component extends="tests.InjectableTest" {
 
     public void function setUp() {
         variables.fw = new framework.one();
+        injectMethod( variables.fw, this, 'isFrameworkInitialized', 'isFrameworkInitialized' );
+        variables.fwVars = getVariablesScope( variables.fw );
+        variables.fwVars.framework.routesCaseSensitive = true;
         // doesn't work on Railo:
         // makePublic(variables.fw, "processRouteMatch");
         // this works on both Railo and ACF:
-        variables.fw.processRouteMatch = getVariablesScope(variables.fw).processRouteMatch;
+        variables.fw.processRouteMatch = variables.fwVars.processRouteMatch;
     }
 
     public void function testRouteMatchBasics()
@@ -116,5 +119,11 @@ component extends="tests.InjectableTest" {
         var uri = variables.fw.buildCustomURL( "/product/:ignore" );
         uri = REReplace( uri, "^.*\.cf[cm]", "" );
         assertEquals( "/product/:ignore", uri );
+    }
+    
+    // PRIVATE
+
+    private boolean function isFrameworkInitialized() {
+        return false;
     }
 }

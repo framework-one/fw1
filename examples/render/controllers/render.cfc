@@ -22,4 +22,8 @@ component {
         variables.fw.renderData( 'json', [ "An", "array", { "containing" = "data" } ] );
     }
 
+    public void function jsonString( struct rc ) {
+        variables.fw.renderData( 'rawjson', '[ "An", "array", { "containing" = "data" } ]' );
+    }
+
 }
