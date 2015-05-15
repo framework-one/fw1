@@ -2,7 +2,7 @@ component extends=framework.one {
     variables.framework = {
         trace : true,
         diComponent : "framework.ioclj",
-        diLocations : "."
+        diLocations : expandPath(".")
     };
     function setupRequest() {
         // to allow reloading of Clojure code - pass all or a namespace name:
