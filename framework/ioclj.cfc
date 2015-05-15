@@ -20,6 +20,10 @@ component extends=framework.ioc {
     // CONSTRUCTOR
 
     public any function init( string folders, struct config = { } ) {
+        variables.debug = structKeyExists( config, "debug" ) ? config.debug : false;
+        if ( variables.debug ) {
+            variables.stdout = createObject( "java", "java.lang.System" ).out;
+        }
         // find the first folder that includes project.clj - that's our project
         variables.project = findProjectFile( folders );
         // initialize DI/1 parent
@@ -145,7 +149,11 @@ component extends=framework.ioc {
                     } else {
                         variables.cljBeans[ beanName ] = { ns : ns, nsx : parts, type : lbo1 };
                     }
+                } else if ( variables.debug ) {
+                    variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it is not plural (#lbo#)" );
                 }
+            } else if ( variables.debug ) {
+                variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it does not have at least three segments" );
             }
         }
     }
