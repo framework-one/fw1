@@ -76,6 +76,33 @@ component extends=framework.ioc {
         }
     }
 
+
+    // convenience API for metaprogramming perhaps?
+    public any function getBeanInfo( string beanName = '', boolean flatten = false,
+                                     string regex = '' ) {
+        if ( len( beanName ) ) {
+            // ask about a specific bean:
+            if ( structKeyExists( variables.cljBeans, beanName ) ) {
+                return variables.cljBeans[ beanName ];
+            }
+            return super.getBeanInfo( beanName, flatten, regex );
+        } else {
+            var result = super.getBeanInfo( beanName, flatten, regex );
+            structAppend( result.beanInfo, variables.cljBeans );
+            if ( len( regex ) ) {
+                var matched = { };
+                for ( var name in result.beanInfo ) {
+                    if ( REFind( regex, name ) ) {
+                        matched[ name ] = result.beanInfo[ name ];
+                    }
+                }
+                result.beanInfo = matched;
+            }
+            return result;
+        }
+    }
+
+
     // reload-all a given namespace or reload all
     public void function reload( string ns ) {
         var core = variables.cfmljure.clojure.core;
