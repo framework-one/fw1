@@ -42,6 +42,8 @@ component extends=framework.ioc {
         cfmljure.install( ns, app );
         variables.clojureApp = app;
         variables.cfmljure = cfmljure;
+        // make this injectable:
+        addBean( "cfmljure", cfmljure );
         return this;
     }
 
