@@ -74,15 +74,15 @@ component {
             for ( var newURL in urls.toArray() ) {
                 addURL.invoke( appCL, [ newURL ] );
             }
-            var out = javaLangSystem.out;
+            variables.out = javaLangSystem.out;
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
-                out.println( "Detected Clojure 1.6 or later" );
+                variables.out.println( "Detected Clojure 1.6 or later" );
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
                 var clj5 = appCL.loadClass( "clojure.lang.RT" );
-                out.println( "Falling back to Clojure 1.5 or earlier" );
+                variables.out.println( "Falling back to Clojure 1.5 or earlier" );
                 this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
                 this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
             }
@@ -107,9 +107,23 @@ component {
     }
 
     public any function __install( any nsList, struct target ) {
+        var lockFile = getTempDirectory() & "cfmljure.lock";
+        while ( fileExists( lockFile ) ) {
+            variables.out.println( "Waiting for #lockFile# to be deleted..." );
+            sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
+        }
+        fileWriteLine( lockFile, "" );
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
-        for ( var ns in nsList ) {
-            __1_install( trim( ns ), target );
+        try {
+            for ( var ns in nsList ) {
+                __1_install( trim( ns ), target );
+            }
+        } finally {
+            try {
+                fileDelete( lockFile );
+            } catch ( any e ) {
+                variables.out.println( "Unable to delete #lockFile#!!!" );
+            }
         }
     }
 
