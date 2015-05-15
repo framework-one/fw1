@@ -1,5 +1,5 @@
 component extends=framework.ioc {
-    variables._fw1_version = "3.0_snapshot";
+    variables._fw1_version = "3.1-beta1";
     variables._ioclj_version = "1.0_snapshot";
 /*
     Copyright (c) 2015, Sean Corfield
@@ -18,7 +18,7 @@ component extends=framework.ioc {
 */
 
     // CONSTRUCTOR
-    
+
     public any function init( string folders, struct config = { } ) {
         // find the first folder that includes project.clj - that's our project
         variables.project = findProjectFile( folders );
@@ -40,7 +40,7 @@ component extends=framework.ioc {
         variables.cfmljure = cfmljure;
         return this;
     }
-    
+
     // PUBLIC METHODS
 
     // return true if the factory (or a parent factory) knows about the requested bean
