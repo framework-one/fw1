@@ -107,7 +107,9 @@ component {
     }
 
     public any function __install( any nsList, struct target ) {
-        var lockFile = getTempDirectory() & "cfmljure.lock";
+        // this assumes a system has either /tmp (Mac/Linux) or /temp (Windows)
+        // and that your servlet container server will have write permission!
+        var lockFile = directoryExists( "/tmp" ) ? "/tmp/cfmljure.lock" : "/temp/cfmljure.lock";
         while ( fileExists( lockFile ) ) {
             variables.out.println( "Waiting for #lockFile# to be deleted..." );
             sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
