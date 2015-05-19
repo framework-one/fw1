@@ -1732,7 +1732,7 @@ component {
             if ( routeLen ) {
                 if ( left( routeRegEx.pattern, 1 ) == '$' ) {
                     // check HTTP method
-                    routeRegEx.method = listFirst( routeRegEx.pattern, '*/' );
+                    routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
                     var methodLen = len( routeRegEx.method );
                     if ( routeLen == methodLen ) {
                         routeRegEx.pattern = '*';
