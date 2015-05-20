@@ -26,14 +26,15 @@ component {
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
-            var script = getTempFile( getTempDirectory(), "lein" );
             var javaLangSystem = createObject( "java", "java.lang.System" );
             var nl = javaLangSystem.getProperty( "line.separator" );
             var fs = javaLangSystem.getProperty( "file.separator" );
+            var nixLike = fs == "/";
+            var script = getTempFile( nixLike ? "/tmp" : "/temp", "lein" );
             var cmd = { };
-            if ( fs == "/" ) {
+            if ( nixLike ) {
                 // *nix / Mac
-                cmd = { cd = "cd", run = "sh", arg = script };
+                cmd = { cd = "cd", run = "/bin/sh", arg = script };
             } else {
                 // Windows
                 script &= ".bat";
