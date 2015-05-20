@@ -44,7 +44,17 @@ component {
                        "#cmd.cd# #project#" & nl &
                        "#lein# with-profile production do clean, compile, classpath" & nl );
             var classpath = "";
-            cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
+            try {
+                cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
+            } catch ( any e ) {
+                if ( structKeyExists( URL, "cfmljure" ) &&
+                     URL.cfmljure == "abortOnFailure" ) {
+                    writeDump( var = cmd, label = "Unable to cfexecute this" );
+                    writeDump( var = e, label = "Full stack trace" );
+                    abort;
+                }
+                throw e;
+            }
             // could be multiple lines so clean it up:
             classpath = listLast( classpath, nl );
             classpath = replace( classpath, nl, "" );
