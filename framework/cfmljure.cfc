@@ -34,27 +34,46 @@ component {
             var cmd = { };
             if ( nixLike ) {
                 // *nix / Mac
-                cmd = { cd = "cd", run = "/bin/sh", arg = script };
+                cmd = {
+                    cd = "cd", run = "/bin/sh", arg = script,
+                    exitCmd = "exit 0#nl#"
+                };
+                // ensure Servlet container's options do not affect Leiningen:
+                lein = "JAVA_OPTS= " & lein;
             } else {
                 // Windows
                 script &= ".bat";
-                cmd = { cd = "chdir", run = script, arg = "" };
+                cmd = {
+                    cd = "chdir", run = script, arg = "", exitCmd = ""
+                };
             }
-            fileWrite( script,
-                       "#cmd.cd# #project#" & nl &
-                       "#lein# with-profile production do clean, compile, classpath" & nl );
+            fileWrite(
+                script,
+                "#cmd.cd# #project#" & nl &
+                    "#lein# with-profile production do clean, compile, classpath" & nl &
+                    cmd.exitCmd
+            );
             var classpath = "";
+            var errors = "";
             try {
-                cfexecute( name="#cmd.run#", arguments="#cmd.arg#", variable="classpath", timeout="#timeout#" );
+                var lockFile = __acquireLock();
+                cfexecute(
+                    name="#cmd.run#", arguments="#cmd.arg#",
+                    variable="classpath", errorVariable="errors",
+                    timeout="#timeout#" );
             } catch ( any e ) {
+                __releaseLock( lockFile );
                 if ( structKeyExists( URL, "cfmljure" ) &&
                      URL.cfmljure == "abortOnFailure" ) {
                     writeDump( var = cmd, label = "Unable to cfexecute this" );
+                    writeDump( var = classpath, label = "Leiningen stdout" );
+                    writeDump( var = errors, label = "Leiningen stderr" );
                     writeDump( var = e, label = "Full stack trace" );
                     abort;
                 }
                 throw e;
             }
+            __releaseLock( lockFile );
             // could be multiple lines so clean it up:
             classpath = listLast( classpath, nl );
             classpath = replace( classpath, nl, "" );
@@ -117,7 +136,7 @@ component {
         return __( name, true );
     }
 
-    public any function __install( any nsList, struct target ) {
+    private string function __acquireLock() {
         // this assumes a system has either /tmp (Mac/Linux) or /temp (Windows)
         // and that your servlet container server will have write permission!
         var lockFile = directoryExists( "/tmp" ) ? "/tmp/cfmljure.lock" : "/temp/cfmljure.lock";
@@ -126,17 +145,26 @@ component {
             sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
         }
         fileWriteLine( lockFile, "" );
+        return lockFile;
+    }
+
+    private void function __releaseLock( string lockFile ) {
+        try {
+            fileDelete( lockFile );
+        } catch ( any e ) {
+            variables.out.println( "Unable to delete #lockFile#!!!" );
+        }
+    }
+
+    public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         try {
+            var lockFile = __acquireLock();
             for ( var ns in nsList ) {
                 __1_install( trim( ns ), target );
             }
         } finally {
-            try {
-                fileDelete( lockFile );
-            } catch ( any e ) {
-                variables.out.println( "Unable to delete #lockFile#!!!" );
-            }
+            __releaseLock( lockFile );
         }
     }
 
