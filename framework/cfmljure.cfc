@@ -27,6 +27,7 @@ component {
             variables._clj_root = this;
             variables._clj_ns = "";
             var javaLangSystem = createObject( "java", "java.lang.System" );
+            variables.out = javaLangSystem.out;
             var nl = javaLangSystem.getProperty( "line.separator" );
             var fs = javaLangSystem.getProperty( "file.separator" );
             var nixLike = fs == "/";
@@ -104,7 +105,6 @@ component {
             for ( var newURL in urls.toArray() ) {
                 addURL.invoke( appCL, [ newURL ] );
             }
-            variables.out = javaLangSystem.out;
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
                 variables.out.println( "Detected Clojure 1.6 or later" );
