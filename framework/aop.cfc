@@ -17,7 +17,7 @@ component extends="framework.ioc" {
     limitations under the License.
 */
 
-    // ADDITIONAL INTERNAL STATE (A)
+    // ADDITIONAL INTERNAL STATE
     variables.interceptInfo = { };
 
     // PUBLIC METHODS
