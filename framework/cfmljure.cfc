@@ -31,50 +31,65 @@ component {
             var nl = javaLangSystem.getProperty( "line.separator" );
             var fs = javaLangSystem.getProperty( "file.separator" );
             var nixLike = fs == "/";
-            var script = getTempFile( nixLike ? "/tmp" : "/temp", "lein" );
+            var script = "";
             var cmd = { };
+            var tmpDir = "";
             if ( nixLike ) {
                 // *nix / Mac
+                tmpDir = "/tmp";
+                script = getTempFile( tmpDir, "lein" );
                 cmd = {
                     cd = "cd", run = "/bin/sh", arg = script,
+                    // make sure we are not trying to run under root account!
+                    preflightCmd = "if [ `id -u` -eq 0 ]; then >&2 echo 'DO NOT RUN CFML OR CFMLJURE AS ROOT!'; exit 1; fi#nl#",
                     exitCmd = "exit 0#nl#"
                 };
                 // ensure Servlet container's options do not affect Leiningen:
                 lein = "JAVA_OPTS= " & lein;
             } else {
                 // Windows
+                tmpDir = "/temp";
+                script = getTempFile( tmpDir, "lein" );
                 script &= ".bat";
                 cmd = {
-                    cd = "chdir", run = script, arg = "", exitCmd = ""
+                    cd = "chdir", run = script, arg = "",
+                    preflightCmd = "", exitCmd = ""
                 };
             }
+            variables.__lockFile = tmpDir & "/cfmljure.lock";
             fileWrite(
                 script,
                 "#cmd.cd# #project#" & nl &
+                    cmd.preflightCmd &
                     "#lein# with-profile production do clean, compile, classpath" & nl &
                     cmd.exitCmd
             );
             var classpath = "";
             var errors = "";
+            __acquireLock( variables.__lockFile );
             try {
-                var lockFile = __acquireLock();
                 cfexecute(
                     name="#cmd.run#", arguments="#cmd.arg#",
                     variable="classpath", errorVariable="errors",
                     timeout="#timeout#" );
             } catch ( any e ) {
-                __releaseLock( lockFile );
+                __releaseLock( variables.__lockFile );
                 if ( structKeyExists( URL, "cfmljure" ) &&
                      URL.cfmljure == "abortOnFailure" ) {
-                    writeDump( var = cmd, label = "Unable to cfexecute this" );
-                    writeDump( var = classpath, label = "Leiningen stdout" );
-                    writeDump( var = errors, label = "Leiningen stderr" );
+                    writeDump( var = cmd, label = "Unable to cfexecute this script" );
+                    if ( !isNull( classpath ) ) writeDump( var = classpath, label = "Leiningen stdout" );
+                    if ( !isNull( errors ) ) writeDump( var = errors, label = "Leiningen stderr" );
                     writeDump( var = e, label = "Full stack trace" );
                     abort;
                 }
                 throw e;
             }
-            __releaseLock( lockFile );
+            __releaseLock( variables.__lockFile );
+            try {
+                fileDelete( script );
+            } catch ( any e ) {
+                variables.out.println( "Unable to delete #script#!!!" );
+            }
             // could be multiple lines so clean it up:
             classpath = listLast( classpath, nl );
             classpath = replace( classpath, nl, "" );
@@ -136,16 +151,15 @@ component {
         return __( name, true );
     }
 
-    private string function __acquireLock() {
-        // this assumes a system has either /tmp (Mac/Linux) or /temp (Windows)
-        // and that your servlet container server will have write permission!
-        var lockFile = directoryExists( "/tmp" ) ? "/tmp/cfmljure.lock" : "/temp/cfmljure.lock";
+    private void function __acquireLock( string lockFile ) {
+        var waits = 0;
         while ( fileExists( lockFile ) ) {
+            if ( waits > 3 ) throw "cfmljure waited a long time for #lockFile# to be deleted - perhaps you should delete it manually and try again?";
             variables.out.println( "Waiting for #lockFile# to be deleted..." );
             sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
+            ++waits;
         }
         fileWriteLine( lockFile, "" );
-        return lockFile;
     }
 
     private void function __releaseLock( string lockFile ) {
@@ -159,12 +173,12 @@ component {
     public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         try {
-            var lockFile = __acquireLock();
+            __acquireLock( variables.__lockFile );
             for ( var ns in nsList ) {
                 __1_install( trim( ns ), target );
             }
         } finally {
-            __releaseLock( lockFile );
+            __releaseLock( variables.__lockFile );
         }
     }
 
