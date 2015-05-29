@@ -29,8 +29,9 @@ component {
              missingMethodArguments.method == "item" ) {
             var rc = missingMethodArguments.rc;
             try {
+                var rcClj = variables.cfmljure.toClojure( rc );
                 var result = variables.cfmljure.toCFML(
-                    variables.ns[ missingMethodName ]( variables.cfmljure.toClojure( rc ) )
+                    evaluate( "variables.ns[ missingMethodName ]( rcClj )" );
                 );
                 structClear( rc );
                 structAppend( rc, result );

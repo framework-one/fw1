@@ -162,9 +162,14 @@ component extends=framework.ioc {
     private string function findProjectFile( string folderList ) {
         var folders = listToArray( folderList );
         for ( var folder in folders ) {
-            var path = replace( expandPath( trim( folder ) ), chr(92), "/", "all" );
+            var expandedFolder = expandPath( trim( folder ) );
+            // for ACF11 compatibility, only use expanded path if it exists
+            if ( directoryExists( expandedFolder ) ) folder = expandedFolder;
+            if ( !directoryExists( folder ) ) continue;
+            var path = replace( folder, chr(92), "/", "all" );
             if ( fileExists( path & "/project.clj" ) ) {
                 // found our Clojure project, return it
+                if ( variables.debug ) variables.stdout.println( "ioclj: using #path#/project.clj for Clojure root" );
                 return path;
             }
         }

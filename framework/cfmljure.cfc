@@ -56,7 +56,7 @@ component {
                     preflightCmd = "", exitCmd = ""
                 };
             }
-            variables.__lockFile = tmpDir & "/cfmljure.lock";
+            variables.__lockFilePath = tmpDir & "/cfmljure.lock";
             fileWrite(
                 script,
                 "#cmd.cd# #project#" & nl &
@@ -66,14 +66,14 @@ component {
             );
             var classpath = "";
             var errors = "";
-            __acquireLock( variables.__lockFile );
+            __acquireLock( variables.__lockFilePath );
             try {
                 cfexecute(
                     name="#cmd.run#", arguments="#cmd.arg#",
                     variable="classpath", errorVariable="errors",
                     timeout="#timeout#" );
             } catch ( any e ) {
-                __releaseLock( variables.__lockFile );
+                __releaseLock( variables.__lockFilePath );
                 if ( structKeyExists( URL, "cfmljure" ) &&
                      URL.cfmljure == "abortOnFailure" ) {
                     writeDump( var = cmd, label = "Unable to cfexecute this script" );
@@ -84,7 +84,7 @@ component {
                 }
                 throw e;
             }
-            __releaseLock( variables.__lockFile );
+            __releaseLock( variables.__lockFilePath );
             try {
                 fileDelete( script );
             } catch ( any e ) {
@@ -151,34 +151,34 @@ component {
         return __( name, true );
     }
 
-    private void function __acquireLock( string lockFile ) {
+    private void function __acquireLock( string lockFilePath ) {
         var waits = 0;
-        while ( fileExists( lockFile ) ) {
-            if ( waits > 3 ) throw "cfmljure waited a long time for #lockFile# to be deleted - perhaps you should delete it manually and try again?";
-            variables.out.println( "Waiting for #lockFile# to be deleted..." );
+        while ( fileExists( lockFilePath ) ) {
+            if ( waits > 3 ) throw "cfmljure waited a long time for #lockFilePath# to be deleted - perhaps you should delete it manually and try again?";
+            variables.out.println( "Waiting for #lockFilePath# to be deleted..." );
             sleep( ( 15 * randRange( 1, 15 ) ) * 1000 );
             ++waits;
         }
-        fileWriteLine( lockFile, "" );
+        fileWrite( lockFilePath, "" );
     }
 
-    private void function __releaseLock( string lockFile ) {
+    private void function __releaseLock( string lockFilePath ) {
         try {
-            fileDelete( lockFile );
+            fileDelete( lockFilePath );
         } catch ( any e ) {
-            variables.out.println( "Unable to delete #lockFile#!!!" );
+            variables.out.println( "Unable to delete #lockFilePath#!!!" );
         }
     }
 
     public any function __install( any nsList, struct target ) {
         if ( !isArray( nsList ) ) nsList = listToArray( nsList );
         try {
-            __acquireLock( variables.__lockFile );
+            __acquireLock( variables.__lockFilePath );
             for ( var ns in nsList ) {
                 __1_install( trim( ns ), target );
             }
         } finally {
-            __releaseLock( variables.__lockFile );
+            __releaseLock( variables.__lockFilePath );
         }
     }
 
