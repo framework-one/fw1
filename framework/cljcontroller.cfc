@@ -31,7 +31,7 @@ component {
             try {
                 var rcClj = variables.cfmljure.toClojure( rc );
                 var result = variables.cfmljure.toCFML(
-                    evaluate( "variables.ns[ missingMethodName ]( rcClj )" )
+                    evaluate( "variables.ns.#missingMethodName#( rcClj )" )
                 );
                 structClear( rc );
                 structAppend( rc, result );
