@@ -48,7 +48,7 @@ component {
                 lein = "JAVA_OPTS= " & lein;
             } else {
                 // Windows
-                tmpDir = "/temp";
+                tmpDir = replace( javaLangSystem.getenv( "TEMP" ), chr(92), "/", "all" );
                 script = getTempFile( tmpDir, "lein" );
                 script &= ".bat";
                 cmd = {
