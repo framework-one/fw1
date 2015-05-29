@@ -129,6 +129,9 @@ component extends=framework.ioc {
         var n = len( src ) + 1; // allow for trailing /
         try {
             cljs = directoryList( src, true, "path", "*.clj" );
+            // we also support .cljc files
+            var cljcs = directoryList( src, true, "path", "*.cljc" );
+            for ( var cljcOSPath in cljcs ) cljs.append( cljcOSPath );
         } catch ( any e ) {
             // assume bad path and ignore it
         }
@@ -136,7 +139,8 @@ component extends=framework.ioc {
         for ( var cljOSPath in cljs ) {
             var cljPath = replace( cljOSPath, chr(92), "/", "all" );
             cljPath = right( cljPath, len( cljPath ) - n );
-            cljPath = left( cljPath, len( cljPath ) - 4 );
+            // allow for extension being either .clj or .cljc
+            cljPath = left( cljPath, len( cljPath ) - ( right( cljPath, 1 ) == "c" ? 5 : 4 ) );
             var ns = replace( replace( cljPath, "/", ".", "all" ), "_", "-", "all" );
             var parts = listToArray( cljPath, "/" );
             var nParts = arrayLen( parts );
