@@ -1,4 +1,5 @@
 component extends=framework.one {
+    this.sessionManagement = true;
     variables.framework = {
         trace : true,
         diComponent : "framework.ioclj",
