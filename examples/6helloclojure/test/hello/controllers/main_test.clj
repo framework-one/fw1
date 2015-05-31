@@ -1,4 +1,4 @@
-(ns hello.controllers-test
+(ns hello.controllers.main-test
   (:require [clojure.test :refer :all]
             [hello.controllers.main :refer :all]))
 
