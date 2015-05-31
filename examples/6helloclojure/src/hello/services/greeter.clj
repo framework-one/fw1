@@ -1,4 +1,3 @@
-(ns hello.services.greeter
-  (:require [hello.greet :as greet]))
+(ns hello.services.greeter)
 
-(defn greetings [s] (greet/hello (str s "!")))
+(defn hello [s] (str "Hello " s "!"))
