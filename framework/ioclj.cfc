@@ -42,7 +42,17 @@ component extends=framework.ioc {
         cfmljure.install( ns, app );
         variables.clojureApp = app;
         variables.cfmljure = cfmljure;
-        this.onLoad( function( bf ) { bf.addBean( "cfmljure", cfmljure ); } );
+        this.onLoad( function( bf ) {
+            // patch DI/1 bean info to include Clojure "beans" -- this allows Clojure
+            // to be autowired like any other "value" bean:
+            for ( var cljBean in variables.cljBeans ) {
+                variables.beanInfo[ cljBean ] = {
+                    name : cljBean, value : getBean( cljBean ), isSingleton : true
+                };
+            }
+            // add cfmljure to expose Clojure-related functions:
+            bf.addBean( "cfmljure", cfmljure );
+        } );
         return this;
     }
 
