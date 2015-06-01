@@ -181,6 +181,10 @@ component extends=framework.ioc {
             if ( directoryExists( expandedFolder ) ) folder = expandedFolder;
             if ( !directoryExists( folder ) ) continue;
             var path = replace( folder, chr(92), "/", "all" );
+            if ( right( path, 1 ) == "/" ) {
+                if ( len( path ) == 1 ) path = "";
+                else path = left( path, len( path ) - 1 );
+            }
             if ( fileExists( path & "/project.clj" ) ) {
                 // found our Clojure project, return it
                 if ( variables.debug ) variables.stdout.println( "ioclj: using #path#/project.clj for Clojure root" );
