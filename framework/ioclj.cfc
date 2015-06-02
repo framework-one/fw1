@@ -19,15 +19,20 @@ component extends=framework.ioc {
 
     // CONSTRUCTOR
 
-    public any function init( string folders, struct config = { } ) {
+    public any function init( any folders, struct config = { } ) {
+        if ( isSimpleValue( folders ) ) {
+            folders = listToArray( folders );
+        }
+        var folderArray = folders.map( function( f ) { return trim( f ); } );
+        var folderList = folderArray.reduce( function( l, f ) {  return listAppend( l, f ); }, "" );
         variables.debug = structKeyExists( config, "debug" ) ? config.debug : false;
         if ( variables.debug ) {
             variables.stdout = createObject( "java", "java.lang.System" ).out;
         }
         // find the first folder that includes project.clj - that's our project
-        variables.project = findProjectFile( folders );
+        variables.project = findProjectFile( folderArray );
         // initialize DI/1 parent
-        super.init( folders, config );
+        super.init( folderList, config );
         discoverClojureFiles();
         // list of namespaces to expose:
         var ns = [ ];
@@ -173,10 +178,9 @@ component extends=framework.ioc {
         }
     }
 
-    private string function findProjectFile( string folderList ) {
-        var folders = listToArray( folderList );
+    private string function findProjectFile( array folders ) {
         for ( var folder in folders ) {
-            var expandedFolder = expandPath( trim( folder ) );
+            var expandedFolder = expandPath( folder );
             // for ACF11 compatibility, only use expanded path if it exists
             if ( directoryExists( expandedFolder ) ) folder = expandedFolder;
             if ( !directoryExists( folder ) ) continue;
