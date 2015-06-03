@@ -195,7 +195,7 @@ component extends=framework.ioc {
                 return path;
             }
         }
-        throw "Unable to find project.clj in any of: #arrayToList( folders )#";
+        throw "Unable to find project.clj in any of: #arrayToList( folders, ', ' )#";
     }
 
 }
