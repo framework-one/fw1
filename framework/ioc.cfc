@@ -19,18 +19,9 @@ component {
 
     // CONSTRUCTOR
 
-    public any function init( any folders, struct config = { } ) {
-        variables.folderList = folders;
-        variables.folderArray = folders;
-        if ( isSimpleValue( folders ) ) {
-            variables.folderArray = listToArray( folders );
-        } else {
-            variables.folderList = arrayToList( folders );
-        }
-        var n = arrayLen( variables.folderArray );
-        for ( var i = 1; i <= n; ++i ) {
-            variables.folderArray[ i ] = trim( variables.folderArray[ i ] );
-        }
+    public any function init( string folders, struct config = { } ) {
+        variables.folders = folders;
+        variables.config = config;
         variables.beanInfo = { };
         variables.beanCache = { };
         variables.resolutionCache = { };
@@ -58,7 +49,7 @@ component {
 
     // programmatically register an alias
     public any function addAlias( string aliasName, string beanName ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
@@ -66,7 +57,7 @@ component {
 
     // programmatically register new beans with the factory (add a singleton name/value pair)
     public any function addBean( string beanName, any beanValue ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         variables.beanInfo[ beanName ] = {
             name = beanName, value = beanValue, isSingleton = true
         };
@@ -76,7 +67,7 @@ component {
 
     // return true if the factory (or a parent factory) knows about the requested bean
     public boolean function containsBean( string beanName ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         return structKeyExists( variables.beanInfo, beanName ) ||
                 ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
     }
@@ -84,7 +75,7 @@ component {
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         var singleDir = '';
         if ( listLen( dottedPath, '.' ) > 1 ) {
             var cfc = listLast( dottedPath, '.' );
@@ -102,7 +93,7 @@ component {
     }
 
     public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
@@ -115,7 +106,7 @@ component {
 
     // return the requested bean, fully populated
     public any function getBean( string beanName ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return resolveBean( beanName );
         } else if ( structKeyExists( variables, 'parent' ) ) {
@@ -128,7 +119,7 @@ component {
     // convenience API for metaprogramming perhaps?
     public any function getBeanInfo( string beanName = '', boolean flatten = false,
                                      string regex = '' ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         if ( len( beanName ) ) {
             // ask about a specific bean:
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -173,7 +164,7 @@ component {
 
     // return true iff bean is known to be a singleton
     public boolean function isSingleton( string beanName ) {
-        discoverBeans();
+        discoverBeans( variables.folders );
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return variables.beanInfo[ beanName ].isSingleton;
         } else if ( structKeyExists( variables, 'parent' ) ) {
@@ -212,7 +203,7 @@ component {
     // if you reload the parent, you must reload *all* child factories to ensure
     // things stay consistent!)
     public any function load() {
-        discoverBeans();
+        discoverBeans( variables.folders );
         variables.beanCache = { };
         variables.resolutionCache = { };
         variables.initMethodCache = { };
@@ -373,13 +364,14 @@ component {
     }
 
 
-    private void function discoverBeans() {
+    private void function discoverBeans( string folders ) {
         if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
-        lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
+        lock name="#application.applicationName#_ioc1_#folders#" type="exclusive" timeout="30" {
             if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
+            var folderArray = listToArray( folders );
             variables.pathMapCache = { };
-            for ( var f in variables.folderArray ) {
-                discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+            for ( var f in folderArray ) {
+                discoverBeansInFolder( replace( trim( f ), chr(92), '/', 'all' ) );
             }
             variables.discoveryComplete = true;
         }
