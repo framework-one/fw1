@@ -20,19 +20,14 @@ component extends=framework.ioc {
     // CONSTRUCTOR
 
     public any function init( any folders, struct config = { } ) {
-        if ( isSimpleValue( folders ) ) {
-            folders = listToArray( folders );
-        }
-        var folderArray = folders.map( function( f ) { return trim( f ); } );
-        var folderList = folderArray.reduce( function( l, f ) {  return listAppend( l, f ); }, "" );
         variables.debug = structKeyExists( config, "debug" ) ? config.debug : false;
         if ( variables.debug ) {
             variables.stdout = createObject( "java", "java.lang.System" ).out;
         }
-        // find the first folder that includes project.clj - that's our project
-        variables.project = findProjectFile( folderArray );
         // initialize DI/1 parent
-        super.init( folderList, config );
+        super.init( folders, config );
+        // find the first folder that includes project.clj - that's our project
+        variables.project = findProjectFile();
         discoverClojureFiles();
         // list of namespaces to expose:
         var ns = [ ];
@@ -178,8 +173,12 @@ component extends=framework.ioc {
         }
     }
 
-    private string function findProjectFile( array folders ) {
-        for ( var folder in folders ) {
+    private string function findProjectFile() {
+        for ( var folder in variables.folderArray ) {
+            if ( right( folder, 1 ) == "/" ) {
+                if ( len( folder ) == 1 ) folder = "";
+                else folder = left( folder, len( folder ) - 1 );
+            }
             var expandedFolder = expandPath( folder );
             // for ACF11 compatibility, only use expanded path if it exists
             if ( directoryExists( expandedFolder ) ) folder = expandedFolder;
@@ -195,7 +194,7 @@ component extends=framework.ioc {
                 return path;
             }
         }
-        throw "Unable to find project.clj in any of: #arrayToList( folders, ', ' )#";
+        throw "Unable to find project.clj in any of: #variables.folderList#";
     }
 
 }
