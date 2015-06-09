@@ -162,7 +162,10 @@ component extends=framework.ioc {
                     if ( structKeyExists( variables.cljBeans, beanName ) ) {
                         throw "#beanName# is not unique (from #cljPath#)";
                     } else {
-                        variables.cljBeans[ beanName ] = { ns : ns, nsx : parts, type : lbo1 };
+                        variables.cljBeans[ beanName ] = {
+                            ns : ns, nsx : parts, type : lbo1,
+                            isSingleton : true // for DI/1 compatibility
+                        };
                     }
                 } else if ( variables.debug ) {
                     variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it is not plural (#lbo#)" );

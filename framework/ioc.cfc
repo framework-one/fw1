@@ -166,6 +166,13 @@ component {
     }
 
 
+    // return a copy of the DI/1 configuration
+    public struct function getConfig() {
+        // note: we only make a shallow copy
+        return structCopy( variables.config );
+    }
+
+
     // return the DI/1 version
     public string function getVersion() {
         return variables.config.version;
@@ -218,7 +225,11 @@ component {
         variables.resolutionCache = { };
         variables.initMethodCache = { };
         for ( var key in variables.beanInfo ) {
-            if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
+            if ( !structKeyExists( variables.beanInfo[ key ], "isSingleton" ) )
+                throw "internal error: bean #key# has no isSingleton flag!";
+            if ( variables.beanInfo[ key ].isSingleton ) {
+                getBean( key );
+            }
         }
         return this;
     }
