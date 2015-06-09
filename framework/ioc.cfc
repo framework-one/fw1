@@ -260,7 +260,7 @@ component {
 
     private struct function cleanMetadata( string cfc ) {
         var baseMetadata = metadata( cfc );
-        var iocMeta = { setters = { }, pruned = false };
+        var iocMeta = { setters = { }, pruned = false, type = baseMetadata.type };
         var md = { extends = baseMetadata };
         do {
             md = md.extends;
@@ -406,6 +406,8 @@ component {
                 name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
                 path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
             };
+            if( structKeyExists( metadata.metadata, "type" ) and metadata.metadata.type == "interface" )
+                continue;
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
                 if ( variables.config.omitDirectoryAliases ) {
                     throw '#beanName# is not unique (and omitDirectoryAliases is true)';
