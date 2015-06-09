@@ -109,7 +109,7 @@ component {
         if ( isStruct( queryString ) && structCount( queryString ) ) {
             var q = '';
             for( var key in queryString ) {
-                if( isSimpleValue( queryString[key] ) ){
+                if ( isSimpleValue( queryString[key] ) ) {
                     q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
                 }
             }
@@ -1577,10 +1577,11 @@ component {
     }
 
     private struct function getFw1App() {
-        if (structKeyExists(variables, "fw1App"))
+        if ( structKeyExists( variables, "fw1App" ) ) {
             return variables.fw1App;
-        else
+        } else {
             return application[variables.framework.applicationKey];
+        }
     }
 
     private string function getNextPreserveKeyAndPurgeOld() {
@@ -2018,14 +2019,14 @@ component {
             because we don't want to affect other threads that may be running at this time
         */
         variables.fw1App = {
-            cache = { 
+            cache = {
                 lastReload = now(),
                 fileExists = { },
                 controllers = { },
                 routes = { regex = { }, resources = { } }
             },
             subsystems = { },
-            subsystemFactories = { } 
+            subsystemFactories = { }
         };
 
         switch ( variables.framework.diEngine ) {

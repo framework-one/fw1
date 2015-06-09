@@ -406,8 +406,9 @@ component {
                 name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
                 path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
             };
-            if( structKeyExists( metadata.metadata, "type" ) and metadata.metadata.type == "interface" )
+            if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
                 continue;
+            }
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
                 if ( variables.config.omitDirectoryAliases ) {
                     throw '#beanName# is not unique (and omitDirectoryAliases is true)';
