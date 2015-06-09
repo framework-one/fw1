@@ -381,7 +381,7 @@ component {
      * returns the bean factory set via setBeanFactory
      */
     public any function getDefaultBeanFactory() {
-        return application[ variables.framework.applicationKey ].factory;
+        return getFw1App().factory;
     }
 
     /*
@@ -547,7 +547,7 @@ component {
 
         setupSubsystemWrapper( subsystem );
 
-        return application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ];
+        return getFw1App().subsystemFactories[ subsystem ];
 
     }
 
@@ -592,7 +592,7 @@ component {
      * returns true iff the framework has been told about a bean factory via setBeanFactory
      */
     public boolean function hasDefaultBeanFactory() {
-        return structKeyExists( application[ variables.framework.applicationKey ], 'factory' );
+        return structKeyExists( getFw1App(), 'factory' );
     }
 
     /*
@@ -602,7 +602,7 @@ component {
 
         ensureNewFrameworkStructsExist();
 
-        return structKeyExists( application[ variables.framework.applicationKey ].subsystemFactories, subsystem );
+        return structKeyExists( getFw1App().subsystemFactories, subsystem );
 
     }
 
@@ -850,6 +850,8 @@ component {
 
         if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
             setupApplicationWrapper();
+        } else {
+            variables.fw1App = getFw1App();
         }
 
         restoreFlashContext();
@@ -1071,12 +1073,12 @@ component {
      */
     public void function setBeanFactory( any beanFactory ) {
         if ( isObject( beanFactory ) ) {
-            application[ variables.framework.applicationKey ].factory = beanFactory;
+            getFw1App().factory = beanFactory;
         } else {
-            structDelete( application[variables.framework.applicationKey], "factory" );
+            structDelete( getFw1App(), "factory" );
         }
         // to address #276 flush controller cache when bean factory is reset:
-        application[ variables.framework.applicationKey ].cache.controllers = { };
+        getFw1App().cache.controllers = { };
 
     }
 
@@ -1097,7 +1099,7 @@ component {
     public void function setSubsystemBeanFactory( string subsystem, any factory ) {
 
         ensureNewFrameworkStructsExist();
-        application[ variables.framework.applicationKey ].subsystemFactories[ subsystem ] = factory;
+        getFw1App().subsystemFactories[ subsystem ] = factory;
 
     }
 
@@ -1301,7 +1303,7 @@ component {
 
 
     private boolean function cachedFileExists( string filePath ) {
-        var cache = application[ variables.framework.applicationKey ].cache;
+        var cache = getFw1App().cache;
         if ( !variables.framework.cacheFileExists ) {
             return fileExists( expandPath( filePath) );
         }
@@ -1361,7 +1363,7 @@ component {
 
     private void function ensureNewFrameworkStructsExist() {
 
-        var framework = application[variables.framework.applicationKey];
+        var framework = getFw1App();
 
         if ( !structKeyExists(framework, 'subsystemFactories') ) {
             framework.subsystemFactories = { };
@@ -1519,7 +1521,7 @@ component {
     private any function getCachedController( string subsystem, string section ) {
 
         setupSubsystemWrapper( subsystem );
-        var cache = application[variables.framework.applicationKey].cache;
+        var cache = getFw1App().cache;
         var cfc = 0;
         var subsystemDir = getSubsystemDirPrefix( subsystem );
         var subsystemDot = replace( subsystemDir, '/', '.', 'all' );
@@ -1572,6 +1574,13 @@ component {
         if ( !isNull( _controller_fw1 ) ) {
             return _controller_fw1;
         }
+    }
+
+    private struct function getFw1App() {
+        if (structKeyExists(variables, "fw1App"))
+            return variables.fw1App;
+        else
+            return application[variables.framework.applicationKey];
     }
 
     private string function getNextPreserveKeyAndPurgeOld() {
@@ -1694,7 +1703,7 @@ component {
 
         ensureNewFrameworkStructsExist();
 
-        return structKeyExists( application[ variables.framework.applicationKey ].subsystems, subsystem );
+        return structKeyExists( getFw1App().subsystems, subsystem );
 
     }
 
@@ -1716,7 +1725,7 @@ component {
     }
 
     private struct function processRouteMatch( string route, string target, string path, string httpMethod ) {
-        var regExCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.regex : { };
+        var regExCache = isFrameworkInitialized() ? getFw1App().cache.routes.regex : { };
         var cacheKey = hash( route & target );
         if ( !structKeyExists( regExCache, cacheKey ) ) {
             var routeRegEx = { redirect = false, method = '', pattern = route, target = target };
@@ -1788,7 +1797,7 @@ component {
     }
 
     private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
-        var resourceCache = isFrameworkInitialized() ? application[ variables.framework.applicationKey ].cache.routes.resources : { };
+        var resourceCache = isFrameworkInitialized() ? getFw1App().cache.routes.resources : { };
         var cacheKey = hash( serializeJSON( resourcesToRoute ) );
         if ( !structKeyExists( resourceCache, cacheKey ) ) {
             // get passed in resourcesToRoute (string,array,struct) to match following struct
@@ -2008,28 +2017,16 @@ component {
             data struct... if the application is already running, we don't blow away the factories
             because we don't want to affect other threads that may be running at this time
         */
-        var frameworkCache = { };
-        var framework = { };
-        var isReload = true;
-        frameworkCache.lastReload = now();
-        frameworkCache.fileExists = { };
-        frameworkCache.controllers = { };
-        frameworkCache.routes = { regex = { }, resources = { } };
-        lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_initialization" type="exclusive" timeout="10" {
-            if ( structKeyExists( application, variables.framework.applicationKey ) ) {
-                // application is already loaded, just reset the cache and trigger re-initialization of subsystems
-                application[variables.framework.applicationKey].cache = frameworkCache;
-                application[variables.framework.applicationKey].subsystems = { };
-                application[variables.framework.applicationKey].subsystemFactories = { };
-            } else {
-                // must be first request so we need to set up the entire structure
-                isReload = false;
-                framework.cache = frameworkCache;
-                framework.subsystems = { };
-                framework.subsystemFactories = { };
-                application[variables.framework.applicationKey] = framework;
-            }
-        }
+        variables.fw1App = {
+            cache = { 
+                lastReload = now(),
+                fileExists = { },
+                controllers = { },
+                routes = { regex = { }, resources = { } }
+            },
+            subsystems = { },
+            subsystemFactories = { } 
+        };
 
         switch ( variables.framework.diEngine ) {
         case "di1":
@@ -2060,23 +2057,9 @@ component {
         // this will recreate the main bean factory on a reload:
         internalFrameworkTrace( 'setupApplication() called' );
         setupApplication();
+		application[variables.framework.applicationKey] = variables.fw1App;
 
-        if ( isReload ) {
-            /*
-                it's possible that the cache got populated by another thread between resetting the cache above
-                and the factory getting recreated by the user code in setupApplication() so we flush the cache
-                again here to be safe / paranoid!
-            */
-            frameworkCache = { };
-            frameworkCache.lastReload = now();
-            frameworkCache.fileExists = { };
-            frameworkCache.controllers = { };
-            frameworkCache.routes = { regex = { }, resources = { } };
-            application[variables.framework.applicationKey].cache = frameworkCache;
-            application[variables.framework.applicationKey].subsystems = { };
-        }
-
-    }
+	}
 
     private void function setupFrameworkDefaults() {
 
@@ -2425,7 +2408,7 @@ component {
         if ( !usingSubsystems() ) return;
         lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
             if ( !isSubsystemInitialized( subsystem ) ) {
-                application[ variables.framework.applicationKey ].subsystems[ subsystem ] = now();
+                getFw1App().subsystems[ subsystem ] = now();
                 // Application.cfc does not get a subsystem bean factory!
                 if ( subsystem != variables.magicApplicationSubsystem &&
                      ( variables.framework.diEngine == "di1" ) ) {
