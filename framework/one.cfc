@@ -966,7 +966,10 @@ component {
     }
 
     // call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
-    public void function redirect( string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL, string queryString = '', string statusCode = '302' ) {
+    public void function redirect(
+        string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL,
+        string queryString = '', string statusCode = '302', string header = ''
+    ) {
         if ( path == variables.magicBaseURL ) path = getBaseURL();
         var preserveKey = '';
         if ( preserve != 'none' ) {
@@ -1025,12 +1028,19 @@ component {
                 // ignore exception if session is not enabled
             }
         }
-        location( targetURL, false, statusCode );
+        if ( len( header ) ) {
+            // per #338 support custom header-based redirect
+            getPageContext().getResponse().setStatus( statusCode );
+            getPageContext().getResponse().setHeader( header, targetURL );
+            abortController();
+        } else {
+            location( targetURL, false, statusCode );
+        }
     }
 
     // append and querystring are not supported here: you are providing the URI so
     // you are responsible for all of its contents
-    public void function redirectCustomURL( string uri, string preserve = 'none', string statusCode = '302' ) {
+    public void function redirectCustomURL( string uri, string preserve = 'none', string statusCode = '302', string header = '' ) {
         var preserveKey = '';
         if ( preserve != 'none' ) {
             preserveKey = saveFlashContext( preserve );
@@ -1057,7 +1067,14 @@ component {
                 // ignore exception if session is not enabled
             }
         }
-        location( targetURL, false, statusCode );
+        if ( len( header ) ) {
+            // per #338 support custom header-based redirect
+            getPageContext().getResponse().setStatus( statusCode );
+            getPageContext().getResponse().setHeader( header, targetURL );
+            abortController();
+        } else {
+            location( targetURL, false, statusCode );
+        }
     }
 
     // call this to render data rather than a view and layouts
@@ -1900,7 +1917,7 @@ component {
             break;
         }
         getPageContext().getResponse().setStatus( statusCode );
-        // set the content type header portably:
+        // Set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
         return out;
     }
