@@ -78,6 +78,12 @@ component extends="tests.InjectableTest" {
         
         match = variables.fw.processRouteMatch("$POST/test/:id", "default.main?id=:id", "/test/5", "POST");
         assertTrue(match.matched);           
+
+        match = variables.fw.processRouteMatch("$POST^/foo/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
+        assertTrue(match.matched);
+
+        match = variables.fw.processRouteMatch("$POST^/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
+        assertFalse(match.matched);
     }
     
     public void function testRouteMatchRedirect()

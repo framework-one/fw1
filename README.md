@@ -36,3 +36,6 @@ See the `run-tests-example.sh` file for a template (for Mac/Linux).
 * `server.name` should be the test domain you have configured
 * `server.port` should be the port on which you access that test domain
 * `run-tests-mxunit` is the actual Ant task that does the testing
+
+
+[![Join the chat at https://gitter.im/framework-one/fw1](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/framework-one/fw1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
