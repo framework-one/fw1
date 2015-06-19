@@ -1,3 +1,4 @@
+<cfscript>
 component extends="mxunit.framework.TestCase"{
 
 
@@ -9,7 +10,7 @@ component extends="mxunit.framework.TestCase"{
 		//Basic Bean Tests
 		result = rs.doReverse("Hello!");
 		AssertEquals("!olleH", result);
-		AssertEquals(ArrayLen(request.callstack),1);
+		AssertEquals(ArrayLen(request.callstack), 1);
 		AssertEquals(ArrayToList(request.callstack),"doReverse");
 	}
 
@@ -24,8 +25,9 @@ component extends="mxunit.framework.TestCase"{
 		rs = bf.getBean("ReverseService");
 		
 		result = rs.doReverse("Hello!");
+
 		AssertEquals(result, Reverse("beforeHello!"), "Before Works");
-		AssertEquals(ArrayLen(request.callstack),2);
+		AssertEquals(ArrayLen(request.callstack), 2);
 		AssertEquals(ArrayToList(request.callstack),"before,doReverse");
 	}
 	
@@ -39,7 +41,7 @@ component extends="mxunit.framework.TestCase"{
 		result = rs.doReverse("Hello!");
 
 		AssertEquals(result, Reverse("Hello!") , "Reverse still Works");	
-		AssertEquals(ArrayLen(request.callstack),2);
+		AssertEquals(ArrayLen(request.callstack), 2);
 		AssertEquals(ArrayToList(request.callstack),"doReverse,after");
 	}
 
@@ -54,11 +56,11 @@ component extends="mxunit.framework.TestCase"{
 		rs = bf.getBean("ReverseService");
 		result = rs.doReverse("Hello!");
 
-
-		AssertEquals(result, Reverse("Hello!") , "Called method through Around");
-		AssertEquals(ArrayLen(request.callstack),2);
+		AssertEquals(result, "around," & Reverse("Hello!") & ",around" , "Called method through Around");
+		AssertEquals(2, ArrayLen(request.callstack));
 		AssertEquals(ArrayToList(request.callstack),"around,doReverse");
 	}
 
 	
 }
+</cfscript>

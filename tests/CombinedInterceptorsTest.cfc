@@ -16,9 +16,9 @@ component extends="mxunit.framework.TestCase"{
 			result = rs.doReverse("Hello!");
 			
 
-			AssertEquals(result, Reverse("Hello!"));
-			AssertEquals(ArrayLen(request.callstack),2);
-			AssertEquals(ArrayToList(request.callstack),"around,doReverse");
+			AssertEquals(result, "around," & Reverse("beforeHello!") & ",around");
+			AssertEquals(ArrayLen(request.callstack), 4);
+			AssertEquals(ArrayToList(request.callstack),"before,around,doReverse,after");
 
 	}
 
@@ -44,14 +44,14 @@ component extends="mxunit.framework.TestCase"{
 		
 	}
 
-	function TestMiltipleAfterInterceptors(){
+	function TestMultipleAfterInterceptors(){
 		//Multiple After Advisors
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
 		//Need to create different Before interceptors
 
 		bf.addBean("AfterInterceptorA", new tests.aop.interceptors.aop.AfterInterceptor("afterA"));
-		bf.addBean("AfterInterceptorB", new tests.aop.interceptors.aop.AfterInterceptor("afterB"));
+		bf.addBean("AfterInterceptorB", new tests.aop.interceptors.aop.AfterInterceptor("afterAlterResultB"));
 		bf.addBean("AfterInterceptorC", new tests.aop.interceptors.aop.AfterInterceptor("afterC"));
 		bf.intercept("ReverseService", "AfterInterceptorA");
 		bf.intercept("ReverseService", "AfterInterceptorB");
@@ -59,9 +59,9 @@ component extends="mxunit.framework.TestCase"{
 		rs = bf.getBean("ReverseService");
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("Hello!"));
+		AssertEquals(result, Reverse("Hello!") & ",afterAlterResultB");
 		AssertEquals(ArrayLen(request.callstack),4);
-		AssertEquals(ArrayToList(request.callstack),"doReverse,afterA,afterB,afterC");
+		AssertEquals(ArrayToList(request.callstack),"doReverse,afterA,afterAlterResultB,afterC");
 	}
 
 	function TestMultipleAroundInterceptors(){
@@ -81,7 +81,7 @@ component extends="mxunit.framework.TestCase"{
 
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("Hello!"));
+		AssertEquals(result, "aroundA,aroundB,aroundC," & Reverse("Hello!") & ",aroundC,aroundB,aroundA");
 		AssertEquals(ArrayLen(request.callstack),4);
 		AssertEquals(ArrayToList(request.callstack),"aroundA,aroundB,aroundC,doReverse");
 
@@ -97,24 +97,30 @@ component extends="mxunit.framework.TestCase"{
 		bf.intercept("ReverseService", "BeforeInterceptor", "doReverse");
 
 		rs = bf.getBean("ReverseService");
+
+		// This should be intercepted.
 		result = rs.doReverse("Hello!");
-		
+
+		// This shoud not be intercepted.
+		result2 = rs.doForward("Hello!");
+
 		AssertEquals(result, Reverse("beforeHello!"));
-		AssertEquals(ArrayLen(request.callstack),2);
-		AssertEquals(ArrayToList(request.callstack),"before,doReverse");
+		AssertEquals(result2, "hello!");
+		AssertEquals(ArrayLen(request.callstack),3);
+		AssertEquals(ArrayToList(request.callstack),"before,doReverse,doForward");
 
 	}
 
 
 	function TestMethodMatches(){
 
-		proxy = new framework.beanProxy('');
+		proxy = new framework.beanProxy('', []);
         makePublic( proxy, "methodMatches" );
+
 		AssertFalse(proxy.methodMatches("doForward", "doReverse"));
 		AssertTrue(proxy.methodMatches("doForward", ""));
 		AssertFalse(proxy.methodMatches("doForward", "doReverse,"));
 		AssertTrue(proxy.methodMatches("doForward", "doReverse,doForward"));
-
 	}
 
 

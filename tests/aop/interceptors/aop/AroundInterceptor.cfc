@@ -1,26 +1,18 @@
-component output="false" displayname="AroundInterceptor"  {
+component output="false" displayname="AroundInterceptor" {
 	
 	this.name = "around";
 	function init(name="around"){
 		this.name=name;
 	}
 
-	function around(method,args,target){
+	function around(target, method, args){
 		ArrayAppend(request.callstack, this.name);
 
-		return proceed(method,args,target);
-	}
+		local.result = proceed(arguments.target, arguments.method, arguments.args);
 
-	function proceed(method,args,target){
-		if(isLast()){
-            // because ACF doesn't support direct invocation syntax :(
-			return evaluate("target.#method#(argumentCollection=args)");
+		if (structKeyExists(local, "result") && !isNull(local.result))
+		{
+			return this.name & "," & local.result & "," & this.name;
 		}
-		return "";
 	}
-
-	function isLast(){
-		return this.last ? this.last : false;
-	}
-
 }
