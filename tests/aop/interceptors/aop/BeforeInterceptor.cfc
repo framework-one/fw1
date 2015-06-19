@@ -13,8 +13,11 @@ component output="false" displayname="BeforeInterceptor"  {
 		this.name=name;
 	}
 
-	function before(method,args,target){
+	function before(target, method, args){
 		ArrayAppend(request.callstack, this.name);
+
+		translateArgs(target, method, args, true);
+
 		arguments.args.input = "before" & arguments.args.input;
 	}
 }
