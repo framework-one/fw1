@@ -1,4 +1,4 @@
-Contributing to Framework One (FW/1, DI/1)
+Contributing to Framework One (FW/1, DI/1, AOP/1)
 ==
 All development happens in the main [Framework One repository](https://github.com/framework-one/fw1) on the **develop** branch. Feel free to fork the repo and submit Pull Requests on the **develop** branch. You can also open issues there to discuss potential enhancements etc.
 
