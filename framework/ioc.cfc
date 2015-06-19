@@ -30,7 +30,8 @@ component {
         variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
-            // recent FW/1 + DI/1 exclusions:
+            // recent FW/1 + DI/1 + AOP/1 exclusions:
+            '/framework/aop.cfc', '/framework/beanProxy.cfc',
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
             '/framework/one.cfc'
         ];
