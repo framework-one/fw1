@@ -1,3 +1,6 @@
+component {
+    variables._fw1_version = "3.1-beta2";
+    variables._aop1_version = "2.0-beta1";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -15,9 +18,7 @@
 */
 
 
-component accessors="true" {
 
-	// property name="interceptors" type="array" hint="Internal cache of interceptor definitions.";
 	variables.afterInterceptors = [];
 	variables.aroundInterceptors = [];
 	variables.beforeInterceptors = [];
@@ -161,7 +162,7 @@ component accessors="true" {
 		if (!structKeyExists(variables.targetBean, arguments.missingMethodName) && !structKeyExists(variables.targetBean, variables.preName & arguments.missingMethodName))
 		{
 			objectName = listLast(getMetadata(this).name, ".");
-			throw(	message="Unable to locate method in (" & objectName & ").", 
+			throw(	message="Unable to locate method in (" & objectName & ").",
 					detail="The method (" & arguments.missingMethodName & ") could not be found. Please verify the method exists and is publically accessible.");
 		}
 
@@ -179,9 +180,9 @@ component accessors="true" {
 
 
 		// Prevent infinite loop and make sure the method exists (public or private)
-		if (	!structKeyExists(variables.targetBean, arguments.methodName) && 
+		if (	!structKeyExists(variables.targetBean, arguments.methodName) &&
 				!structKeyExists(variables.targetBean, variables.preName & arguments.methodName) &&
-				!structKeyExists(variables.targetBean._v(), arguments.methodName) && 
+				!structKeyExists(variables.targetBean._v(), arguments.methodName) &&
 				!structKeyExists(variables.targetBean._v(), variables.preName & arguments.methodName))
 		{
 			objectName = listLast(getMetadata(this).name, ".");

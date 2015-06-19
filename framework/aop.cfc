@@ -1,3 +1,6 @@
+component extends="framework.ioc" {
+    variables._fw1_version = "3.1-beta2";
+    variables._aop1_version = "2.0-beta1";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -13,12 +16,7 @@
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-
-
-component accessors=true extends="framework.ioc"
-{
-	property name="aop1Version" type="string";
-	property name="interceptInfo" type="struct" hint="Internal cache of interceptor definitions.";
+	variables.interceptInfo = { }; // Internal cache of interceptor definitions.
 
 
 
@@ -30,9 +28,6 @@ component accessors=true extends="framework.ioc"
 	/** Constructor. */
 	public any function init(string folders, struct config = {}, array interceptors = [])
 	{
-		setAOP1Version("2.0b1");
-		setInterceptInfo({});
-
 		super.init(argumentCollection = arguments);
 
 		loadInterceptors(interceptors);
@@ -42,19 +37,19 @@ component accessors=true extends="framework.ioc"
 	/** Adds an interceptor definition to the definition cache. */
 	public any function intercept(string beanName, string interceptorName, string methods = "")
 	{
-		var interceptDefinition = 
+		var interceptDefinition =
 		{
 			name = arguments.interceptorName,
 			methods = arguments.methods
 		};
 
 
-		if (!structKeyExists(getInterceptInfo(), arguments.beanName))
+		if (!structKeyExists(variables.interceptInfo, arguments.beanName))
 		{
-			getInterceptInfo()[arguments.beanName] = [];
+			variables.interceptInfo[arguments.beanName] = [];
 		}
 
-		arrayAppend(getInterceptInfo()[arguments.beanName], interceptDefinition);
+		arrayAppend(variables.interceptInfo[arguments.beanName], interceptDefinition);
 
 		return this;
 	}
@@ -105,7 +100,7 @@ component accessors=true extends="framework.ioc"
 		{
 			value = arguments.source[key];
 
-			if (!arguments.skipFunctions || (arguments.skipFunctions && isCustomFunction(value))) 
+			if (!arguments.skipFunctions || (arguments.skipFunctions && isCustomFunction(value)))
 			{
 				target[key] = value;
 			}
@@ -120,7 +115,7 @@ component accessors=true extends="framework.ioc"
 		var interceptDefinition = "";
 		var interceptors = [];
 
-		for (interceptDefinition in getInterceptInfo()[beanName])
+		for (interceptDefinition in variables.interceptInfo[beanName])
 		{
 			arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
 		}
@@ -132,7 +127,7 @@ component accessors=true extends="framework.ioc"
 	/** Determines if the bean has interceptor definitions associated with it. */
 	private boolean function hasInterceptors(string beanName)
 	{
-		return structKeyExists(getInterceptInfo(), arguments.beanName);
+		return structKeyExists(variables.interceptInfo, arguments.beanName);
 	}
 
 
@@ -143,7 +138,7 @@ component accessors=true extends="framework.ioc"
 
 		for (interceptor in interceptors)
 		{
-			 intercept(argumentCollection = interceptor);	
+			 intercept(argumentCollection = interceptor);
 		}
 	}
 
@@ -170,7 +165,7 @@ component accessors=true extends="framework.ioc"
 
 		// then clear old VARIABLES scope
 		structClear(arguments.sourceBean._v());
-		
+
 		// then clear old THIS scope
 		structClear(arguments.sourceBean);
 	}
@@ -179,7 +174,7 @@ component accessors=true extends="framework.ioc"
 	private void function setupFrameworkDefaults()
 	{
 		super.setupFrameworkDefaults();
-		variables.config.version = getAOP1Version() & " (" & variables._di1_version & ")";
+		variables.config.version = variables._aop1_version & " (" & variables._di1_version & ")";
 	}
 
 
@@ -188,7 +183,7 @@ component accessors=true extends="framework.ioc"
 	{
 		// if it doesn't have a dotted path for us to create a new instance
 		// or it has no interceptors, we have to leave it alone
-		if (!structKeyExists(variables.beanInfo, beanName) || !structKeyExists(variables.beanInfo[beanName], "cfc") || !hasInterceptors(arguments.beanName)) 
+		if (!structKeyExists(variables.beanInfo, beanName) || !structKeyExists(variables.beanInfo[beanName], "cfc") || !hasInterceptors(arguments.beanName))
 		{
 			return;
 		}
