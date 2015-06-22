@@ -26,11 +26,14 @@ component extends="framework.ioc" {
 	// -------------- //
 
 	/** Constructor. */
-	public any function init(string folders, struct config = {}, array interceptors = [])
+	public any function init(string folders, struct config = {})
 	{
 		super.init(argumentCollection = arguments);
 
-		loadInterceptors(interceptors);
+		if (structKeyExists(arguments.config, "interceptors") && isArray(arguments.config.interceptors) && arrayLen(arguments.config.interceptors))
+		{
+			loadInterceptors(arguments.config.interceptors);
+		}
 	}
 
 
