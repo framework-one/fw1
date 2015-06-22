@@ -1078,8 +1078,8 @@ component {
     }
 
     // call this to render data rather than a view and layouts
-    public void function renderData( string type, any data, numeric statusCode = 200 ) {
-        request._fw1.renderData = { type = type, data = data, statusCode = statusCode };
+    public void function renderData( string type, any data, numeric statusCode = 200, string jsonpCallback = "" ) {
+        request._fw1.renderData = { type = type, data = data, statusCode = statusCode, jsonpCallback = jsonpCallback };
     }
 
     /*
@@ -1886,6 +1886,15 @@ component {
             contentType = 'application/json; charset=utf-8';
             out = serializeJSON( data );
             break;
+        case 'jsonp':
+            contentType = 'application/javascript; charset=utf-8';
+            if ( !len(request._fw1.renderData.jsonpCallback) ){
+                throw( type = 'FW1.jsonpCallbackRequired',
+                       message = 'Callback was not defined',
+                       detail = 'renderData() called with jsonp type requires a jsonpCallback' );
+            }
+            out = request._fw1.renderData.jsonpCallback & "(" & serializeJSON( data ) & ");";
+            break;
         case 'rawjson':
             contentType = 'application/json; charset=utf-8';
             out = data;
@@ -1912,7 +1921,7 @@ component {
             break;
         default:
             throw( type = 'FW1.UnsupportedRenderType',
-                   message = 'Only JSON, RAWJSON, XML, and TEXT are supported',
+                   message = 'Only JSON, JSONP, RAWJSON, XML, and TEXT are supported',
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
