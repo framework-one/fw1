@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "3.1-beta2";
+    variables._fw1_version = "3.1-snapshot";
 /*
     Copyright (c) 2009-2015, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -2444,31 +2444,34 @@ component {
             if ( !isSubsystemInitialized( subsystem ) ) {
                 getFw1App().subsystems[ subsystem ] = now();
                 // Application.cfc does not get a subsystem bean factory!
-                if ( subsystem != variables.magicApplicationSubsystem &&
-                     ( variables.framework.diEngine == "di1" ||
-                       variables.framework.diEngine == "aop1" ) ) {
-                    // we can only reliably automate D/I engine setup for DI/1 / AOP/1
-                    var locations = listToArray( variables.framework.diLocations );
-                    var subLocations = "";
-                    for ( var loc in locations ) {
-                        var relLoc = trim( loc );
-                        // make a relative location:
-                        if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
-                            relLoc = right( relLoc, len( relLoc ) - 2 );
-                        } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
-                            relLoc = right( relLoc, len( relLoc ) - 1 );
-                        }
-                        subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
-                    }
+                if ( subsystem != variables.magicApplicationSubsystem ) {
                     var subsystemConfig = getSubsystemConfig( subsystem );
-                    var ioc = new "#variables.framework.diComponent#"(
-                        subLocations,
-                        ( structKeyExists( subsystemConfig, 'diConfig' ) ?
+                    var diEngine = structKeyExists( subsystemConfig, 'diEngine' ) ? subsystemConfig.diEngine : variables.framework.diEngine;
+                    if ( diEngine == "di1" || diEngine == "aop1" ) {
+                        // we can only reliably automate D/I engine setup for DI/1 / AOP/1
+                        var diLocations = structKeyExists( subsystemConfig, 'diLocations' ) ? subsystemConfig.diLocations : variables.framework.diLocations;
+                        var locations = listToArray( diLocations );
+                        var subLocations = "";
+                        for ( var loc in locations ) {
+                            var relLoc = trim( loc );
+                            // make a relative location:
+                            if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
+                                relLoc = right( relLoc, len( relLoc ) - 2 );
+                            } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
+                                relLoc = right( relLoc, len( relLoc ) - 1 );
+                            }
+                            subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
+                        }
+                        var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
+                        var ioc = new "#diComponent#"(
+                            subLocations,
+                            ( structKeyExists( subsystemConfig, 'diConfig' ) ?
                               subsystemConfig.diConfig :
                               variables.framework.diConfig )
-                    );
-                    ioc.setParent( getDefaultBeanFactory() );
-                    setSubsystemBeanFactory( subsystem, ioc );
+                        );
+                        ioc.setParent( getDefaultBeanFactory() );
+                        setSubsystemBeanFactory( subsystem, ioc );
+                    }
                 }
 
                 internalFrameworkTrace( 'setupSubsystem() called', subsystem );
