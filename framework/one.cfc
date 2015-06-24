@@ -1925,6 +1925,9 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
+        // Reset content
+        getPageContext().getCFOutput().clearAll();
+        // Set status code
         getPageContext().getResponse().setStatus( statusCode );
         // Set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
