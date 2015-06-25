@@ -632,6 +632,7 @@ component {
             var info = variables.beanInfo[ beanName ];
             accumulator.dependencies[ beanName ] = { };
             if ( structKeyExists( info, 'cfc' ) ) {
+/*******************************************************/
                 var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
                 bean = metaBean.bean;
@@ -682,6 +683,7 @@ component {
                         }
                     }
                 }
+/*******************************************************/
                 if ( !structKeyExists( accumulator.injection, beanName ) ) {
                     if ( !structKeyExists( variables.settersInfo, beanName ) ) {
                         variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
