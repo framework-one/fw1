@@ -2047,6 +2047,8 @@ component {
             data struct... if the application is already running, we don't blow away the factories
             because we don't want to affect other threads that may be running at this time
         */
+        if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
+        request._fw1.appWrapped = true;
         variables.fw1App = {
             cache = {
                 lastReload = now(),
