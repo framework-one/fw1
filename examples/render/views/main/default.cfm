@@ -5,4 +5,5 @@
 <p><a href="#buildURL( 'render.xmlobject' )#" target="_blank">Render an XML object</a></p>
 <p><a href="#buildURL( 'render.jsonobject' )#" target="_blank">Render object as JSON</a></p>
 <p><a href="#buildURL( 'render.jsonstring' )#" target="_blank">Render raw JSON (pre-serialized)</a></p>
+<p><a href="#buildURL( 'render.html' )#" target="_blank">Render HTML</a></p>
 </cfoutput>

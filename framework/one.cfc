@@ -1899,6 +1899,11 @@ component {
             contentType = 'application/json; charset=utf-8';
             out = data;
             break;
+        case 'html':
+            contentType = 'text/html; charset=utf-8';
+            out = data;
+            structDelete( request._fw1, 'renderData' );
+            break;
         case 'xml':
             contentType = 'text/xml; charset=utf-8';
             if ( isXML( data ) ) {
@@ -1921,15 +1926,13 @@ component {
             break;
         default:
             throw( type = 'FW1.UnsupportedRenderType',
-                   message = 'Only JSON, JSONP, RAWJSON, XML, and TEXT are supported',
+                   message = 'Only HTML, JSON, JSONP, RAWJSON, XML, and TEXT are supported',
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        // Reset content
-        getPageContext().getCFOutput().clearAll();
-        // Set status code
+        // Clear any previous content then set status / content type:
+        getPageContext().getResponse().reset();
         getPageContext().getResponse().setStatus( statusCode );
-        // Set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
         return out;
     }

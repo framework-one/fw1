@@ -26,4 +26,8 @@ component {
         variables.fw.renderData( 'rawjson', '[ "An", "array", { "containing" = "data" } ]' );
     }
 
+    public void function html( struct rc ) {
+        variables.fw.renderData( 'html', '<h1>Some HTML</h1><p>Passed to renderData().</p>' );
+    }
+
 }
