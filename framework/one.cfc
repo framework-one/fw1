@@ -1930,10 +1930,9 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        // Clear any previous content:
-        content reset="yes";
+        // Clear any previous content then set status / content type:
+        getPageContext().getResponse().reset();
         getPageContext().getResponse().setStatus( statusCode );
-        // Set the content type header portably:
         getPageContext().getResponse().setContentType( contentType );
         return out;
     }
