@@ -7,13 +7,17 @@ for `/framework` to the `framework` folder inside this FW/1 directory. Note that
 your `Application.cfc` needs to extend `framework.one`, you have to add the mapping
 in your admin - you can't just use a per-application mapping.
 
+Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
+
 **Project home:** http://fw1.riaforge.org
 
-**Documentation wiki:** http://github.com/framework-one/fw1/wiki
+**Documentation / Wiki:** http://framework-one.github.io/documentation/ / http://github.com/framework-one/fw1/wiki
 
 **Blog:** http://framework-one.github.io
 
 **Support:** http://groups.google.com/group/framework-one/
+
+**Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a dedicated #fw1 channel; There's also a [FW/1 Gitter chat](https://gitter.im/framework-one/fw1).
 
 **Running the tests:**
 
@@ -36,6 +40,3 @@ See the `run-tests-example.sh` file for a template (for Mac/Linux).
 * `server.name` should be the test domain you have configured
 * `server.port` should be the port on which you access that test domain
 * `run-tests-mxunit` is the actual Ant task that does the testing
-
-
-[![Join the chat at https://gitter.im/framework-one/fw1](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/framework-one/fw1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
