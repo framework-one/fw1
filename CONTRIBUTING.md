@@ -1,5 +1,7 @@
 Contributing to Framework One (FW/1, DI/1, AOP/1)
 ==
+Please note that in order to encourage more people to get involved with Framework One, we have adopted a [Code of Conduct](CODE_OF_CONDUCT.md) so that _everyone_ should feel welcome and safe when getting involved with any aspect of the Framework One community.
+
 All development happens in the main [Framework One repository](https://github.com/framework-one/fw1) on the **develop** branch. Feel free to fork the repo and submit Pull Requests on the **develop** branch. You can also open issues there to discuss potential enhancements etc.
 
 Pull Requests that contain new/updated tests for the bug fix / enhancement will be looked on more favorably than those that do not contain fixes. Travis-CI automatically runs the test suite for Pull Requests which helps us be confident that the Pull Request is "good".
