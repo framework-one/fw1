@@ -82,76 +82,23 @@ component {
 
 
 	/** Constructor. */
-	public any function init(required any bean, required array interceptors)
+	public any function init(required any bean, required array interceptors, required struct config)
 	{
 		variables.targetBean = arguments.bean;
 		variables.preName = "___";
 
 		populateInterceptorCache(arguments.interceptors);
-	}
+		morphTargetBeanInterceptedMethods();
+		setupSetMethods();
 
+		this["init"] = __passThrough;
 
-	/** Alters the target bean by adding intercept points. */
-	public void function morphTargetBeanInterceptedMethods()
-	{
-		var access = "";
-		var key = "";
-		var method = "";
-		var varScope = "";
-
-
-		// Replace intercepted methods on 'this' scope of target bean
-		for (key in variables.targetBean)
+		if (structKeyExists(arguments.config, "initMethod") && len(arguments.config.initMethod) && structKeyExists(variables.targetBean, arguments.config.initMethod))
 		{
-			// Only alter methods that should be intercepted.
-			if ((variables.interceptedMethods == "*" || listFindNoCase(variables.interceptedMethods, key)) && isCustomFunction(variables.targetBean[key]))
-			{
-				method = variables.targetBean[key];
-
-				variables.targetBean[variables.preName & key] = method;
-				variables.targetBean[key] = __callPublicMethod;
-			}
+			this[arguments.config.initMethod] = __passThrough;
 		}
 
-
-		variables.targetBean._v = _liftVariablesScope;
-		varScope = variables.targetBean._v();
-
-
-		// Replace intercepted methods on 'variables' scope of target bean
-		for (key in varScope)
-		{
-			// Only alter methods that should be intercepted.
-			if ((variables.interceptedMethods == "*" || listFindNoCase(variables.interceptedMethods, key)) && isCustomFunction(varScope[key]))
-			{
-				method = varScope[key];
-				access = getMethodAccess(method);
-
-				varScope[variables.preName & key] = method;
-
-				if (access == "public")
-				{
-					varScope[key] = __callPublicMethod;
-				}
-				else
-				{
-					varScope[key] = __callPrivateMethod;
-				}
-			}
-		}
-
-
-		varScope.beanProxy = this;
-		varScope.callStacks = __callStacks;
-		varScope.preName = variables.preName;
-
-		// No longer removing because it's used for method access comparison
-		// structDelete(variables.targetBean, "_v");
-
-		// Because this method has to be run AFTER all the bean copying is done to maintain proper scopes
-		// I just destory this method to prevent undesired affects.
-		structDelete(variables, "morphTargetBeanInterceptedMethods");
-		structDelete(this, "morphTargetBeanInterceptedMethods");
+		return this;
 	}
 
 
@@ -377,6 +324,16 @@ component {
 	}
 
 
+	/** A pass through method placed on the proxy bean (used primarily for 'init' and 'init-method' on target bean). */
+	private any function __passThrough()
+	{
+		local.methodName = getFunctionCalledName();
+		local.result = _runMethod(variables.targetBean, local.methodName, arguments);
+
+		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
+	}
+
+
 
 
 	// --- Local Private Methods --- //
@@ -500,6 +457,62 @@ component {
 	}
 
 
+	/** Alters the target bean by adding intercept points. */
+	private void function morphTargetBeanInterceptedMethods()
+	{
+		var access = "";
+		var key = "";
+		var method = "";
+		var varScope = "";
+
+
+		// Replace intercepted methods on 'this' scope of target bean
+		for (key in variables.targetBean)
+		{
+			// Only alter methods that should be intercepted.
+			if ((variables.interceptedMethods == "*" || listFindNoCase(variables.interceptedMethods, key)) && isCustomFunction(variables.targetBean[key]))
+			{
+				method = variables.targetBean[key];
+
+				variables.targetBean[variables.preName & key] = method;
+				variables.targetBean[key] = __callPublicMethod;
+			}
+		}
+
+
+		variables.targetBean._v = _liftVariablesScope;
+		varScope = variables.targetBean._v();
+
+
+		// Replace intercepted methods on 'variables' scope of target bean
+		for (key in varScope)
+		{
+			// Only alter methods that should be intercepted.
+			if ((variables.interceptedMethods == "*" || listFindNoCase(variables.interceptedMethods, key)) && isCustomFunction(varScope[key]))
+			{
+				method = varScope[key];
+				access = getMethodAccess(method);
+
+				varScope[variables.preName & key] = method;
+
+				if (access == "public")
+				{
+					varScope[key] = __callPublicMethod;
+				}
+				else
+				{
+					varScope[key] = __callPrivateMethod;
+				}
+			}
+		}
+
+
+		varScope.beanProxy = this;
+		varScope.callStacks = __callStacks;
+		varScope.preName = variables.preName;
+	}
+
+
 	/** Adds an array of interceptor definitions to the interceptor definition cache. */
 	private void function populateInterceptorCache(required array interceptors)
 	{
@@ -585,6 +598,21 @@ component {
 			if (methodMatches(methodName, interceptor.methods))
 			{
 				interceptor.bean.onError(targetBean, methodName, args, exception);
+			}
+		}
+	}
+
+
+	/** Creates 'set' methods on the proxy bean to mimic the 'set' methods on the target bean. */
+	private function setupSetMethods()
+	{
+		var key = "";
+
+		for (key in variables.targetBean)
+		{
+			if (left(key, 3) == "set")
+			{
+				this[key] = __callPublicMethod;
 			}
 		}
 	}

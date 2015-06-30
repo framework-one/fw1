@@ -71,43 +71,30 @@ component extends="framework.ioc" {
 	}
 
 
-	/** Augments the original bean by gutting it and replacing it's scopes with the proxy bean. */
-	private void function augmentBean(string beanName, any bean)
+	private any function construct(string dottedPath)
 	{
-		var beanProxy = "";
-		var newBean = "";
+		var bean = super.construct(arguments.dottedPath);
+		var beanName = listLast(arguments.dottedPath, ".");
 
 
-		// create the new state/method holder:
-		newBean = construct(variables.beanInfo[beanName].cfc);
-		moveBeanTo(bean, newBean, true);
+		// if it doesn't have a dotted path for us to create a new instance
+		// or it has no interceptors, we have to leave it alone
+		if (!hasInterceptors(beanName))
+		{
+			return bean;
+		}
 
-
-		// Setup the proxy
-		beanProxy = new framework.beanProxy(newBean, getInterceptorsForBean(arguments.beanName));
-		moveBeanTo(beanProxy, bean, false);
-
-		// Called here to maintain proper scopes.
-		bean.morphTargetBeanInterceptedMethods();
+		// Create and return a proxy wrapping the bean.
+		return createProxy(beanName, bean);
 	}
 
 
-	/** Copies variables and methods from one source structure to a target structure. */
-	private void function copyScope(struct source, struct target, boolean skipFunctions)
+	/** Augments the original bean by gutting it and replacing it's scopes with the proxy bean. */
+	private any function createProxy(string beanName, any bean)
 	{
-		var key = "";
-		var value = "";
+		var beanProxy = new framework.beanProxy(bean, getInterceptorsForBean(arguments.beanName), variables.config);
 
-
-		for (key in arguments.source)
-		{
-			value = arguments.source[key];
-
-			if (!arguments.skipFunctions || (arguments.skipFunctions && isCustomFunction(value)))
-			{
-				target[key] = value;
-			}
-		}
+		return beanProxy;
 	}
 
 
@@ -115,12 +102,24 @@ component extends="framework.ioc" {
 	private array function getInterceptorsForBean(string beanName)
 	{
 		// build the interceptor array:
+		var aliases = getAliases(arguments.beanName);
 		var interceptDefinition = "";
+		var interceptedBeanName = "";
 		var interceptors = [];
 
-		for (interceptDefinition in variables.interceptInfo[beanName])
+
+		arrayPrepend(aliases, arguments.beanName);
+
+
+		for (interceptedBeanName in aliases)
 		{
-			arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
+			if (structKeyExists(variables.interceptInfo, interceptedBeanName))
+			{
+				for (interceptDefinition in variables.interceptInfo[interceptedBeanName])
+				{
+					arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
+				}
+			}
 		}
 
 		return interceptors;
@@ -130,7 +129,56 @@ component extends="framework.ioc" {
 	/** Determines if the bean has interceptor definitions associated with it. */
 	private boolean function hasInterceptors(string beanName)
 	{
-		return structKeyExists(variables.interceptInfo, arguments.beanName);
+		var interceptedBeanName = "";
+
+		// Straight up match in the interceptors.
+		if (structKeyExists(variables.interceptInfo, arguments.beanName))
+		{
+			return true;
+		}
+
+
+		// Look for matches on aliases.
+		for (interceptedBeanName in getAliases(arguments.beanName))
+		{
+			if (structKeyExists(variables.interceptInfo, interceptedBeanName))
+			{
+				return true;
+			}
+		}
+
+
+		return false;
+	}
+
+
+	/** Finds all aliases for the given beanName. */
+	private array function getAliases(string beanName)
+	{
+		var aliases = [];
+		var beanData = "";
+		var key = "";
+
+
+		if (structKeyExists(variables.beanInfo, arguments.beanName))
+		{
+			beanData = variables.beanInfo[arguments.beanName];
+
+			for (key in variables.beanInfo)
+			{
+				// Same cfc dotted path, must be an alias.
+				if (
+						key != arguments.beanName && 
+						structKeyExists(variables.beanInfo[key], "cfc") && 
+						structKeyExists(variables.beanInfo[arguments.beanName], "cfc") && 
+						variables.beanInfo[key].cfc == variables.beanInfo[arguments.beanName].cfc)
+				{
+					arrayAppend(aliases, key);
+				}
+			}
+		}
+
+		return aliases;
 	}
 
 
@@ -146,53 +194,9 @@ component extends="framework.ioc" {
 	}
 
 
-	/** Moves all the state data and methods from a source bean to a target bean. Clears out the source bean. */
-	private void function moveBeanTo(any sourceBean, any targetBean, boolean skipFunctions)
-	{
-		var key = "";
-		var source = "";
-		var target = "";
-		var value = "";
-
-		arguments.targetBean._v = _liftVariablesScope;
-		arguments.sourceBean._v = _liftVariablesScope;
-
-
-		// copy THIS scope
-		copyScope(arguments.sourceBean, arguments.targetBean, arguments.skipFunctions);
-
-
-		// then copy VARIABLES scope
-		copyScope(arguments.sourceBean._v(), arguments.targetBean._v(), arguments.skipFunctions);
-
-
-		// then clear old VARIABLES scope
-		structClear(arguments.sourceBean._v());
-
-		// then clear old THIS scope
-		structClear(arguments.sourceBean);
-	}
-
-
 	private void function setupFrameworkDefaults()
 	{
 		super.setupFrameworkDefaults();
 		variables.config.version = variables._aop1_version & " (" & variables._di1_version & ")";
-	}
-
-
-	/** Hook point to intercept beans and augment them if they are to be intercepted. */
-	private void function setupInitMethod(string beanName, any bean)
-	{
-		// if it doesn't have a dotted path for us to create a new instance
-		// or it has no interceptors, we have to leave it alone
-		if (!structKeyExists(variables.beanInfo, beanName) || !structKeyExists(variables.beanInfo[beanName], "cfc") || !hasInterceptors(arguments.beanName))
-		{
-			return;
-		}
-
-
-		// Alter the original bean to now be a proxy.
-		augmentBean(arguments.beanName, arguments.bean);
 	}
 }
