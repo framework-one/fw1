@@ -27,7 +27,6 @@
   <property name="mxunit.local.url" value="/opt/ci/fix-railo-nulls.zip" />
 
   <!-- Remote URLs -->
-  <property name="railo40.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.0.4.001-nojre.tar.gz" />
   <property name="railo41.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.1.2.005-nojre.tar.gz" />
   <property name="railo42beta.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.2.0.000-nojre.tar.gz" />
   <property name="acf10-linux32.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf10-linux32.tar.gz" />
@@ -38,7 +37,6 @@
 
   <property name="source" value="local" />
 
-  <property name="railo40.helper" value="railo" />
   <property name="railo41.helper" value="railo" />
   <property name="railo41-osx.helper" value="railo" />
   <property name="railo42beta.helper" value="railo" />
@@ -50,7 +48,6 @@
   <fail unless="${platform}.${source}.url">Unkown platform ${platform} for source ${source}.
 
 Valid values are:
- railo40
  railo41
  railo41-osx
  railo42beta
