@@ -17,7 +17,7 @@ Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW
 
 **Support:** http://groups.google.com/group/framework-one/
 
-**Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a dedicated #fw1 channel; There's also a [FW/1 Gitter chat](https://gitter.im/framework-one/fw1).
+**Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a [dedicated #fw1 channel](https://cfml.slack.com/messages/fw1/).
 
 **Running the tests:**
 
