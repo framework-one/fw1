@@ -1567,6 +1567,26 @@ component {
                             if ( structKeyExists( cfc, 'init' ) ) {
                                 cfc.init( this );
                             }
+                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.lc' ) ) {
+                            // we call createObject() rather than new so we can control initialization:
+                            if ( request.cfcbase == '' ) {
+                                cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
+                            } else {
+                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
+                            }
+                            if ( structKeyExists( cfc, 'init' ) ) {
+                                cfc.init( this );
+                            }
+                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.lucee' ) ) {
+                            // we call createObject() rather than new so we can control initialization:
+                            if ( request.cfcbase == '' ) {
+                                cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
+                            } else {
+                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
+                            }
+                            if ( structKeyExists( cfc, 'init' ) ) {
+                                cfc.init( this );
+                            }
                         }
                         if ( isObject( cfc ) && ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) ) {
                             autowire( cfc, getBeanFactory( subsystem ) );
@@ -1737,8 +1757,15 @@ component {
         if ( usingSubsystems() ) {
             pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
         }
-
-        return customizeViewOrLayoutPath( pathInfo, type, '#pathInfo.base##type#s/#pathInfo.path#.cfm' );
+        var defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.cfm';
+        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.lucee';
+        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.lc';
+        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+            // can't find it so assume .cfm default value
+            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.cfm';
+        return customizeViewOrLayoutPath( pathInfo, type, defaultPath );
 
     }
 
@@ -2193,7 +2220,8 @@ component {
         }
         // NOTE: unhandledExtensions is a list of file extensions that are not handled by FW/1
         if ( !structKeyExists(variables.framework, 'unhandledExtensions') ) {
-            variables.framework.unhandledExtensions = 'cfc';
+            // NOTE: this prevents index.lc or index.lucee from working!!
+            variables.framework.unhandledExtensions = 'cfc,lc,lucee';
         }
         // NOTE: you can provide a comma delimited list of paths.  Since comma is the delim, it can not be part of your path URL to exclude
         if ( structKeyExists(variables.framework, 'unhandledPaths') ) {

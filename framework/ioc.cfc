@@ -39,6 +39,7 @@ component {
         variables.settersInfo = { };
         variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
+            '/Application.lc', '/Application.lucee',
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
             // recent FW/1 + DI/1 + AOP/1 exclusions:
             '/framework/aop.cfc', '/framework/beanProxy.cfc',
@@ -93,7 +94,13 @@ component {
             var dottedPart = left( dottedPath, len( dottedPath ) - len( cfc ) - 1 );
             singleDir = singular( listLast( dottedPart, '.' ) );
         }
-        var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), chr(92), '/', 'all' );
+        var basePath = replace( dottedPath, '.', '/', 'all' );
+        var cfcPath = expandPath( '/' & basePath & '.cfc' );
+        var expPath = cfcPath;
+        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lc' );
+        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lucee' );
+        if ( !fileExists( expPath ) ) throw "Unable to find source file for #dottedPath#: expands to #cfcPath#";
+        var cfcPath = replace( expPath, chr(92), '/', 'all' );
         var metadata = {
             name = beanName, qualifier = singleDir, isSingleton = isSingleton,
             path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ),
@@ -406,6 +413,10 @@ component {
         var cfcs = [ ];
         try {
             cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
+            var lcs = directoryList( folder, variables.config.recurse, 'path', '*.lc' );
+            for ( var l in lcs ) arrayAppend( cfcs, l );
+            lcs = directoryList( folder, variables.config.recurse, 'path', '*.lucee' );
+            for ( l in lcs ) arrayAppend( cfcs, l );
         } catch ( any e ) {
             // assume bad path - ignore it, cfcs is empty list
         }
@@ -421,7 +432,8 @@ component {
             }
             if ( excludePath ) continue;
             var relPath = right( cfcPath, len( cfcPath ) - len( folder ) );
-            relPath = left( relPath, len( relPath ) - 4 );
+            var extN = 1 + len( listLast( cfcPath, "." ) );
+            relPath = left( relPath, len( relPath ) - extN );
             var dir = listLast( getDirectoryFromPath( cfcPath ), '/' );
             var singleDir = singular( dir );
             var beanName = listLast( relPath, '/' );
