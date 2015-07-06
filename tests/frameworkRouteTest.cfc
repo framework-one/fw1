@@ -63,6 +63,10 @@ component extends="tests.InjectableTest" {
         match = variables.fw.processRouteMatch(route, target, "/test/5/something.html/", "GET");
         assertTrue(match.matched);
         assertEquals("default.main/id/5/type/html/", rereplace(match.path, match.pattern, match.target));
+
+        match = variables.fw.processRouteMatch("/product/{id:[0-9]+}-:name.html", "product.detail?id=:id&name=:name", "/product/1-computer.html", "GET");
+        assertTrue(match.matched);
+        assertEquals("product.detail?id=1&name=computer/", rereplace(match.path, match.pattern, match.target));
     }
     
     public void function testRouteMatchMethod()
