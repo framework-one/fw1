@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.1-rc1";
-    variables._aop1_version = "2.0-rc1";
+    variables._fw1_version = "3.1-rc2";
+    variables._aop1_version = "2.0-rc2";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -657,7 +657,7 @@ component {
 			}
 		}
 
-		
+
 		// Checks to see if the 'initMethod' was defined in the config and handles if it exists on the target bean.
 		if (structKeyExists(arguments.config, "initMethod") && len(arguments.config.initMethod) && structKeyExists(variables.targetBean, arguments.config.initMethod))
 		{
@@ -714,7 +714,7 @@ component {
 
 			// Only alter methods that should be intercepted. 'init()', accessors, and 'initMethod' are ignored unless specified in the methods list.
 			if	(
-					(variables.interceptedMethods == "*" && key != "init" && key != initMethod && !methodInfo.isPropertyAccessor) || 
+					(variables.interceptedMethods == "*" && key != "init" && key != initMethod && !methodInfo.isPropertyAccessor) ||
 					listFindNoCase(variables.interceptedMethods, key)
 				)
 			{
