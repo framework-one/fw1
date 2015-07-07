@@ -479,6 +479,7 @@ component {
 	private struct function getTargetBeanMetadata(any beanMetadata)
 	{
 		var beanInfo = {accessors = false, methods = {}, name = "", properties = {}};
+		var i = 0;
 		var method = {};
 		var property = {};
 		var tmpBeanInfo = {};
@@ -505,8 +506,10 @@ component {
 		// Gather method information.
 		if (structKeyExists(arguments.beanMetadata, "functions"))
 		{
-			for (method in arguments.beanMetadata.functions)
+			// ACF 9 did NOT like using a for-in loop here.
+			for (i = 1; i <= arrayLen(arguments.beanMetadata.functions); i++)
 			{
+				method = arguments.beanMetadata.functions[i];
 				beanInfo.methods[method.name] = {};
 
 				if (structKeyExists(method, "access"))
@@ -520,8 +523,10 @@ component {
 		// Gather property information.
 		if (structKeyExists(arguments.beanMetadata, "properties"))
 		{
-			for (property in arguments.beanMetadata.properties)
+			// ACF 9 did NOT like using a for-in loop here.
+			for (i = 1; i <= arrayLen(arguments.beanMetadata.properties); i++)
 			{
+				property = arguments.beanMetadata.properties[i];
 				beanInfo.properties[property.name] = {};
 
 				if (structKeyExists(property, "access"))
