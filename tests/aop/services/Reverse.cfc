@@ -1,20 +1,22 @@
-component output="false" displayname="ReverseService"  {
-	param name="request.callstack" default="#arrayNew(1)#";
+component displayname="reverseService" extends="stringService" accessors="true" output="false" {
 
-	public function doReverse(String input){
-		ArrayAppend(request.callstack, "doReverse");
-		return Reverse(arguments.input);
-	}
 
-	public function doForward(String input){
+	public function doForward(string input) {
 		//I double reverse a string... i.e. do nothing!
-		ArrayAppend(request.callstack, "doForward");
-		return Reverse(Reverse(arguments.input));	
+		getStackLogService().log("doForward");
+		return reverse(reverse(arguments.input));	
 	}
 
-	public function throwError(){
+
+	public function doReverse(string input) {
+		getStackLogService().log("doReverse");
+		return reverse(arguments.input);
+	}
+
+
+	public function throwError() {
 		//This is just to throw an error
-		ArrayAppend(request.callstack, "throwError");
+		getStackLogService().log("throwError");
 		throw "I AM AN EVIL ERROR YOU WANT TO TRAP!";
 	}
 }

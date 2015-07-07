@@ -1,5 +1,4 @@
-<cfscript>
-component extends="mxunit.framework.TestCase"{
+component extends="mxunit.framework.TestCase" {
 
 
 	function TestNoInterceptors(){
@@ -26,25 +25,28 @@ component extends="mxunit.framework.TestCase"{
 		
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("beforeHello!"), "Before Works");
-		AssertEquals(ArrayLen(request.callstack), 2);
-		AssertEquals(ArrayToList(request.callstack),"before,doReverse");
+		AssertEquals(reverse("beforeHello!"), result, "Before Works");
+		AssertEquals(2, arrayLen(request.callstack));
+		AssertEquals("before,doReverse", arrayToList(request.callstack));
 	}
 	
+
 	function TestAfterInterceptors(){
 		//AfterAdvice Tests
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
+
 		//add an Interceptor
 		bf.intercept("ReverseService", "AfterInterceptor");
+
 		rs = bf.getBean("ReverseService");
+
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("Hello!") , "Reverse still Works");	
-		AssertEquals(ArrayLen(request.callstack), 2);
-		AssertEquals(ArrayToList(request.callstack),"doReverse,after");
+		AssertEquals(reverse("Hello!"), result, "Reverse still Works");	
+		AssertEquals(2, ArrayLen(request.callstack));
+		AssertEquals("doReverse,after", ArrayToList(request.callstack));
 	}
-
 
 
 	function TestAroundInterceptors(){
@@ -54,13 +56,11 @@ component extends="mxunit.framework.TestCase"{
 		//add an Interceptor
 		bf.intercept("ReverseService", "AroundInterceptor");
 		rs = bf.getBean("ReverseService");
+
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, "around," & Reverse("Hello!") & ",around" , "Called method through Around");
-		AssertEquals(2, ArrayLen(request.callstack));
-		AssertEquals(ArrayToList(request.callstack),"around,doReverse");
+		AssertEquals("around," & reverse("Hello!") & ",around", result, "Called method through Around");
+		AssertEquals(arrayLen(request.callstack), 2);
+		AssertEquals("around,doReverse", arrayToList(request.callstack));
 	}
-
-	
 }
-</cfscript>

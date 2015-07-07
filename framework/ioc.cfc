@@ -359,7 +359,13 @@ component {
 
     // in case an extension point wants to override actual metadata retrieval:
     private any function metadata( string dottedPath ) {
-        return getComponentMetadata( dottedPath );
+        try {
+            return getComponentMetadata( dottedPath );
+        } catch ( any e ) {
+            var except = "Unable to getComponentMetadata(#dottedPath#) because: " &
+                e.message & ( len( e.detail ) ? " (#e.detail#)" : "" );
+            throw except;
+        }
     }
 
 

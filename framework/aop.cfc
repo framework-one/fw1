@@ -16,7 +16,8 @@ component extends="framework.ioc" {
 	See the License for the specific language governing permissions and
 	limitations under the License.
 */
-	variables.interceptInfo = { }; // Internal cache of interceptor definitions.
+	// Internal cache of interceptor definitions.
+	variables.interceptorCache = {regex = [], name = {}, type = []};
 
 
 
@@ -47,14 +48,43 @@ component extends="framework.ioc" {
 		};
 
 
-		if (!structKeyExists(variables.interceptInfo, arguments.beanName))
+		arguments.beanName = trim(arguments.beanName);
+
+
+		// Determine if this is a name match or regex match.
+		if (len(arguments.beanName) && left(arguments.beanName, 1) == "/" && right(arguments.beanName, 1) == "/")
 		{
-			variables.interceptInfo[arguments.beanName] = [];
+			// Store regex without the forward slashes.
+			interceptDefinition.regex = mid(arguments.beanName, 2, len(arguments.beanName) - 2);
+
+			arrayAppend(variables.interceptorCache.regex, interceptDefinition);
+		}
+		else
+		{
+			if (!structKeyExists(variables.interceptorCache.name, arguments.beanName))
+			{
+				variables.interceptorCache.name[arguments.beanName] = [];
+			}
+
+			arrayAppend(variables.interceptorCache.name[arguments.beanName], interceptDefinition);
 		}
 
-		arrayAppend(variables.interceptInfo[arguments.beanName], interceptDefinition);
 
 		return this;
+	}
+
+
+	/** Adds an interceptor definition to the definition cache. */
+	public any function interceptByType(string type, string interceptorName, string methods = "")
+	{
+		var interceptDefinition =
+		{
+			type = arguments.type,
+			name = arguments.interceptorName,
+			methods = arguments.methods
+		};
+
+		arrayAppend(variables.interceptorCache.type, interceptDefinition);
 	}
 
 
@@ -64,86 +94,138 @@ component extends="framework.ioc" {
 	// PRIVATE METHODS //
 	// --------------- //
 
-	// Used to augment the bean and makes the variables scope of the bean accessible for transgenesis
-	public struct function _liftVariablesScope()
-	{
-		return variables;
-	}
-
-
+	/** Hook point to wrap bean with proxy. */
 	private any function construct(string dottedPath)
 	{
 		var bean = super.construct(arguments.dottedPath);
-		var beanName = listLast(arguments.dottedPath, ".");
-
+		var beanProxy = "";
 
 		// if it doesn't have a dotted path for us to create a new instance
 		// or it has no interceptors, we have to leave it alone
-		if (!hasInterceptors(beanName))
+		if (!hasInterceptors(arguments.dottedPath))
 		{
 			return bean;
 		}
 
 		// Create and return a proxy wrapping the bean.
-		return createProxy(beanName, bean);
-	}
-
-
-	/** Augments the original bean by gutting it and replacing it's scopes with the proxy bean. */
-	private any function createProxy(string beanName, any bean)
-	{
-		var beanProxy = new framework.beanProxy(bean, getInterceptorsForBean(arguments.beanName), variables.config);
+		beanProxy = new framework.beanProxy(bean, getInterceptorsForBean(arguments.dottedPath), variables.config);
 
 		return beanProxy;
 	}
 
 
 	/** Gets the associated interceptor definitions for a specific bean. */
-	private array function getInterceptorsForBean(string beanName)
+	private array function getInterceptorsForBean(string dottedPath)
 	{
 		// build the interceptor array:
-		var aliases = getAliases(arguments.beanName);
+		var beanName = listLast(arguments.dottedPath, ".");
+		var beanNames = getAliases(beanName);
+		var beanTypes = "";
 		var interceptDefinition = "";
 		var interceptedBeanName = "";
 		var interceptors = [];
 
 
-		arrayPrepend(aliases, arguments.beanName);
+		arrayPrepend(beanNames, beanName);
 
 
-		for (interceptedBeanName in aliases)
+		// Grab all name based interceptors that match.
+		for (interceptedBeanName in beanNames)
 		{
-			if (structKeyExists(variables.interceptInfo, interceptedBeanName))
+			// Match on name.
+			if (structKeyExists(variables.interceptorCache.name, interceptedBeanName))
 			{
-				for (interceptDefinition in variables.interceptInfo[interceptedBeanName])
+				for (interceptDefinition in variables.interceptorCache.name[interceptedBeanName])
 				{
 					arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
 				}
 			}
 		}
 
+
+		// Match on regex.  Ensure we only attach each one time.
+		if (arrayLen(variables.interceptorCache.regex))
+		{
+			for (interceptDefinition in variables.interceptorCache.regex)
+			{
+				for (interceptedBeanName in beanNames)
+				{
+					if (reFindNoCase(interceptDefinition.regex, interceptedBeanName))
+					{
+						arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
+						break;
+					}
+				}
+			}
+		}
+
+
+		// Grab all type based interceptors that match.
+		if (arrayLen(variables.interceptorCache.type))
+		{
+			beanTypes = getBeanTypes(arguments.dottedPath);
+
+			for (interceptDefinition in variables.interceptorCache.type)
+			{
+				if (listFindNoCase(beanTypes, interceptDefinition.type))
+				{
+					arrayAppend(interceptors, {bean = getBean(interceptDefinition.name), methods = interceptDefinition.methods});
+				}
+			}
+		}
+
+
 		return interceptors;
 	}
 
 
 	/** Determines if the bean has interceptor definitions associated with it. */
-	private boolean function hasInterceptors(string beanName)
+	private boolean function hasInterceptors(string dottedPath)
 	{
 		var interceptedBeanName = "";
+		var interceptorDefinition = {};
+		var beanName = listLast(arguments.dottedPath, ".");
+		var beanNames = getAliases(beanName);
+		var beanTypes = "";
 
-		// Straight up match in the interceptors.
-		if (structKeyExists(variables.interceptInfo, arguments.beanName))
+
+		arrayPrepend(beanNames, beanName);
+
+
+		for (interceptedBeanName in beanNames)
 		{
-			return true;
-		}
-
-
-		// Look for matches on aliases.
-		for (interceptedBeanName in getAliases(arguments.beanName))
-		{
-			if (structKeyExists(variables.interceptInfo, interceptedBeanName))
+			// Look for matches on name first.
+			if (structKeyExists(variables.interceptorCache.name, interceptedBeanName))
 			{
 				return true;
+			}
+
+
+			// Look for matches on regex.
+			if (arrayLen(variables.interceptorCache.regex))
+			{
+				for (interceptorDefinition in variables.interceptorCache.regex)
+				{
+					if (reFindNoCase(interceptorDefinition.regex, interceptedBeanName))
+					{
+						return true;
+					}
+				}
+			}
+
+
+			// Look for matches by bean type.
+			if (arrayLen(variables.interceptorCache.type))
+			{
+				beanTypes = getBeanTypes(arguments.dottedPath);
+
+				for (interceptorDefinition in variables.interceptorCache.type)
+				{
+					if (listFindNoCase(beanTypes, interceptorDefinition.type))
+					{
+						return true;
+					}
+				}
 			}
 		}
 
@@ -182,6 +264,27 @@ component extends="framework.ioc" {
 	}
 
 
+	/** Returns a list of bean types (both name and dotted path) for a given bean. */
+	private string function getBeanTypes(string dottedPath)
+	{
+		var beanTypes = "";
+		var metadata = getComponentMetadata(arguments.dottedPath);
+
+		while (!len(beanTypes) || structKeyExists(metadata, "extends"))
+		{
+			beanTypes = listAppend(beanTypes, listLast(metadata.name, "."));
+			beanTypes = listAppend(beanTypes, metadata.name);
+
+			if (structKeyExists(metadata, "extends"))
+			{
+				metadata = metadata.extends;
+			}
+		}
+
+		return beanTypes;
+	}
+
+
 	/** Loads an array of interceptor definitions into the interceptor definition cache. */
 	private void function loadInterceptors(array interceptors)
 	{
@@ -189,7 +292,14 @@ component extends="framework.ioc" {
 
 		for (interceptor in interceptors)
 		{
-			 intercept(argumentCollection = interceptor);
+			if (structKeyExists(interceptor, "beanName"))
+			{
+				intercept(argumentCollection = interceptor);
+			}
+			else
+			{
+				interceptByType(argumentCollection = interceptor);
+			}
 		}
 	}
 

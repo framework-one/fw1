@@ -1,8 +1,6 @@
-component extends="mxunit.framework.TestCase"{
+component extends="mxunit.framework.TestCase" {
 
-
-	function TestBeforeAroundAfterInterception(){
-
+	function TestBeforeAroundAfterInterception() {
 		//Putting it all together What happens when you call all of them?
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
@@ -16,30 +14,108 @@ component extends="mxunit.framework.TestCase"{
 		result = rs.doReverse("Hello!");
 
 
-		AssertEquals(result, "around," & Reverse("beforeHello!") & ",around");
-		AssertEquals(ArrayLen(request.callstack), 4);
-		AssertEquals(ArrayToList(request.callstack),"before,around,doReverse,after");
+		AssertEquals("around," & Reverse("beforeHello!") & ",around", result);
+		AssertEquals(4, arrayLen(request.callstack));
+		AssertEquals("before,around,doReverse,after", arrayToList(request.callstack));
 	}
 
-	function TestInitMethods(){
-	
+
+	function TestInitMethods() {
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {initMethod = "configure"});
-		rs = bf.getBean("advReverse");
 
-		AssertEquals(ArrayLen(request.callstack), 2);
-		AssertEquals(ArrayToList(request.callstack),"init,configure");
+		bf.intercept("advReverse", "BeforeInterceptor");
+
+		rs = bf.getBean("advReverse");
+		result = rs.doWrap("Hello!");
+
+		// First test does not intercept the (init, set..., or initMethod) methods.
+		AssertEquals(9, arrayLen(request.callstack));
+		AssertEquals(	"init,setStackLogService,configure,before,dowrap,before,dofront,before,dorear", 
+						arrayToList(request.callstack), 
+						"This test shows that the (init, set..., and configure) methods are by default ignored.");
+
+
+		request.callstack = []; //reset
+		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {initMethod = "configure"});
+
+		bf.intercept("advReverse", "BeforeInterceptor", "init,configure,setStackLogService,doWrap");
+
+		rs = bf.getBean("advReverse");
+		result = rs.doWrap("Hello!");
+
+		// Explicitly intercept the (init, set..., or initMethod) methods.
+		AssertEquals(10, arrayLen(request.callstack));
+		AssertEquals(	"before,init,before,setStackLogService,before,configure,before,dowrap,dofront,dorear", 
+						arrayToList(request.callstack), 
+						"This test shows that the (init, set..., and configure) methods can be explicitly intercepted.");
 	}
 
-	function TestMultipleBeforeInterceptions(){
+
+	function TestInterceptOnRegex() {
+		request.callstack = []; //reset
+		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {initMethod = "configure"});
+
+		//add an Interceptor
+		bf.intercept("/^reverse.*$/", "BeforeInterceptor");
+
+		ars = bf.getBean("advReverse");
+		rs = bf.getBean("reverse");
+		as = bf.getBean("array");
+
+
+		result = ars.doWrap("Hello!");
+		result2 = rs.doReverse("Hello!");
+		result3 = as.doListToArray("dog,cat,mouse");
+
+
+		AssertEquals("front-Hello!-rear", result);
+		AssertEquals("!olleHerofeb", result2);
+		AssertTrue(isArray(result3));
+		AssertEquals("dog,cat,mouse", arrayToList(result3));
+
+		AssertEquals(9, arrayLen(request.callstack));
+		AssertEquals("init,setStackLogService,configure,doWrap,doFront,doRear,before,doReverse,doListToArray", arrayToList(request.callstack));
+	}
+
+
+	function TestInterceptOnType() {
+		request.callstack = []; //reset
+		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {initMethod = "configure"});
+
+		//add an Interceptor
+		bf.interceptByType("stringService", "BeforeInterceptor", "doReverse,doForward,doWrap");
+
+		ars = bf.getBean("advReverse");
+		rs = bf.getBean("reverse");
+		as = bf.getBean("array");
+
+
+		result = ars.doWrap("Hello!");
+		result2 = rs.doReverse("Hello!");
+		result3 = as.doListToArray("dog,cat,mouse");
+
+
+		AssertEquals("front-beforeHello!-rear", result);
+		AssertEquals("!olleHerofeb", result2);
+		AssertTrue(isArray(result3));
+		AssertEquals("dog,cat,mouse", arrayToList(result3));
+
+		AssertEquals(10, arrayLen(request.callstack));
+		AssertEquals("init,setStackLogService,configure,before,doWrap,doFront,doRear,before,doReverse,doListToArray", arrayToList(request.callstack));
+	}
+
+
+	function TestMultipleBeforeInterceptions() {
 		//Multiple Before Advisors
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
-		//Need to create different Before interceptors
 
-		bf.addBean("BeforeInterceptorA", new tests.aop.interceptors.aop.BeforeInterceptor("beforeA"));
-		bf.addBean("BeforeInterceptorB", new tests.aop.interceptors.aop.BeforeInterceptor("beforeB"));
-		bf.addBean("BeforeInterceptorC", new tests.aop.interceptors.aop.BeforeInterceptor("beforeC"));
+		//Need to create different Before interceptors
+		bf.declareBean("BeforeInterceptorA", "tests.aop.interceptors.aop.BeforeInterceptor", true, {name = "beforeA"});
+		bf.declareBean("BeforeInterceptorB", "tests.aop.interceptors.aop.BeforeInterceptor", true, {name = "beforeB"});
+		bf.declareBean("BeforeInterceptorC", "tests.aop.interceptors.aop.BeforeInterceptor", true, {name = "beforeC"});
+
 		bf.intercept("ReverseService", "BeforeInterceptorA");
 		bf.intercept("ReverseService", "BeforeInterceptorB");
 		bf.intercept("ReverseService", "BeforeInterceptorC");
@@ -47,42 +123,49 @@ component extends="mxunit.framework.TestCase"{
 		rs = bf.getBean("ReverseService");
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("beforebeforebeforeHello!"));
-		AssertEquals(ArrayLen(request.callstack),4);
-		AssertEquals(ArrayToList(request.callstack),"beforeA,beforeB,beforeC,doReverse");
-		
+		AssertEquals(reverse("beforebeforebeforeHello!"), result);
+		AssertEquals(4, arrayLen(request.callstack));
+		AssertEquals("beforeA,beforeB,beforeC,doReverse", arrayToList(request.callstack));
 	}
 
-	function TestMultipleAfterInterceptors(){
+
+	function TestMultipleAfterInterceptors() {
 		//Multiple After Advisors
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
-		//Need to create different Before interceptors
 
-		bf.addBean("AfterInterceptorA", new tests.aop.interceptors.aop.AfterInterceptor("afterA"));
-		bf.addBean("AfterInterceptorB", new tests.aop.interceptors.aop.AfterInterceptor("afterAlterResultB"));
-		bf.addBean("AfterInterceptorC", new tests.aop.interceptors.aop.AfterInterceptor("afterC"));
+		//Need to create different After interceptors
+		bf.declareBean("AfterInterceptorA", "tests.aop.interceptors.aop.AfterInterceptor", true, {name = "afterA"});
+		bf.declareBean("AfterInterceptorB", "tests.aop.interceptors.aop.AfterInterceptor", true, {name = "afterAlterResultB"});
+		bf.declareBean("AfterInterceptorC", "tests.aop.interceptors.aop.AfterInterceptor", true, {name = "afterC"});
+
+
 		bf.intercept("ReverseService", "AfterInterceptorA");
 		bf.intercept("ReverseService", "AfterInterceptorB");
 		bf.intercept("ReverseService", "AfterInterceptorC");
+
+
 		rs = bf.getBean("ReverseService");
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("Hello!") & ",afterAlterResultB");
-		AssertEquals(ArrayLen(request.callstack),4);
-		AssertEquals(ArrayToList(request.callstack),"doReverse,afterA,afterAlterResultB,afterC");
+		AssertEquals(reverse("Hello!") & ",afterAlterResultB", result);
+		AssertEquals(4, arrayLen(request.callstack));
+		AssertEquals("doReverse,afterA,afterAlterResultB,afterC", arrayToList(request.callstack));
 	}
 
-	function TestMultipleAroundInterceptors(){
 
+	function TestMultipleAroundInterceptors() {
 		//Multiple Around Advisors
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
-		//Need to create different Before interceptors
 
-		bf.addBean("AroundInterceptorA", new tests.aop.interceptors.aop.AroundInterceptor("aroundA"));
-		bf.addBean("AroundInterceptorB", new tests.aop.interceptors.aop.AroundInterceptor("aroundB"));
-		bf.addBean("AroundInterceptorC", new tests.aop.interceptors.aop.AroundInterceptor("aroundC"));
+
+		//Need to create different After interceptors
+		bf.declareBean("AroundInterceptorA", "tests.aop.interceptors.aop.AroundInterceptor", true, {name = "aroundA"});
+		bf.declareBean("AroundInterceptorB", "tests.aop.interceptors.aop.AroundInterceptor", true, {name = "aroundB"});
+		bf.declareBean("AroundInterceptorC", "tests.aop.interceptors.aop.AroundInterceptor", true, {name = "aroundC"});
+
+
 		bf.intercept("ReverseService", "AroundInterceptorA");
 		bf.intercept("ReverseService", "AroundInterceptorB");
 		bf.intercept("ReverseService", "AroundInterceptorC");
@@ -90,13 +173,13 @@ component extends="mxunit.framework.TestCase"{
 
 		result = rs.doReverse("Hello!");
 
-		AssertEquals(result, "aroundA,aroundB,aroundC," & Reverse("Hello!") & ",aroundC,aroundB,aroundA");
-		AssertEquals(ArrayLen(request.callstack),4);
-		AssertEquals(ArrayToList(request.callstack),"aroundA,aroundB,aroundC,doReverse");
-
+		AssertEquals("aroundA,aroundB,aroundC," & reverse("Hello!") & ",aroundC,aroundB,aroundA", result);
+		AssertEquals(4, arrayLen(request.callstack));
+		AssertEquals("aroundA,aroundB,aroundC,doReverse", arrayToList(request.callstack));
 	}
 
-	function TestMethodMatches(){
+
+	function TestMethodMatches() {
 		bf = new framework.ioc('/tests/aop/services,/tests/aop/interceptors', {});
 		rs = bf.getBean("Reverse");
 
@@ -110,8 +193,8 @@ component extends="mxunit.framework.TestCase"{
 		AssertTrue(proxy.methodMatches("doForward", "doReverse,doForward"));
 	}
 
-	function TestNamedMethodInterceptions(){
 
+	function TestNamedMethodInterceptions() {
 		//Named Method Interceptions
 
 		request.callstack = []; //reset
@@ -131,25 +214,25 @@ component extends="mxunit.framework.TestCase"{
 		// This should be intercepted.
 		result3 = rs.doReverse("Hello!");
 
-		AssertEquals(result, Reverse("beforeHello!"));
-		AssertEquals(result2, "hello!");
-		AssertEquals(result3, Reverse("beforeHello!"));
-		AssertEquals(ArrayLen(request.callstack),5);
-		AssertEquals(ArrayToList(request.callstack),"before,doReverse,doForward,before,doReverse");
-
+		AssertEquals(reverse("beforeHello!"), result);
+		AssertEquals("hello!", result2);
+		AssertEquals(reverse("beforeHello!"), result3);
+		AssertEquals(5, arrayLen(request.callstack));
+		AssertEquals("before,doReverse,doForward,before,doReverse", arrayToList(request.callstack));
 	}
 
+
 	function TestOnErrorInterceptors() {
-	
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
         rs =  bf.getBean("ReverseService");
 		result2 = rs.doForward("Hello!");
 
 
-		AssertEquals(result2, "Hello!");
-		AssertEquals(ArrayLen(request.callstack),1);
-		AssertEquals(ArrayToList(request.callstack),"doForward");
+		AssertEquals("Hello!", result2);
+		AssertEquals(1, arrayLen(request.callstack));
+		AssertEquals("doForward", arrayToList(request.callstack));
+
 
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
@@ -159,13 +242,12 @@ component extends="mxunit.framework.TestCase"{
 		rs = bf.getBean("ReverseService");
 		rs.throwError();
 
-		AssertEquals(ArrayLen(request.callstack),2);
-		AssertEquals(ArrayToList(request.callstack),"throwError,onError");
+		AssertEquals(2, arrayLen(request.callstack));
+		AssertEquals("throwError,onError", arrayToList(request.callstack));
 	}
 
 
-	function TestPrivateMethodInterceptors(){
-	
+	function TestPrivateMethodInterceptors() {
 		request.callstack = []; //reset
 		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {initMethod = "configure"});
 
@@ -176,8 +258,8 @@ component extends="mxunit.framework.TestCase"{
 
 		result = rs.doWrap("Hello!");
 
-		AssertEquals(result, "front-beforeHello!-rear");
-		AssertEquals(ArrayLen(request.callstack), 6);
-		AssertEquals(ArrayToList(request.callstack),"init,configure,doWrap,before,doFront,doRear");
+		AssertEquals("front-beforeHello!-rear", result);
+		AssertEquals(7, arrayLen(request.callstack));
+		AssertEquals("init,setStackLogService,configure,doWrap,before,doFront,doRear", arrayToList(request.callstack));
 	}
 }

@@ -1806,11 +1806,22 @@ component {
             if ( !len( routeRegEx.target ) || right( routeRegEx.target, 1) != '/' ) routeRegEx.target &= '/';
             // walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
             var n = 1;
-            var placeholders = rematch( '(:[-_a-zA-Z0-9]+)|(\([^\)]+)', routeRegEx.pattern );
+            var placeholders = rematch( '(\{[-_a-zA-Z0-9]+:[^\}]*\})|(:[-_a-zA-Z0-9]+)|(\([^\)]+)', routeRegEx.pattern );
             for ( var placeholder in placeholders ) {
-                if ( left( placeholder, 1 ) == ':') {
+                var placeholderFirstChar = left( placeholder, 1 );
+                if ( placeholderFirstChar == ':') {
                     routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, '([^/]*)' );
                     routeRegEx.target = replace( routeRegEx.target, placeholder, chr(92) & n );
+                }
+                else if ( placeholderFirstChar == '{') {
+                    var findPlaceholderSpecificRegex = refind("\{([^:]*):([^\}]*)\}", placeholder, 1, true);
+                    var placeholderSpecificRegexFound = arrayLen(findPlaceholderSpecificRegex.pos) gte 3;
+                    if( placeholderSpecificRegexFound ){
+                        var placeholderName = mid( placeholder, findPlaceholderSpecificRegex.pos[2], findPlaceholderSpecificRegex.len[2] );
+                        var placeholderSpecificRegex = mid( placeholder, findPlaceholderSpecificRegex.pos[3], findPlaceholderSpecificRegex.len[3] );
+                        routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, "(#placeholderSpecificRegex#)" );
+                        routeRegEx.target = replace( routeRegEx.target, ":" & placeholderName, chr(92) & n );
+                    }
                 }
                 ++n;
             }
