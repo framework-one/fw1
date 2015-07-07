@@ -1,10 +1,10 @@
 language: java
 env:
   matrix:
+    - PLATFORM=acf10-linux64
     - PLATFORM=acf902-linux64
-#    - PLATFORM=railo41
-#    - PLATFORM=railo42beta
-#    - PLATFORM=acf10-linux64
+    - PLATFORM=railo42beta
+    - PLATFORM=railo41
 
 notifications:
   webhooks:

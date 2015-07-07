@@ -20,7 +20,6 @@ component {
     // CONSTRUCTOR
 
     public any function init( string folders, struct config = { } ) {
-        variables.stdout = createObject( "java", "java.lang.System" ).out;
         variables.folders = folders;
         variables.config = config;
         variables.beanInfo = { };
@@ -332,7 +331,9 @@ component {
         try {
             return getComponentMetadata( dottedPath );
         } catch ( any e ) {
-            throw "metadata(#dottedPath#) failed #e.message# #e.detail#";
+            var except = "Unable to getComponentMetadata(#dottedPath#) because: " &
+                e.message & ( len( e.detail ) ? " (#e.detail#)" : "" );
+            throw except;
         }
     }
 
