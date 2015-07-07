@@ -20,6 +20,7 @@ component {
     // CONSTRUCTOR
 
     public any function init( string folders, struct config = { } ) {
+        variables.stdout = createObject( "java", "java.lang.System" ).out;
         variables.folders = folders;
         variables.config = config;
         variables.beanInfo = { };
@@ -328,7 +329,11 @@ component {
 
     // in case an extension point wants to override actual metadata retrieval:
     private any function metadata( string dottedPath ) {
-        return getComponentMetadata( dottedPath );
+        try {
+            return getComponentMetadata( dottedPath );
+        } catch ( any e ) {
+            throw "metadata(#dottedPath#) failed #e.message# #e.detail#";
+        }
     }
 
 
