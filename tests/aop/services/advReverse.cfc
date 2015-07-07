@@ -1,4 +1,4 @@
-component displayname="advReverseService" extends="reverse" accessors="true" output="false" {
+component displayname="advReverseService" extends="Reverse" accessors="true" output="false" {
 
 
 	// PUBLIC METHODS
