@@ -1,14 +1,15 @@
-component output="false" displayname="AfterInterceptor"  {
+component displayname="AfterInterceptor" extends="interceptor" accessors="true" output="false" {
 	
-	this.name = "after";
-	function init(name="after"){
+
+	function init(name="after") {
 		this.name=name;
 	}
 
-	function after(target, method, args, result){
-		ArrayAppend(request.callstack, this.name);
 
-		//how do we know if we have run it?
+	function after(target, method, args, result) {
+		getStackLogService().log(this.name);
+
+		// Demonstrate that we can alter the result.
 		if (findNoCase("alter", this.name) && structKeyExists(arguments, "result") && !isNull(arguments.result))
 		{
 			return arguments.result & "," & this.name;
