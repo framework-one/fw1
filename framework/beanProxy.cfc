@@ -141,13 +141,6 @@ component {
 	}
 
 
-	/** Used to temporarily augment a bean and makes the variables scope of the bean accessible for transgenesis */
-	private struct function _liftVariablesScope()
-	{
-		return variables;
-	}
-
-
 	/** Runs the 'Around' method, skips to the next interceptor in the chain if the 'Around' should not be run, or calls the actual method. */
 	public any function _preAround(required any targetBean, required string methodName, struct args = {})
 	{
@@ -414,7 +407,7 @@ component {
 
 
 		// Add a link in the call chain from the previous interceptor to the one just added.
-		if (arrayLen(variables.aroundInterceptors) > 1)
+		if (1 < arrayLen(variables.aroundInterceptors))
 		{
 			prevInterceptor = variables.aroundInterceptors[arrayLen(variables.aroundInterceptors) - 1];
 
@@ -558,28 +551,15 @@ component {
 		var beanInfo = getTargetBeanMetadata(variables.targetBean);
 		var key = "";
 		var methodInfo = {};
-		var varScope = {};
 
 
 		variables.targetBeanPath = beanInfo.name;
-		variables.targetBean._v = _liftVariablesScope;
-		varScope = variables.targetBean._v();
-
-
-		// Locate methods in 'variables' scope of targetBean.
-		for (key in varScope)
-		{
-			if (!structKeyExists(methodInfo, key) && key != "_v" && isCustomFunction(varScope[key]))
-			{
-				methodInfo[key] = {access = getMethodAccess(varScope[key]), discoveredIn = "variables", isPropertyAccessor = false};
-			}
-		}
 
 
 		// Locate methods in 'this' scope of targetBean.
 		for (key in variables.targetBean)
 		{
-			if (!structKeyExists(methodInfo, key) && key != "_v" && isCustomFunction(variables.targetBean[key]))
+			if (!structKeyExists(methodInfo, key) && isCustomFunction(variables.targetBean[key]))
 			{
 				methodInfo[key] = {access = "public", discoveredIn = "this", isPropertyAccessor = false};
 			}
@@ -591,7 +571,7 @@ component {
 		{
 			for (key in beanInfo.methods)
 			{
-				if (!structKeyExists(methodInfo, key) && key != "_v")
+				if (!structKeyExists(methodInfo, key))
 				{
 					methodInfo[key] = {access = beanInfo.methods[key].access, discoveredIn = "metadata", isPropertyAccessor = false};
 				}
@@ -616,9 +596,6 @@ component {
 				}
 			}
 		}
-
-
-		structDelete(variables.targetBean, "_v");
 
 
 		return methodInfo;
@@ -662,7 +639,7 @@ component {
 
 
 	/** Alters the proxy bean so the factory still sees the set..(), init(), and initMethod() and so these methods get called on the target bean. */
-	private any function morphProxy(required struct config)
+	private void function morphProxy(required struct config)
 	{
 		var key = "";
 
@@ -793,7 +770,7 @@ component {
 	}
 
 
-	private function runAfterStack(string methodName, struct args, any result)
+	private any function runAfterStack(string methodName, struct args, any result)
 	{
 		if (structKeyExists(arguments, "result") && !isNull(arguments.result))
 		{
@@ -824,7 +801,7 @@ component {
 	}
 
 
-	private function runAroundStack(string methodName, struct args)
+	private any function runAroundStack(string methodName, struct args)
 	{
 		if (arrayLen(variables.aroundInterceptors))
 		{
@@ -840,7 +817,7 @@ component {
 	}
 
 
-	private function runBeforeStack(string methodName, struct args)
+	private void function runBeforeStack(string methodName, struct args)
 	{
 		var inteceptor = "";
 
@@ -857,7 +834,7 @@ component {
 	}
 
 
-	private function runOnErrorStack(string methodName, struct args, any exception)
+	private void function runOnErrorStack(string methodName, struct args, any exception)
 	{
 		var interceptor = "";
 
