@@ -56,12 +56,26 @@ component extends="mxunit.framework.TestCase" {
 
     public void function testTraceOutputReq() {
         request.fw.onApplicationStart();
-        variables.fw.renderData( "text", "test" );
+        variables.fw.renderData( "text", "myteststring" );
         var output = "";
         savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
             request.fw.onRequestEnd();
         }
+        assertTrue( output contains "myteststring" );
         assertFalse( output contains "framework lifecycle trace" );
+    }
+
+    public void function testTraceOutputHTMLReq() {
+        request.fw.onApplicationStart();
+        variables.fw.renderData( "html", "<p>myteststring</p>" );
+        var output = "";
+        savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
+            request.fw.onRequestEnd();
+        }
+        assertTrue( output contains "myteststring" );
+        assertTrue( output contains "framework lifecycle trace" );
     }
 
     public void function testSetupTraceRenderHtml() {

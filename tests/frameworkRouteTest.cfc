@@ -2,10 +2,13 @@ component extends="tests.InjectableTest" {
 
     public void function setUp() {
         variables.fw = new framework.one();
+        injectMethod( variables.fw, this, 'isFrameworkInitialized', 'isFrameworkInitialized' );
+        variables.fwVars = getVariablesScope( variables.fw );
+        variables.fwVars.framework.routesCaseSensitive = true;
         // doesn't work on Railo:
         // makePublic(variables.fw, "processRouteMatch");
         // this works on both Railo and ACF:
-        variables.fw.processRouteMatch = getVariablesScope(variables.fw).processRouteMatch;
+        variables.fw.processRouteMatch = variables.fwVars.processRouteMatch;
     }
 
     public void function testRouteMatchBasics()
@@ -60,6 +63,10 @@ component extends="tests.InjectableTest" {
         match = variables.fw.processRouteMatch(route, target, "/test/5/something.html/", "GET");
         assertTrue(match.matched);
         assertEquals("default.main/id/5/type/html/", rereplace(match.path, match.pattern, match.target));
+
+        match = variables.fw.processRouteMatch("/product/{id:[0-9]+}-:name.html", "product.detail?id=:id&name=:name", "/product/1-computer.html", "GET");
+        assertTrue(match.matched);
+        assertEquals("product.detail?id=1&name=computer/", rereplace(match.path, match.pattern, match.target));
     }
     
     public void function testRouteMatchMethod()
@@ -75,6 +82,12 @@ component extends="tests.InjectableTest" {
         
         match = variables.fw.processRouteMatch("$POST/test/:id", "default.main?id=:id", "/test/5", "POST");
         assertTrue(match.matched);           
+
+        match = variables.fw.processRouteMatch("$POST^/foo/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
+        assertTrue(match.matched);
+
+        match = variables.fw.processRouteMatch("$POST^/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
+        assertFalse(match.matched);
     }
     
     public void function testRouteMatchRedirect()
@@ -116,5 +129,11 @@ component extends="tests.InjectableTest" {
         var uri = variables.fw.buildCustomURL( "/product/:ignore" );
         uri = REReplace( uri, "^.*\.cf[cm]", "" );
         assertEquals( "/product/:ignore", uri );
+    }
+    
+    // PRIVATE
+
+    private boolean function isFrameworkInitialized() {
+        return false;
     }
 }

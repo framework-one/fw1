@@ -7,13 +7,17 @@ for `/framework` to the `framework` folder inside this FW/1 directory. Note that
 your `Application.cfc` needs to extend `framework.one`, you have to add the mapping
 in your admin - you can't just use a per-application mapping.
 
+Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
+
 **Project home:** http://fw1.riaforge.org
 
-**Documentation wiki:** http://github.com/framework-one/fw1/wiki
+**Documentation / Wiki:** http://framework-one.github.io/documentation/ / http://github.com/framework-one/fw1/wiki
 
 **Blog:** http://framework-one.github.io
 
 **Support:** http://groups.google.com/group/framework-one/
+
+**Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a [dedicated #fw1 channel](https://cfml.slack.com/messages/fw1/).
 
 **Running the tests:**
 

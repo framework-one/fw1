@@ -56,7 +56,12 @@ component extends="framework.one" {
         // change this if you want a different dependency injection engine:
         diEngine = 'di1',
         // change this if you want different locations to be scanned by the D/I engine:
-        diLocations = 'model,controllers'
+        diLocations = 'model,controllers',
+        // optional configuration for your dependency injection engine:
+        diConfig = { },
+        // routes (for fancier SES URLs) - see the documentation for details:
+        routes = [ ],
+        routesCaseSensitive = true
 	};
 	*/
 	
