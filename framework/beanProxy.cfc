@@ -375,7 +375,10 @@ component {
 		}
 
 
-		augmentInterceptor(arguments.interceptor);
+		if (!structKeyExists(arguments.interceptor.bean, "interceptorAugmented"))
+		{
+			augmentInterceptor(arguments.interceptor);
+		}
 
 
 		// Maintain the list of intercepted methods. '*' and blank means all.
@@ -433,6 +436,7 @@ component {
 
 		arguments.interceptor.bean._inject = _inject;
 
+		arguments.interceptor.bean._inject("interceptorAugmented", true);
 		arguments.interceptor.bean._inject("interceptedMethods", arguments.interceptor.methods, "private");
 		arguments.interceptor.bean._inject("translateArgs", _translateArgs, "private");
 
