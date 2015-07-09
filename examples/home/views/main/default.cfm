@@ -7,8 +7,8 @@
 	<li><a href="#buildURL('errortest:')#">errortest subsystem</a></li>
 	<li><a href="#buildURL('1helloworld:')#">basic hello world subsystem</a></li>
 	<li><a href="#buildURL('2hellolinked:')#">linked hello world subsystem</a></li>
-	<li><a href="#buildURL('3hellolayout:')#">hello world with layout subsystem</a></li>
-	<li><a href="#buildURL('4hellocontroller:')#">hello world controller subsystem</a></li>
+	<li><a href="#buildURL('3hellocontroller:')#">hello world controller subsystem</a></li>
+	<li><a href="#buildURL('4hellolayout:')#">hello world with layout subsystem</a></li>
 	<li><a href="#buildURL('5helloservice:')#">hello world service subsystem</a></li>
 </ul>
 </cfoutput>
