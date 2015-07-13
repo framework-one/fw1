@@ -19,7 +19,8 @@ component {
     }
 
     public void function jsonObject( struct rc ) {
-        variables.fw.renderData( 'json', [ "An", "array", { "containing" = "data" } ] );
+        // variables.fw.renderData( 'json', [ "An", "array", { "containing" = "data" } ] );
+        variables.fw.renderData( 'json', [], 200 );
     }
 
     public void function jsonString( struct rc ) {
