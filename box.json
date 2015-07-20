@@ -9,7 +9,7 @@
     "Homepage" : "http://framework-one.github.io/",
     "Documentation" : "http://framework-one.github.io/documentation/",
     "Repository" : {
-        "type" : "git", "URL" : "https://github.com/framework-one/fw1"
+        "type" : "git", "URL" : "https://github.com/framework-one/fw1.git"
     },
     "Bugs" : "https://github.com/framework-one/fw1/issues",
     "shortDescription" : "FW/1 - Framework One - is a family of small, lightweight, convention-over-configuration frameworks, primarily for CFML.",
