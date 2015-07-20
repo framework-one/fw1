@@ -4,8 +4,8 @@
     "version" : "3.1",
     "author" : "Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
     "location" : "https://github.com/framework-one/fw1/archive/master.zip",
-    "createPackageDirectory" : "true",
-    "packageDirectory" : "framework",
+    "createPackageDirectory" : true,
+    "packageDirectory" : "",
     "Homepage" : "http://framework-one.github.io/",
     "Documentation" : "http://framework-one.github.io/documentation/",
     "Repository" : {
