@@ -1,6 +1,6 @@
 {
     "name" : "Framework One",
-    "slug" : "fw1",
+    "slug" : "fw1-test-box-json",
     "version" : "3.1",
     "author" : "Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
     "location" : "https://github.com/framework-one/fw1/archive/master.zip",
@@ -28,5 +28,5 @@
         { "type" : "Apache 2.0", "URL" : "http://www.apache.org/licenses/LICENSE-2.0" }
     ],
     "Contributors" : [ {"name": "Contributors List", "url": "https://github.com/framework-one/fw1/graphs/contributors"} ],
-    "ignore" : [ "css", "docs", "examples", "introduction", "skeleton", "tests", ".gitignore", ".travis.yml", "code_of_conduct.md", "contributing.md", "readme.md", "build.xml", "run-tests-example.sh" ]
+    "ignore" : [ "index.cfm", "Application.cfc", "css", "docs", "examples", "introduction", "skeleton", "tests", ".gitignore", ".travis.yml", "code_of_conduct.md", "contributing.md", "readme.md", "build.xml", "run-tests-example.sh" ]
 }
