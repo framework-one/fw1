@@ -3,9 +3,14 @@ component {
     this.name = hash( getBaseTemplatePath() );
     // any other application settings:
     this.sessionManagement = true;
+    this.mappings[ '/framework' ] = expandPath( '../../framework' );
 
-    // create your FW/1 application:
-    request._framework_one = new MyApplication();
+    // create your FW/1 application (with extension points):
+    request._framework_one = new MyApplication( {
+        trace : true,
+        diComponent : "framework.ioclj",
+        diLocations : getDirectoryFromPath( CGI.SCRIPT_NAME )
+    } );
 
     // delegation of lifecycle methods to FW/1:
     function onApplicationStart() {

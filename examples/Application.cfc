@@ -1,11 +1,18 @@
 component {
     // you can provide a specific application name if you want:
-    this.name = hash( getBaseTemplatePath() );
+	this.name = 'fw1-examples';
     // any other application settings:
     this.sessionManagement = true;
+    this.mappings[ '/framework' ] = expandPath( '../framework' );
 
     // create your FW/1 application:
-    request._framework_one = new MyApplication();
+    request._framework_one = new framework.one( {
+		usingSubsystems = true,
+		SESOmitIndex = true,
+        diLocations = "model, controllers, beans, services", // to account for the variety of D/I locations in our examples
+        // that allows all our subsystems to automatically have their own bean factory with the base factory as parent
+        trace = true
+    } );
 
     // delegation of lifecycle methods to FW/1:
     function onApplicationStart() {

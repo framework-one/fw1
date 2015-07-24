@@ -3,9 +3,14 @@ component {
     this.name = hash( getBaseTemplatePath() );
     // any other application settings:
     this.sessionManagement = true;
+    this.mappings[ '/framework' ] =
+        getDirectoryFromPath( getBaseTemplatePath() ) & 'framework';
 
     // create your FW/1 application:
-    request._framework_one = new MyApplication();
+    request._framework_one = new framework.one( {
+		base = getDirectoryFromPath( CGI.SCRIPT_NAME )
+            .replaceFirst( getContextRoot(), '' ) & 'introduction'
+    } );
 
     // delegation of lifecycle methods to FW/1:
     function onApplicationStart() {
