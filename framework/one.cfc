@@ -2094,12 +2094,6 @@ component {
     }
 
     private void function setupApplicationWrapper() {
-        /*
-            since this can be called on a reload, we need to lock it to prevent other threads
-            trying to reload the app at the same time since we're messing with the main application
-            data struct... if the application is already running, we don't blow away the factories
-            because we don't want to affect other threads that may be running at this time
-        */
         if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
         request._fw1.appWrapped = true;
         variables.fw1App = {
