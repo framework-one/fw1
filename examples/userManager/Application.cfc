@@ -1,12 +1,29 @@
-component extends="framework.one" {
-	
-	this.mappings["/userManager"] = getDirectoryFromPath(getCurrentTemplatePath());
+component {
+    // you can provide a specific application name if you want:
 	this.name = 'fw1-userManager';
-	
-	// FW/1 - configuration:
-	variables.framework = {
-		home = "user.default",
-        trace = true
-	};
-	
+    // any other application settings:
+	this.mappings["/userManager"] = getDirectoryFromPath(getCurrentTemplatePath());
+
+    // create your FW/1 application:
+    request._framework_one = new MyApplication();
+
+    // delegation of lifecycle methods to FW/1:
+    function onApplicationStart() {
+        return request._framework_one.onApplicationStart();
+    }
+    function onError( exception, event ) {
+        return request._framework_one.onError( exception, event );
+    }
+    function onRequest( targetPath ) {
+        return request._framework_one.onRequest( targetPath );
+    }
+    function onRequestEnd() {
+        return request._framework_one.onRequestEnd();
+    }
+    function onRequestStart( targetPath ) {
+        return request._framework_one.onRequestStart( targetPath );
+    }
+    function onSessionStart() {
+        return request._framework_one.onSessionStart();
+    }
 }
