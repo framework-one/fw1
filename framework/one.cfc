@@ -17,18 +17,20 @@ component {
 */
 
     this.name = hash( getBaseTemplatePath() );
-    request._fw1 = {
-        cgiScriptName = CGI.SCRIPT_NAME,
-        cgiPathInfo = CGI.PATH_INFO,
-        cgiRequestMethod = CGI.REQUEST_METHOD,
-        controllers = [ ],
-        requestDefaultsInitialized = false,
-        doTrace = false,
-        trace = [ ]
-    };
-    if ( len( getContextRoot() ) ) {
-        request._fw1.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
-        request._fw1.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
+    if ( !structKeyExists( request, '_fw1' ) ) {
+        request._fw1 = {
+            cgiScriptName = CGI.SCRIPT_NAME,
+            cgiPathInfo = CGI.PATH_INFO,
+            cgiRequestMethod = CGI.REQUEST_METHOD,
+            controllers = [ ],
+            requestDefaultsInitialized = false,
+            doTrace = false,
+            trace = [ ]
+        };
+        if ( len( getContextRoot() ) ) {
+            request._fw1.cgiScriptName = replace( CGI.SCRIPT_NAME, getContextRoot(), '' );
+            request._fw1.cgiPathInfo = replace( CGI.PATH_INFO, getContextRoot(), '' );
+        }
     }
     // do not rely on these, they are meant to be true magic...
     variables.magicApplicationSubsystem = '][';
