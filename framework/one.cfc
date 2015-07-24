@@ -36,6 +36,16 @@ component {
     variables.magicApplicationAction = '__';
     variables.magicBaseURL = '-[]-';
 
+    // constructor if not extended via Application.cfc
+
+    public any function init( struct config = { } ) {
+        if ( !structKeyExists( variables, 'framework' ) ) {
+            variables.framework = { };
+        }
+        structAppend( variables.framework, config );
+        return this;
+    }
+
     public void function abortController() {
         request._fw1.abortController = true;
         internalFrameworkTrace( 'abortController() called' );
