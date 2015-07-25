@@ -55,7 +55,7 @@ component {
     }
 
     public boolean function actionSpecifiesSubsystem( string action ) {
-
+        // SS2: remove this check -- ok for action to specify subsystems anyway
         if ( !usingSubsystems() ) {
             return false;
         }
@@ -368,6 +368,7 @@ component {
             }
             return getDefaultBeanFactory();
         }
+        // SS2: remove this condition
         if ( !usingSubsystems() ) {
             return getDefaultBeanFactory();
         }
@@ -448,6 +449,7 @@ component {
      * using defaults from the configuration or request where appropriate
      */
     public string function getFullyQualifiedAction( string action = request.action ) {
+        // SS2: not sure about this... I think it needs to be conditional on getSubsystem( action ) being non-empty?
         if ( usingSubsystems() ) {
             return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
         }
@@ -505,7 +507,7 @@ component {
      */
     public string function getSectionAndItem( string action = request.action ) {
         var sectionAndItem = '';
-
+        // SS2: just remove usingSubsystems() from this condition:
         if ( usingSubsystems() && actionSpecifiesSubsystem( action ) ) {
             if ( listLen( action, variables.framework.subsystemDelimiter ) > 1 ) {
                 sectionAndItem = listLast( action, variables.framework.subsystemDelimiter );
@@ -583,7 +585,7 @@ component {
         if ( hasDefaultBeanFactory() ) {
             return true;
         }
-
+        // SS2: remove this condition:
         if ( !usingSubsystems() ) {
             return false;
         }
@@ -1288,6 +1290,7 @@ component {
                 }
             }
             // look for site-wide layout (only applicable if using subsystems)
+            // SS2: open issue -- does site-wide layout go away in SS2?
             if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
                 testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem &
                                                     variables.framework.subsystemDelimiter & 'default', 'layout' );
@@ -1561,8 +1564,10 @@ component {
         if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#componentKey#" type="exclusive" timeout="30" {
                 if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
+                    // SS2: just remove usingSubsystems() from this condition?
                     if ( usingSubsystems() && hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
                         cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
+                        // SS2: this is ok if the condition above is updated
                     } else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
                         cfc = getDefaultBeanFactory().getBean( beanName );
                     } else {
@@ -1674,7 +1679,8 @@ component {
         if ( subsystem eq '' ) {
             return '';
         }
-
+        // SS2: if usingSubsystems() then return subsystem & '/';
+        // else return 'subsystems/' & subsystem & '/';
         return subsystem & '/';
     }
 
@@ -1766,6 +1772,8 @@ component {
         pathInfo.path = listLast( path, variables.framework.subsystemDelimiter );
         pathInfo.base = request.base;
         pathInfo.subsystem = subsystem;
+        // SS2: this seems to need to know whether the current action contains a subsystem?
+        // if usingSubsystems() || subsystem != ''
         if ( usingSubsystems() ) {
             pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
         }
@@ -2170,6 +2178,7 @@ component {
             variables.framework.usingSubsystems =
                 structKeyExists(variables.framework,'defaultSubsystem') ||
                 structKeyExists(variables.framework,'sitewideLayoutSubsystem') ||
+                // SS2: remove the next two conditions (maybe the one above? that's the edge case site-side subsystem layout)
                 structKeyExists(variables.framework,'subsystemDelimiter') ||
                 structKeyExists(variables.framework,'subsystems');
         }
@@ -2192,12 +2201,14 @@ component {
             variables.framework.subsystems = { };
         }
         if ( structKeyExists(variables.framework, 'home') ) {
+            // SS2: leave as-is
             if (usingSubsystems()) {
                 if ( !find( variables.framework.subsystemDelimiter, variables.framework.home ) ) {
                     raiseException( type = "FW1.configuration.home", message = "You are using subsystems but framework.home does not specify a subsystem.", detail = "You should set framework.home to #variables.framework.defaultSubsystem##variables.framework.subsystemDelimiter##variables.framework.home#" );
                 }
             }
         } else {
+            // SS2: leave as-is
             if (usingSubsystems()) {
                 variables.framework.home = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
             } else {
@@ -2205,6 +2216,7 @@ component {
             }
         }
         if ( !structKeyExists(variables.framework, 'error') ) {
+            // SS2: leave as-is
             if (usingSubsystems()) {
                 variables.framework.error = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.error';
             } else {
@@ -2464,6 +2476,7 @@ component {
         request.item = getItem( request.action );
 
         if ( runSetup ) {
+            // SS2: leave this as-is?
             if ( usingSubsystems() ) {
                 controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
                             variables.magicApplicationController & '.' & variables.magicApplicationAction );
@@ -2489,6 +2502,7 @@ component {
     }
 
     private void function setupSubsystemWrapper( string subsystem ) {
+        // SS2: remove this condition:
         if ( !usingSubsystems() ) return;
         lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
             if ( !isSubsystemInitialized( subsystem ) ) {
@@ -2510,6 +2524,7 @@ component {
                             } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
                                 relLoc = right( relLoc, len( relLoc ) - 1 );
                             }
+                            // SS2: insert 'subsystems/' if !usingSubsystems()
                             subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
                         }
                         var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
