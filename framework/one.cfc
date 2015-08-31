@@ -1104,6 +1104,17 @@ component {
      */
     public void function setBeanFactory( any beanFactory ) {
         if ( isObject( beanFactory ) ) {
+            if ( structKeyExists( getFw1App(), "factory" ) ) {
+                if ( variables.framework.diOverrideAllowed ) {
+                    // we still log a warning because this is strange behavior
+                    var out = createObject( "java", "java.lang.System" ).out;
+                    out.println( "FW/1: WARNING: setBeanFactory() called more than once - use diEngine = 'none'?" );
+                } else {
+                    throw( type = "FW1.Warning",
+                           message = "setBeanFactory() called more than once - use diEngine = 'none'?",
+                           detail = "Either set diEngine to 'none' or let FW/1 manage your bean factory for you." );
+                }
+            }
             getFw1App().factory = beanFactory;
         } else {
             structDelete( getFw1App(), "factory" );
@@ -2296,6 +2307,9 @@ component {
         }
         if ( !structKeyExists( variables.framework, 'trace' ) ) {
             variables.framework.trace = false;
+        }
+        if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
+            variables.framework.diOverrideAllowed = false;
         }
         if ( !structKeyExists( variables.framework, 'diEngine' ) ) {
             variables.framework.diEngine = 'di1';
