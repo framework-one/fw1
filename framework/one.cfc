@@ -1941,8 +1941,6 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        // Clear any previous content then set status / content type:
-        getPageContext().getResponse().reset();
         getPageContext().getResponse().setStatus( statusCode );
         getPageContext().getResponse().setContentType( contentType );
         return out;
