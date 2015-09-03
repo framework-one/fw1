@@ -2489,6 +2489,8 @@ component {
     }
 
     private void function setupSubsystemWrapper( string subsystem ) {
+        if ( !len( subsystem ) ) return;
+        internalFrameworkTrace( 'setupSubsystem() called', subsystem );
         lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
             if ( !isSubsystemInitialized( subsystem ) ) {
                 getFw1App().subsystems[ subsystem ] = now();
@@ -2527,7 +2529,6 @@ component {
                     }
                 }
 
-                internalFrameworkTrace( 'setupSubsystem() called', subsystem );
                 setupSubsystem( subsystem );
             }
         }
