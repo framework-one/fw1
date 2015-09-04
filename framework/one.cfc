@@ -2293,37 +2293,6 @@ component {
         if ( !structKeyExists( variables.framework, 'trace' ) ) {
             variables.framework.trace = false;
         }
-        if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
-            variables.framework.diOverrideAllowed = false;
-        }
-        if ( !structKeyExists( variables.framework, 'diEngine' ) ) {
-            variables.framework.diEngine = 'di1';
-        }
-        if ( !structKeyExists( variables.framework, 'diLocations' ) ) {
-            variables.framework.diLocations = 'model,controllers';
-        }
-        if ( !structKeyExists( variables.framework, 'diConfig' ) ) {
-            variables.framework.diConfig = { };
-        }
-        if ( !structKeyExists( variables.framework, 'diComponent' ) ) {
-            var diComponent = 'framework.ioc';
-            switch ( variables.framework.diEngine ) {
-                case 'aop1':
-                    diComponent = 'framework.aop';
-                    break;
-                case 'wirebox':
-                    diComponent = 'framework.WireBoxAdapter';
-                    break;
-                case 'custom':
-                    throw( type="FW1.IllegalConfiguration",
-                           message="If you specify diEngine='custom' you must specify a component path for diComponent." );
-                    break;
-                default:
-                    // assume DI/1
-                    break;
-            }
-            variables.framework.diComponent = diComponent;
-        }
         if ( !structKeyExists( variables.framework, 'controllersFolder' ) ) {
             variables.framework.controllersFolder = 'controllers';
         }
@@ -2354,6 +2323,37 @@ component {
         if ( right( variables.framework.viewsFolder, 1 ) != 's' ) {
             throw( type = "FW1.IllegalConfiguration",
                    message = "ViewsFolder must be a plural word (ends in 's')." );
+        }
+        if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
+            variables.framework.diOverrideAllowed = false;
+        }
+        if ( !structKeyExists( variables.framework, 'diEngine' ) ) {
+            variables.framework.diEngine = 'di1';
+        }
+        if ( !structKeyExists( variables.framework, 'diLocations' ) ) {
+            variables.framework.diLocations = 'model,' & variables.framework.controllersFolder;
+        }
+        if ( !structKeyExists( variables.framework, 'diConfig' ) ) {
+            variables.framework.diConfig = { };
+        }
+        if ( !structKeyExists( variables.framework, 'diComponent' ) ) {
+            var diComponent = 'framework.ioc';
+            switch ( variables.framework.diEngine ) {
+                case 'aop1':
+                    diComponent = 'framework.aop';
+                    break;
+                case 'wirebox':
+                    diComponent = 'framework.WireBoxAdapter';
+                    break;
+                case 'custom':
+                    throw( type="FW1.IllegalConfiguration",
+                           message="If you specify diEngine='custom' you must specify a component path for diComponent." );
+                    break;
+                default:
+                    // assume DI/1
+                    break;
+            }
+            variables.framework.diComponent = diComponent;
         }
         variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
         setupEnvironment( env );
