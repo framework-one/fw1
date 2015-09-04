@@ -3,4 +3,5 @@
   <div>
     #body#
   </div>
+  <p>#rc.message#</p>
 </cfoutput>

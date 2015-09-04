@@ -1,6 +1,7 @@
 component accessors=true {
     property framework;
     function default( rc ) {
-        rc.message = "Rendered by FW/1 version " & framework.getConfig().version;
+        rc.handlerSays = "This message brought to you by " &
+            framework.getConfig().controllersFolder & "/main.cfc!";
     }
 }
