@@ -1288,11 +1288,22 @@ component {
                 }
             }
             // look for site-wide layout (only applicable if using subsystems)
-            if ( usingSubsystems() && siteWideLayoutBase != subsystembase ) {
-                testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem &
-                                                    variables.framework.subsystemDelimiter & 'default', 'layout' );
+            var stdout = createObject( "java", "java.lang.System" ).out;
+            stdout.println( "buildLayoutQueue: " & subsystem & "; " & siteWideLayoutBase & "; " & subsystembase );
+            if ( usingSubsystems() ) {
+                if ( siteWideLayoutBase != subsystembase ) {
+                    testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem &
+                                                        variables.framework.subsystemDelimiter & 'default', 'layout' );
+                    if ( cachedFileExists( testLayout ) ) {
+                        internalFrameworkTrace( 'found #variables.framework.siteWideLayoutSubsystem# layout #testLayout#',
+                                                subsystem, section, item );
+                        arrayAppend( request._fw1.layouts, testLayout );
+                    }
+                }
+            } else if ( len( subsystem ) ) {
+                testLayout = parseViewOrLayoutPath( 'default', 'layout' );
                 if ( cachedFileExists( testLayout ) ) {
-                    internalFrameworkTrace( 'found #variables.framework.siteWideLayoutSubsystem# layout #testLayout#',
+                    internalFrameworkTrace( 'found application layout #testLayout#',
                                             subsystem, section, item );
                     arrayAppend( request._fw1.layouts, testLayout );
                 }
