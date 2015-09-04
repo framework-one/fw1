@@ -7,7 +7,6 @@ component {
 
     // create your FW/1 application:
     request._framework_one = new framework.one( {
-		usingSubsystems = true,
 		SESOmitIndex = true,
         diLocations = "model, controllers, beans, services", // to account for the variety of D/I locations in our examples
         // that allows all our subsystems to automatically have their own bean factory with the base factory as parent

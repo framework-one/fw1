@@ -1,5 +1,6 @@
 component extends=framework.one {
     variables.framework = {
+        trace : true,
         controllersFolder : "handlers",
         layoutsFolder : "wrappers",
         subsystemsFolder : "plugins",

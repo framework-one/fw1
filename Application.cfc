@@ -8,6 +8,7 @@ component {
 
     // create your FW/1 application:
     request._framework_one = new framework.one( {
+        trace = true,
 		base = getDirectoryFromPath( CGI.SCRIPT_NAME )
             .replaceFirst( getContextRoot(), '' ) & 'introduction'
     } );
