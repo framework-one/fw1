@@ -1288,8 +1288,6 @@ component {
                 }
             }
             // look for site-wide layout (only applicable if using subsystems)
-            var stdout = createObject( "java", "java.lang.System" ).out;
-            stdout.println( "buildLayoutQueue: " & subsystem & "; " & siteWideLayoutBase & "; " & subsystembase );
             if ( usingSubsystems() ) {
                 if ( siteWideLayoutBase != subsystembase ) {
                     testLayout = parseViewOrLayoutPath( variables.framework.siteWideLayoutSubsystem &
