@@ -1556,7 +1556,9 @@ component {
         var subsystemDot = replace( subsystemDir, '/', '.', 'all' );
         var subsystemUnderscore = replace( subsystemDir, '/', '_', 'all' );
         var componentKey = subsystemUnderscore & section;
-        var beanName = section & "controller";
+        var beanName = section & variables.controllerFolder;
+        var controllersSlash = variables.framework.controllersFolder & '/';
+        var controllersDot = variables.framework.controllersFolder & '.';
         // per #310 we no longer cache the Application controller since it is new on each request
         if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#componentKey#" type="exclusive" timeout="30" {
@@ -1569,32 +1571,32 @@ component {
                         if ( section == variables.magicApplicationController ) {
                             // treat this (Application.cfc) as a controller:
                             cfc = this;
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.cfc' ) ) {
+                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.cfc' ) ) {
                             // we call createObject() rather than new so we can control initialization:
                             if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
                             } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
                             }
                             if ( structKeyExists( cfc, 'init' ) ) {
                                 cfc.init( this );
                             }
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.lc' ) ) {
+                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.lc' ) ) {
                             // we call createObject() rather than new so we can control initialization:
                             if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
                             } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
                             }
                             if ( structKeyExists( cfc, 'init' ) ) {
                                 cfc.init( this );
                             }
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'controllers/' & section & '.lucee' ) ) {
+                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.lucee' ) ) {
                             // we call createObject() rather than new so we can control initialization:
                             if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
                             } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'controllers.' & section );
+                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
                             }
                             if ( structKeyExists( cfc, 'init' ) ) {
                                 cfc.init( this );
@@ -1677,7 +1679,7 @@ component {
         if ( usingSubsystems() ) {
             return subsystem & '/';
         } else {
-            return 'subsystems/' & subsystem & '/';
+            return variables.framework.subsystemsFolder & '/' & subsystem & '/';
         }
     }
 
@@ -1761,7 +1763,16 @@ component {
     }
 
     private string function parseViewOrLayoutPath( string path, string type ) {
-
+        var folder = type;
+        switch ( folder ) {
+        case 'layout':
+            folder = variables.layoutFolder;
+            break;
+        case 'view':
+            folder = variables.viewFolder;
+            break;
+        // else leave it alone?
+        }
         var pathInfo = { };
         var subsystem = getSubsystem( path );
 
@@ -1772,14 +1783,14 @@ component {
         if ( usingSubsystems() || len( subsystem ) ) {
             pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
         }
-        var defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.cfm';
+        var defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
         if ( !cachedFileExists( expandPath( defaultPath ) ) )
-            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.lucee';
+            defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lucee';
         if ( !cachedFileExists( expandPath( defaultPath ) ) )
-            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.lc';
+            defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lc';
         if ( !cachedFileExists( expandPath( defaultPath ) ) )
             // can't find it so assume .cfm default value
-            defaultPath = pathInfo.base & type & 's/' & pathInfo.path & '.cfm';
+            defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
         return customizeViewOrLayoutPath( pathInfo, type, defaultPath );
 
     }
@@ -2313,6 +2324,38 @@ component {
             }
             variables.framework.diComponent = diComponent;
         }
+        if ( !structKeyExists( variables.framework, 'controllersFolder' ) ) {
+            variables.framework.controllersFolder = 'controllers';
+        }
+        if ( right( variables.framework.controllersFolder, 1 ) != 's' ) {
+            throw( type = "FW1.IllegalConfiguration",
+                   message = "ControllersFolder must be a plural word (ends in 's')." );
+        }
+        variables.controllerFolder = left( variables.framework.controllersFolder, len( variables.framework.controllersFolder ) - 1 );
+        if ( !structKeyExists( variables.framework, 'layoutsFolder' ) ) {
+            variables.framework.layoutsFolder = 'layouts';
+        }
+        if ( right( variables.framework.layoutsFolder, 1 ) != 's' ) {
+            throw( type = "FW1.IllegalConfiguration",
+                   message = "LayoutsFolder must be a plural word (ends in 's')." );
+        }
+        variables.layoutFolder = left( variables.framework.layoutsFolder, len( variables.framework.layoutsFolder ) - 1 );
+        if ( !structKeyExists( variables.framework, 'subsystemsFolder' ) ) {
+            variables.framework.subsystemsFolder = 'subsystems';
+        }
+        if ( right( variables.framework.subsystemsFolder, 1 ) != 's' ) {
+            throw( type = "FW1.IllegalConfiguration",
+                   message = "SubsystemsFolder must be a plural word (ends in 's')." );
+        }
+        variables.subsystemFolder = left( variables.framework.subsystemsFolder, len( variables.framework.subsystemsFolder ) - 1 );
+        if ( !structKeyExists( variables.framework, 'viewsFolder' ) ) {
+            variables.framework.viewsFolder = 'views';
+        }
+        if ( right( variables.framework.viewsFolder, 1 ) != 's' ) {
+            throw( type = "FW1.IllegalConfiguration",
+                   message = "ViewsFolder must be a plural word (ends in 's')." );
+        }
+        variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
         // add this as a fingerprint so autowire can detect FW/1 CFC:
@@ -2514,7 +2557,7 @@ component {
                             if ( usingSubsystems() ) {
                                 subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
                             } else {
-                                subLocations = listAppend( subLocations, variables.framework.base & "subsystems/" & subsystem & "/" & relLoc );
+                                subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
                             }
                         }
                         var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
