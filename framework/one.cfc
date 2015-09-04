@@ -262,7 +262,7 @@ component {
         var tuple = { };
 
         if ( structKeyExists( request._fw1, 'controllerExecutionStarted' ) ) {
-            raiseException( type='FW1.controllerExecutionStarted', message="Controller '#action#' may not be added at this point.",
+            throw( type='FW1.controllerExecutionStarted', message="Controller '#action#' may not be added at this point.",
                 detail='The controller execution phase has already started. Controllers may not be added by other controller methods.' );
         }
 
@@ -402,7 +402,7 @@ component {
         }
 
         if ( variables.framework.defaultSubsystem == '' ) {
-            raiseException( type='FW1.subsystemNotSpecified', message='No subsystem specified and no default configured.',
+            throw( type='FW1.subsystemNotSpecified', message='No subsystem specified and no default configured.',
                     detail='When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured.' );
         }
 
@@ -1727,7 +1727,7 @@ component {
             $ = rc.$;
         }
         if ( !structKeyExists( request._fw1, 'controllerExecutionComplete' ) ) {
-            raiseException( type='FW1.layoutExecutionFromController', message='Invalid to call the layout method at this point.',
+            throw( type='FW1.layoutExecutionFromController', message='Invalid to call the layout method at this point.',
                 detail='The layout method should not be called prior to the completion of the controller execution phase.' );
         }
         var response = '';
@@ -1968,10 +1968,6 @@ component {
             resourceCache[ cacheKey ] = routes;
         }
         return resourceCache[ cacheKey ];
-    }
-
-    private void function raiseException( string type, string message, string detail ) {
-        throw( type = type, message = message, detail = detail );
     }
 
     private string function renderDataWithContentType() {
@@ -2237,7 +2233,7 @@ component {
         if ( structKeyExists(variables.framework, 'home') ) {
             if ( usingSubsystems() ) {
                 if ( !find( variables.framework.subsystemDelimiter, variables.framework.home ) ) {
-                    raiseException( type = "FW1.configuration.home", message = "You are using subsystems but framework.home does not specify a subsystem.", detail = "You should set framework.home to #variables.framework.defaultSubsystem##variables.framework.subsystemDelimiter##variables.framework.home#" );
+                    throw( type = "FW1.configuration.home", message = "You are using subsystems but framework.home does not specify a subsystem.", detail = "You should set framework.home to #variables.framework.defaultSubsystem##variables.framework.subsystemDelimiter##variables.framework.home#" );
                 }
             }
         } else {
@@ -2609,7 +2605,7 @@ component {
     private string function validateAction( string action ) {
         // check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
         if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
-            raiseException( type='FW1.actionContainsSlash', message="Found a slash in the action: '#action#'.",
+            throw( type='FW1.actionContainsSlash', message="Found a slash in the action: '#action#'.",
                     detail='Actions are not allowed to embed sub-directory paths.');
         }
         return action;
@@ -2620,7 +2616,7 @@ component {
         // but this will prevent an exception while attempting to throw
         // the exception we actually want to throw!
         param name="request.missingView" default="<unknown.view>";
-        raiseException( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
+        throw( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
                 detail="'#request.missingView#' does not exist." );
     }
 
