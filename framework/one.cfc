@@ -105,9 +105,9 @@ component {
      */
     public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
         if ( action == '.' ) {
-            action = getFullyQualifiedAction();
+            action = getSubsystemSectionAndItem();
         } else if ( left( action, 2 ) == '.?' ) {
-            action = replace( action, '.', getFullyQualifiedAction() );
+            action = replace( action, '.', getSubsystemSectionAndItem() );
         }
         var pathData = resolveBaseURL( action, path );
         path = pathData.path;
@@ -147,8 +147,8 @@ component {
                 }
             }
         }
-        var cosmeticAction = getFullyQualifiedAction( action );
-        var isHomeAction = cosmeticAction == getFullyQualifiedAction( variables.framework.home );
+        var cosmeticAction = getSubsystemSectionAndItem( action );
+        var isHomeAction = cosmeticAction == getSubsystemSectionAndItem( variables.framework.home );
         var isDefaultItem = getItem( cosmeticAction ) == variables.framework.defaultItem;
 
         var initialDelim = '?';
@@ -438,6 +438,8 @@ component {
     /*
      * return an action with all applicable parts (subsystem, section, and item) specified
      * using defaults from the configuration or request where appropriate
+     * if the subsystem is empty, do _not_ include the delimiter - compare this behavior
+     * with getSubsystemSectionAndItem() below
      */
     public string function getFullyQualifiedAction( string action = request.action ) {
         if ( actionSpecifiesSubsystem( action ) ) {
@@ -447,7 +449,7 @@ component {
             if ( len( current ) ) {
                 return current & variables.framework.subsystemDelimiter & getSectionAndItem( action );
             } else {
-                return variables.framework.subsystemDelimiter & getSectionAndItem( action );
+                return getSectionAndItem( action );
             }
         }
     }
@@ -569,6 +571,25 @@ component {
     }
 
     /*
+     * return an action with all applicable parts (subsystem, section, and item) specified
+     * using defaults from the configuration or request where appropriate
+     * differs from getFullyQualifiedAction() in that it will _always_ contain the
+     * subsystem delimiter, even when the subsystem is blank
+     */
+    public string function getSubsystemSectionAndItem( string action = request.action ) {
+        if ( actionSpecifiesSubsystem( action ) ) {
+            return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+        } else {
+            var current = structKeyExists( request, 'action' ) ? getSubsystem( request.action ) : '';
+            if ( len( current ) ) {
+                return current & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+            } else {
+                return variables.framework.subsystemDelimiter & getSectionAndItem( action );
+            }
+        }
+    }
+
+    /*
      * returns true iff a call to getBeanFactory() will successfully return a bean factory
      * previously set via setBeanFactory or setSubsystemBeanFactory
      */
@@ -613,8 +634,8 @@ component {
      * executing action (after both have been expanded)
      */
     public boolean function isCurrentAction( string action ) {
-        return getFullyQualifiedAction( action ) ==
-            getFullyQualifiedAction();
+        return getSubsystemSectionAndItem( action ) ==
+            getSubsystemSectionAndItem();
     }
 
     /*
