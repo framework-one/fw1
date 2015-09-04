@@ -177,7 +177,7 @@ component {
         }
         var curDelim = varDelim;
 
-        if ( usingSubsystems() && getSubsystem( cosmeticAction ) == variables.framework.defaultSubsystem ) {
+        if ( getSubsystem( cosmeticAction ) == variables.framework.defaultSubsystem ) {
             cosmeticAction = getSectionAndItem( cosmeticAction );
         }
 
@@ -2210,10 +2210,10 @@ component {
             }
         }
         if ( !structKeyExists(variables.framework, 'usingSubsystems') ) {
-            variables.framework.usingSubsystems = structKeyExists(variables.framework,'defaultSubsystem');
+            variables.framework.usingSubsystems = structKeyExists( variables.framework, 'defaultSubsystem' );
         }
         if ( !structKeyExists(variables.framework, 'defaultSubsystem') ) {
-            variables.framework.defaultSubsystem = 'home';
+            variables.framework.defaultSubsystem = variables.framework.usingSubsystems ? 'home' : '';
         }
         if ( !structKeyExists(variables.framework, 'defaultSection') ) {
             variables.framework.defaultSection = 'main';
