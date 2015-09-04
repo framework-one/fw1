@@ -55,8 +55,7 @@ component {
     }
 
     public boolean function actionSpecifiesSubsystem( string action ) {
-        return listLen( action, variables.framework.subsystemDelimiter ) > 1 ||
-            right( action, 1 ) == variables.framework.subsystemDelimiter;
+        return find( variables.framework.subsystemDelimiter, action );
     }
 
     public void function addRoute( any routes, string target, any methods = [ ], string statusCode = '' ) {
@@ -441,12 +440,16 @@ component {
      * using defaults from the configuration or request where appropriate
      */
     public string function getFullyQualifiedAction( string action = request.action ) {
-        var sub = getSubsystem( action );
-        if ( len( sub ) ) {
+        if ( actionSpecifiesSubsystem( action ) ) {
             return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+        } else {
+            var current = structKeyExists( request, 'action' ) ? getSubsystem( request.action ) : '';
+            if ( len( current ) ) {
+                return current & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+            } else {
+                return variables.framework.subsystemDelimiter & getSectionAndItem( action );
+            }
         }
-
-        return getSectionAndItem( action );
     }
 
     /*
@@ -500,9 +503,7 @@ component {
     public string function getSectionAndItem( string action = request.action ) {
         var sectionAndItem = '';
         if ( actionSpecifiesSubsystem( action ) ) {
-            if ( listLen( action, variables.framework.subsystemDelimiter ) > 1 ) {
-                sectionAndItem = listLast( action, variables.framework.subsystemDelimiter );
-            }
+            sectionAndItem = segmentLast( action, variables.framework.subsystemDelimiter );
         } else {
             sectionAndItem = action;
         }
@@ -532,7 +533,7 @@ component {
      */
     public string function getSubsystem( string action = request.action ) {
         if ( actionSpecifiesSubsystem( action ) ) {
-            return listFirst( action, variables.framework.subsystemDelimiter );
+            return segmentFirst( action, variables.framework.subsystemDelimiter );
         }
         return getDefaultSubsystem();
     }
@@ -1771,6 +1772,31 @@ component {
 
     }
 
+    // like listFirst() and listLast() but they actually work with empty segments
+    private string function segmentFirst( string segments, string delimiter ) {
+        var where = find( delimiter, segments );
+        if ( where ) {
+            if ( where == 1 ) {
+                return '';
+            } else {
+                return left( segments, where - 1 );
+            }
+        }
+        return '';
+    }
+
+    private string function segmentLast( string segments, string delimiter ) {
+        var where = find( delimiter, segments );
+        if ( where ) {
+            if ( where == len( segments ) ) {
+                return '';
+            } else {
+                return right( segments, len( segments ) - where );
+            }
+        }
+        return segments;
+    }
+
     private string function parseViewOrLayoutPath( string path, string type ) {
         var folder = type;
         switch ( folder ) {
@@ -1786,7 +1812,7 @@ component {
         var subsystem = getSubsystem( path );
 
         // allow for :section/action to simplify logic in setupRequestWrapper():
-        pathInfo.path = listLast( path, variables.framework.subsystemDelimiter );
+        pathInfo.path = segmentLast( path, variables.framework.subsystemDelimiter );
         pathInfo.base = request.base;
         pathInfo.subsystem = subsystem;
         if ( usingSubsystems() || len( subsystem ) ) {
@@ -2215,17 +2241,15 @@ component {
                 }
             }
         } else {
+            variables.framework.home = variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
             if ( usingSubsystems() ) {
-                variables.framework.home = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.' & variables.framework.defaultItem;
-            } else {
-                variables.framework.home = variables.framework.defaultSection & '.' & variables.framework.defaultItem;
+                variables.framework.home = variables.framework.defaultSubsystem & variables.framework.home;
             }
         }
         if ( !structKeyExists(variables.framework, 'error') ) {
+            variables.framework.error = variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.error';
             if ( usingSubsystems() ) {
-                variables.framework.error = variables.framework.defaultSubsystem & variables.framework.subsystemDelimiter & variables.framework.defaultSection & '.error';
-            } else {
-                variables.framework.error = variables.framework.defaultSection & '.error';
+                variables.framework.error = variables.framework.defaultSubsystem & variables.framework.error;
             }
         }
         if ( !structKeyExists(variables.framework, 'reload') ) {
@@ -2516,12 +2540,8 @@ component {
         request.item = getItem( request.action );
 
         if ( runSetup ) {
-            if ( usingSubsystems() ) {
-                controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
-                            variables.magicApplicationController & '.' & variables.magicApplicationAction );
-            } else {
-                controller( variables.magicApplicationController & '.' & variables.magicApplicationAction );
-            }
+            controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
+                        variables.magicApplicationController & '.' & variables.magicApplicationAction );
             setupSubsystemWrapper( request.subsystem );
             internalFrameworkTrace( 'setupRequest() called' );
             setupRequest();
