@@ -2182,12 +2182,23 @@ component {
             setBeanFactory( ioc );
             break;
         case "wirebox":
-            var wb = new "#variables.framework.diComponent#"(
-                properties = variables.framework.diConfig
-            );
-            wb.getBinder().scanLocations( variables.framework.diLocations );
-            // we do not provide fw alias for controller constructor here!
-            setBeanFactory( wb );
+            if ( isSimpleValue( variables.framework.diConfig ) ) {
+                // per #363 assume name of binder CFC
+                var wb1 = new "#variables.framework.diComponent#"(
+                    variables.framework.diConfig, // binder path
+                    variables.framework // properties struct
+                );
+                // we do not provide fw alias for controller constructor here!
+                setBeanFactory( wb1 );
+            } else {
+                // legacy configuration
+                var wb2 = new "#variables.framework.diComponent#"(
+                    properties = variables.framework.diConfig
+                );
+                wb2.getBinder().scanLocations( variables.framework.diLocations );
+                // we do not provide fw alias for controller constructor here!
+                setBeanFactory( wb2 );
+            }
             break;
         case "custom":
             var ioc = new "#variables.framework.diComponent#"(
