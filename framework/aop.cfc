@@ -1,6 +1,6 @@
 component extends="framework.ioc" {
-    variables._fw1_version = "3.5.0-snapshot";
-    variables._aop1_version = "2.0.1-snapshot";
+    variables._fw1_version = "3.5.0-alpha1";
+    variables._aop1_version = "2.0.1-alpha1";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -250,9 +250,9 @@ component extends="framework.ioc" {
 			{
 				// Same cfc dotted path, must be an alias.
 				if (
-						key != arguments.beanName && 
-						structKeyExists(variables.beanInfo[key], "cfc") && 
-						structKeyExists(variables.beanInfo[arguments.beanName], "cfc") && 
+						key != arguments.beanName &&
+						structKeyExists(variables.beanInfo[key], "cfc") &&
+						structKeyExists(variables.beanInfo[arguments.beanName], "cfc") &&
 						variables.beanInfo[key].cfc == variables.beanInfo[arguments.beanName].cfc)
 				{
 					arrayAppend(aliases, key);
