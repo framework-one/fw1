@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-alpha1";
-    variables._cfmljure_version = "1.0.0-alpha1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._cfmljure_version = "1.0.0-snapshot";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -96,6 +96,7 @@ component {
             // turn the classpath into a URL list:
             var classpathParts = listToArray( classpath, javaLangSystem.getProperty( "path.separator" ) );
             var urls = [ ];
+            var cfmlInteropAvailable = false;
             for ( var part in classpathParts ) {
                 if ( !fileExists( part ) && !directoryExists( part ) ) {
                     try {
@@ -106,6 +107,9 @@ component {
                 }
                 if ( !part.endsWith( ".jar" ) && !part.endsWith( fs ) ) {
                     part &= fs;
+                }
+                if ( REFind( "cfml-interop-[-.0-9a-zA-Z_]+\.jar", part ) ) {
+                    cfmlInteropAvailable = true;
                 }
                 // TODO: shortcut this...
                 var file = createObject( "java", "java.io.File" ).init( part );
@@ -134,10 +138,21 @@ component {
             // promote API:
             this.install = this.__install;
             this.read = this.__read;
-            this.toCFML = this.__toCFML;
-            this.toClojure = this.__toClojure;
-            // auto-load clojure.core and clojure.walk for clients
-            __install( "clojure.core, clojure.walk", this );
+            var autoLoaded = "clojure.core";
+            if ( cfmlInteropAvailable ) {
+                variables.out.println( "Detected cfml-interop for interop" );
+                // perform the best interop we can:
+                autoLoaded = listAppend( autoLoaded, "cfml.interop" );
+                this.toCFML = this.__toCljStruct;
+                this.toClojure = this.__toCljStruct;
+            } else {
+                variables.out.println( "Falling back to clojure.walk for interop" );
+                // fall back to basic interop:
+                autoLoaded = listAppend( autoLoaded, "clojure.walk" );
+                this.toCFML = this.__toCFML;
+                this.toClojure = this.__toClojure;
+            }
+            __install( autoLoaded, this );
         } else if ( ns != "" ) {
             variables._clj_root = root;
             variables._clj_ns = ns;
@@ -189,6 +204,10 @@ component {
 
     public any function __toCFML( any expr ) {
         return this.clojure.walk.stringify_keys( expr );
+    }
+
+    public any function __toCljStruct( any expr ) {
+        return this.cfml.interop.to_clj_struct( expr );
     }
 
     public any function __toClojure( any expr ) {
