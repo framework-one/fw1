@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-alpha2";
-    variables._di1_version = "1.1.1-alpha2";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._di1_version = "1.1.1-snapshot";
 /*
     Copyright (c) 2010-2015, Sean Corfield
 
@@ -370,10 +370,14 @@ component {
 
 
     private string function deduceDottedPath( string baseMapping, string basePath ) {
+        if ( right( basePath, 1 ) == '/' && len( basePath ) > 1 ) {
+            basePath = left( basePath, len( basePath ) - 1 );
+        }
         var cfcPath = left( baseMapping, 1 ) == '/' ?
             ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
             getFileFromPath( baseMapping );
         var expPath = basePath;
+        var notFound = true;
         var dotted = '';
         do {
             var mapped = cfcPath;
@@ -381,6 +385,7 @@ component {
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
             if ( mappedPath == basePath ) {
                 dotted = replace( cfcPath, '/', '.', 'all' );
+                notFound = false;
                 break;
             }
             var prevPath = expPath;
@@ -392,7 +397,7 @@ component {
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
         } while ( progress );
-        if ( dotted == '' ) {
+        if ( notFound ) {
             throw 'unable to deduce dot-relative path for: #baseMapping# (#basePath#) root #expandPath("/")#';
         }
         return dotted;
