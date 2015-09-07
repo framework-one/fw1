@@ -28,5 +28,5 @@
         { "type" : "Apache 2.0", "URL" : "http://www.apache.org/licenses/LICENSE-2.0" }
     ],
     "Contributors" : [ {"name": "Contributors List", "url": "https://github.com/framework-one/fw1/graphs/contributors"} ],
-    "ignore" : [ "/[^f]" ]
+    "ignore" : [ ]
 }
