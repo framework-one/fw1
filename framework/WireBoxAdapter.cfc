@@ -1,5 +1,5 @@
 component extends="wirebox.system.ioc.Injector" {
-    variables._fw1_version = "3.5.0-alpha2";
+    variables._fw1_version = "3.5.0-beta1";
 /*
     Copyright (c) 2010-2015, Sean Corfield
 

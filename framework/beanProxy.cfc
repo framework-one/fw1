@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-alpha2";
-    variables._aop1_version = "2.0.1-alpha2";
+    variables._fw1_version = "3.5.0-beta1";
+    variables._aop1_version = "2.0.1-beta1";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
