@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-beta1";
-    variables._cfmljure_version = "1.0.0-beta1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._cfmljure_version = "1.0.0-snapshot";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -203,17 +203,23 @@ component {
     }
 
     public any function __toCFML( any expr ) {
-        return this.clojure.walk.stringify_keys( expr );
+        return this.clojure.walk.stringify_keys(
+            isNull( expr ) ? javaCast( "null", 0 ) : expr
+        );
     }
 
     public any function __toCljStruct( any expr ) {
-        return this.cfml.interop.to_clj_struct( expr );
+        return this.cfml.interop.to_clj_struct(
+            isNull( expr ) ? javaCast( "null", 0 ) : expr
+        );
     }
 
     public any function __toClojure( any expr ) {
         return this.clojure.walk.keywordize_keys(
-            isStruct( expr ) ?
-                this.clojure.core.into( this.clojure.core.hash_map(), expr ) : expr
+            isNull( expr ) ? javaCast( "null", 0 ) :
+                ( isStruct( expr ) ?
+                  this.clojure.core.into( this.clojure.core.hash_map(), expr ) :
+                  expr )
         );
     }
 
