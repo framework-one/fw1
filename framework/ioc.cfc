@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-beta1";
-    variables._di1_version = "1.1.1-beta1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._di1_version = "1.1.1-snapshot";
 /*
     Copyright (c) 2010-2015, Sean Corfield
 
@@ -821,6 +821,12 @@ component {
         if ( !structKeyExists( variables.config, 'omitDirectoryAliases' ) ) {
             variables.config.omitDirectoryAliases = false;
         }
+        if ( !structKeyExists( variables.config, 'singulars' ) ) {
+            variables.config.singulars = { };
+        }
+        if ( !structKeyExists( variables.config, 'liberal' ) ) {
+            variables.config.liberal = false;
+        }
 
         variables.config.version = variables._di1_version;
     }
@@ -833,15 +839,18 @@ component {
 
 
     private string function singular( string plural ) {
-        if ( structKeyExists( variables.config, 'singulars' ) &&
-                structKeyExists( variables.config.singulars, plural ) ) {
+        if ( structKeyExists( variables.config.singulars, plural ) ) {
             return variables.config.singulars[ plural ];
         }
         var single = plural;
         var n = len( plural );
         var last = right( plural, 1 );
         if ( last == 's' ) {
-            single = left( plural, n - 1 );
+            if ( variables.config.liberal && n > 3 && right( plural, 3 ) == 'ies' ) {
+                single = left( plural, n - 3 ) & 'y';
+            } else {
+                single = left( plural, n - 1 );
+            }
         }
         return single;
     }
