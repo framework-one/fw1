@@ -1,6 +1,6 @@
 component extends=framework.ioc {
-    variables._fw1_version = "3.5.0-beta1";
-    variables._ioclj_version = "1.0.0-beta1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._ioclj_version = "1.0.0-snapshot";
 /*
     Copyright (c) 2015, Sean Corfield
 
@@ -152,13 +152,25 @@ component extends=framework.ioc {
             // allow for extension being either .clj or .cljc
             cljPath = left( cljPath, len( cljPath ) - ( right( cljPath, 1 ) == "c" ? 5 : 4 ) );
             var ns = replace( replace( cljPath, "/", ".", "all" ), "_", "-", "all" );
+            // per #366, the pattern allowed is
+            // top-level(.optional)*.plural.(prefix.)*name
+            // and this will generate prefixNameSingular
             var parts = listToArray( cljPath, "/" );
             var nParts = arrayLen( parts );
             if ( nParts >= 3 ) {
-                var lbo = parts[ nParts - 1 ];
-                var lbo1 = singular( lbo );
+                var pluralCandidate = 2;
+                do {
+                    var lbo = parts[ pluralCandidate ];
+                    var lbo1 = singular( lbo );
+                    ++pluralCandidate;
+                } while ( lbo == lbo1 && pluralCandidate < nParts );
                 if ( lbo1 != lbo ) {
-                    var beanName = parts[ nParts ] & lbo1;
+                    var beanName = "";
+                    while ( pluralCandidate <= nParts ) {
+                        beanName &= parts[ pluralCandidate ];
+                        ++pluralCandidate;
+                    }
+                    beanName &= lbo1;
                     if ( structKeyExists( variables.cljBeans, beanName ) ) {
                         throw "#beanName# is not unique (from #cljPath#)";
                     } else {
@@ -168,7 +180,7 @@ component extends=framework.ioc {
                         };
                     }
                 } else if ( variables.debug ) {
-                    variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it is not plural (#lbo#)" );
+                    variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it has no plural segment" );
                 }
             } else if ( variables.debug ) {
                 variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it does not have at least three segments" );
