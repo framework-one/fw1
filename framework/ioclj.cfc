@@ -37,7 +37,16 @@ component extends=framework.ioc {
         // and create a cfmljure instance
         var timeout = structKeyExists( config, "timeout" ) ? config.timeout : 300;
         var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
-        var cfmljure = new framework.cfmljure( variables.project, timeout, lein );
+        var useServerScope = structKeyExists( config, "server" ) ? config.server : false;
+        var cfmljure = 0;
+        if ( useServerScope ) {
+            if ( !structKeyExists( server, "__cfmljure" ) ) {
+                server.__cfmljure = new framework.cfmljure( variables.project, timeout, lein );
+            }
+            cfmljure = server.__cfmljure;
+        } else {
+            cfmljure = new framework.cfmljure( variables.project, timeout, lein );
+        }
         var app = { };
         cfmljure.install( ns, app );
         variables.clojureApp = app;
