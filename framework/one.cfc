@@ -2601,31 +2601,36 @@ component {
                     if ( diEngine == "di1" || diEngine == "aop1" ) {
                         // we can only reliably automate D/I engine setup for DI/1 / AOP/1
                         var diLocations = structKeyExists( subsystemConfig, 'diLocations' ) ? subsystemConfig.diLocations : variables.framework.diLocations;
-                        var locations = listToArray( diLocations );
+                        var locations = isSimpleValue( diLocations ) ? listToArray( diLocations ) : diLocations;
                         var subLocations = "";
                         for ( var loc in locations ) {
                             var relLoc = trim( loc );
+                            var useLoc = true;
                             // make a relative location:
                             if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
                                 relLoc = right( relLoc, len( relLoc ) - 2 );
                             } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
-                                relLoc = right( relLoc, len( relLoc ) - 1 );
+                                useLoc = false;
                             }
-                            if ( usingSubsystems() ) {
-                                subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
-                            } else {
-                                subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
+                            if ( useLoc ) {
+                                if ( usingSubsystems() ) {
+                                    subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
+                                } else {
+                                    subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
+                                }
                             }
                         }
-                        var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
-                        var ioc = new "#diComponent#"(
-                            subLocations,
-                            ( structKeyExists( subsystemConfig, 'diConfig' ) ?
-                              subsystemConfig.diConfig :
-                              variables.framework.diConfig )
-                        );
-                        ioc.setParent( getDefaultBeanFactory() );
-                        setSubsystemBeanFactory( subsystem, ioc );
+                        if ( len( sublocations ) ) {
+                            var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
+                            var ioc = new "#diComponent#"(
+                                subLocations,
+                                ( structKeyExists( subsystemConfig, 'diConfig' ) ?
+                                  subsystemConfig.diConfig :
+                                  variables.framework.diConfig )
+                            );
+                            ioc.setParent( getDefaultBeanFactory() );
+                            setSubsystemBeanFactory( subsystem, ioc );
+                        }
                     }
                 }
 
