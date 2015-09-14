@@ -379,6 +379,9 @@ component {
         var cfcPath = left( baseMapping, 1 ) == '/' ?
             ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
             getFileFromPath( baseMapping );
+        if ( right( cfcPath, 1 ) == '/' && len( cfcPath ) > 1 ) {
+            cfcPath = left( cfcPath, len( cfcPath ) - 1 );
+        }
         var expPath = basePath;
         var notFound = true;
         var dotted = '';
