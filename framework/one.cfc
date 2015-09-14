@@ -1137,7 +1137,7 @@ component {
      * use this to override the default layout
      */
     public void function setLayout( string action, boolean suppressOtherLayouts = false ) {
-        request._fw1.overrideLayoutAction = validateAction( action );
+        request._fw1.overrideLayoutAction = validateAction( getFullyQualifiedAction( action ) );
         request._fw1.suppressOtherLayouts = suppressOtherLayouts;
     }
 
@@ -1214,7 +1214,7 @@ component {
      * use this to override the default view
      */
     public void function setView( string action ) {
-        request._fw1.overrideViewAction = validateAction( action );
+        request._fw1.overrideViewAction = validateAction( getFullyQualifiedAction( action ) );
     }
 
     /*
