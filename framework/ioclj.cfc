@@ -166,6 +166,8 @@ component extends=framework.ioc {
             // and this will generate prefixNameSingular
             var parts = listToArray( cljPath, "/" );
             var nParts = arrayLen( parts );
+            // ignore temp files from editors (starting with .)
+            if ( left( parts[ nParts ], 1 ) == "." ) continue;
             if ( nParts >= 3 ) {
                 var pluralCandidate = 2;
                 do {
