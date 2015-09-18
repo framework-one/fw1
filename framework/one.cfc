@@ -642,10 +642,11 @@ component {
      * returns true if this request has a valid reload URL parameter
      */
     public boolean function isFrameworkReloadRequest() {
+        setupRequestDefaults();
         return ( isDefined( 'URL' ) &&
-                    structKeyExists( URL, variables.framework.reload ) &&
-                    URL[ variables.framework.reload ] == variables.framework.password ) ||
-                variables.framework.reloadApplicationOnEveryRequest;
+                 structKeyExists( URL, variables.framework.reload ) &&
+                 URL[ variables.framework.reload ] == variables.framework.password ) ||
+            variables.framework.reloadApplicationOnEveryRequest;
     }
 
     /*
@@ -685,7 +686,6 @@ component {
      * super.onApplicationStart() first
      */
     public any function onApplicationStart() {
-        setupFrameworkDefaults();
         setupRequestDefaults();
         setupApplicationWrapper();
     }
@@ -878,7 +878,6 @@ component {
      * super.onRequestStart() first
      */
     public any function onRequestStart( string targetPath ) {
-        setupFrameworkDefaults();
         setupRequestDefaults();
 
         if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
@@ -912,7 +911,6 @@ component {
      * super.onSessionStart() first
      */
     public any function onSessionStart() {
-        setupFrameworkDefaults();
         setupRequestDefaults();
         setupSessionWrapper();
     }
@@ -2487,6 +2485,7 @@ component {
 
     private void function setupRequestDefaults() {
         if ( !request._fw1.requestDefaultsInitialized ) {
+            setupFrameworkDefaults();
             var pathInfo = request._fw1.cgiPathInfo;
             request.base = variables.framework.base;
             request.cfcbase = variables.framework.cfcbase;
