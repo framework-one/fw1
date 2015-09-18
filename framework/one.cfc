@@ -639,6 +639,16 @@ component {
     }
 
     /*
+     * returns true if this request has a valid reload URL parameter
+     */
+    public boolean function isFrameworkReloadRequest() {
+        return ( isDefined( 'URL' ) &&
+                    structKeyExists( URL, variables.framework.reload ) &&
+                    URL[ variables.framework.reload ] == variables.framework.password ) ||
+                variables.framework.reloadApplicationOnEveryRequest;
+    }
+
+    /*
      * you can override this to dynamically tell FW/1 to not handle
      * specific requests - by default it uses the unhandledExtensions
      * and unhandledPaths configuration items so if you want that as
@@ -1776,13 +1786,6 @@ component {
     private boolean function isFrameworkInitialized() {
         return structKeyExists( variables, 'framework' ) &&
             structKeyExists( application, variables.framework.applicationKey );
-    }
-
-    private boolean function isFrameworkReloadRequest() {
-        return ( isDefined( 'URL' ) &&
-                    structKeyExists( URL, variables.framework.reload ) &&
-                    URL[ variables.framework.reload ] == variables.framework.password ) ||
-                variables.framework.reloadApplicationOnEveryRequest;
     }
 
     private boolean function isSubsystemInitialized( string subsystem ) {
