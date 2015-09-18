@@ -2,6 +2,7 @@ component extends="mxunit.framework.TestCase" {
 
     public void function setUp() {
         variables.fw = new framework.one();
+        request._fw1.requestDefaultsInitialized = false;
         request.failureCount = 0;
         request.outputContent = "";
         injectMethod(variables.fw, this, "exceptionCapture", "dumpException");
