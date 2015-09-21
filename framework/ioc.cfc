@@ -409,24 +409,28 @@ component {
             var singleDir = singular( dir );
             var beanName = listLast( relPath, '/' );
             var dottedPath = dotted & replace( relPath, '/', '.', 'all' );
-            var metadata = {
-                name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
-                path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
-            };
-            if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
-                continue;
-            }
-            if ( structKeyExists( variables.beanInfo, beanName ) ) {
-                if ( variables.config.omitDirectoryAliases ) {
-                    throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+            try {
+                var metadata = {
+                    name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
+                    path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
+                };
+                if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
+                    continue;
                 }
-                structDelete( variables.beanInfo, beanName );
-                variables.beanInfo[ beanName & singleDir ] = metadata;
-            } else {
-                variables.beanInfo[ beanName ] = metadata;
-                if ( !variables.config.omitDirectoryAliases ) {
+                if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                    if ( variables.config.omitDirectoryAliases ) {
+                        throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+                    }
+                    structDelete( variables.beanInfo, beanName );
                     variables.beanInfo[ beanName & singleDir ] = metadata;
+                } else {
+                    variables.beanInfo[ beanName ] = metadata;
+                    if ( !variables.config.omitDirectoryAliases ) {
+                        variables.beanInfo[ beanName & singleDir ] = metadata;
+                    }
                 }
+            } catch( any e ) {
+                throw 'bean discovery error: #beanName# (#dottedPath#); original message: #e.message#';
             }
         }
     }
