@@ -600,11 +600,11 @@ component {
         }
 
         if ( structKeyExists( request, 'subsystem' ) ) {
-            return hasSubsystemBeanFactory(request.subsystem);
+            return hasSubsystemBeanFactory( request.subsystem );
         }
 
-        if ( len(variables.framework.defaultSubsystem) > 0 ) {
-            return hasSubsystemBeanFactory(variables.framework.defaultSubsystem);
+        if ( len( variables.framework.defaultSubsystem ) > 0 ) {
+            return hasSubsystemBeanFactory( variables.framework.defaultSubsystem );
         }
 
         return false;
@@ -1434,11 +1434,11 @@ component {
 
         var framework = getFw1App();
 
-        if ( !structKeyExists(framework, 'subsystemFactories') ) {
+        if ( !structKeyExists( framework, 'subsystemFactories' ) ) {
             framework.subsystemFactories = { };
         }
 
-        if ( !structKeyExists(framework, 'subsystems') ) {
+        if ( !structKeyExists( framework, 'subsystems' ) ) {
             framework.subsystems = { };
         }
 
