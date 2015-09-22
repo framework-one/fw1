@@ -491,10 +491,14 @@ component {
         var liveMeta = { setters = iocMeta.setters };
         if ( !iocMeta.pruned ) {
             // need to prune known setters of transients:
+            var prunable = { };
             for ( var known in iocMeta.setters ) {
                 if ( !isSingleton( known ) ) {
-                    structDelete( iocMeta.setters, known );
+                    prunable[ known ] = true;
                 }
+            }
+            for ( known in prunable ) {
+                structDelete( iocMeta.setters, known );
             }
             iocMeta.pruned = true;
         }
