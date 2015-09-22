@@ -623,7 +623,8 @@ component {
      */
     public boolean function hasSubsystemBeanFactory( string subsystem ) {
 
-        ensureNewFrameworkStructsExist();
+        if ( !len( subsystem ) ) return false;
+        setupSubsystemWrapper( subsystem );
 
         return structKeyExists( getFw1App().subsystemFactories, subsystem );
 
