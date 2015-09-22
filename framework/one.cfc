@@ -1329,7 +1329,7 @@ component {
                     }
                 }
             } else if ( len( subsystem ) ) {
-                testLayout = parseViewOrLayoutPath( 'default', 'layout' );
+                testLayout = parseViewOrLayoutPath( ':default', 'layout' );
                 if ( cachedFileExists( testLayout ) ) {
                     internalFrameworkTrace( 'found application layout #testLayout#',
                                             subsystem, section, item );
@@ -1831,7 +1831,7 @@ component {
         // else leave it alone?
         }
         var pathInfo = { };
-        var subsystem = getSubsystem( path );
+        var subsystem = getSubsystem( getSubsystemSectionAndItem( path ) );
 
         // allow for :section/action to simplify logic in setupRequestWrapper():
         pathInfo.path = segmentLast( path, variables.framework.subsystemDelimiter );
