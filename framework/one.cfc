@@ -1330,7 +1330,7 @@ component {
                     }
                 }
             } else if ( len( subsystem ) ) {
-                testLayout = parseViewOrLayoutPath( ':default', 'layout' );
+                testLayout = parseViewOrLayoutPath( variables.framework.subsystemDelimiter & 'default', 'layout' );
                 if ( cachedFileExists( testLayout ) ) {
                     internalFrameworkTrace( 'found application layout #testLayout#',
                                             subsystem, section, item );
