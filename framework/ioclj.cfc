@@ -49,9 +49,15 @@ component extends=framework.ioc {
         } else {
             cfmljure = new framework.cfmljure( variables.project, timeout, lein );
         }
-        var app = { };
-        cfmljure.install( ns, app );
-        variables.clojureApp = app;
+        if ( cfmljure.isAvailable() ) {
+            // Clojure loaded -- install the discovered namespaces
+            var app = { };
+            cfmljure.install( ns, app );
+            variables.clojureApp = app;
+        } else {
+            // Clojure failed to load -- forget any installed beans
+            variables.cljBeans = { };
+        }
         variables.cfmljure = cfmljure;
         this.onLoad( function( bf ) {
             // patch DI/1 bean info to include Clojure "beans" -- this allows Clojure
@@ -131,6 +137,7 @@ component extends=framework.ioc {
 
     // reload-all a given namespace or reload all
     public void function reload( string ns ) {
+        if ( !variables.cfmljure.isAvailable() ) return;
         var core = variables.cfmljure.clojure.core;
         if ( ns == "all" ) {
             for ( var beanName in variables.cljBeans ) {

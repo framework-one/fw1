@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.5.0-rc1";
-    variables._cfmljure_version = "1.0.0-rc1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._cfmljure_version = "1.0.0-snapshot";
 /*
 	Copyright (c) 2012-2015, Sean Corfield
 
@@ -130,13 +130,22 @@ component {
                 this._clj_var  = clj6.getMethod( "var", __classes( "Object", 2 ) );
                 this._clj_read = clj6.getMethod( "read", __classes( "String" ) );
             } catch ( any e ) {
-                var clj5 = appCL.loadClass( "clojure.lang.RT" );
-                variables.out.println( "Falling back to Clojure 1.5 or earlier" );
-                this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
-                this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+                try {
+                    var clj5 = appCL.loadClass( "clojure.lang.RT" );
+                    variables.out.println( "Falling back to Clojure 1.5 or earlier" );
+                    this._clj_var  = clj5.getMethod( "var", __classes( "String", 2 ) );
+                    this._clj_read = clj5.getMethod( "readString", __classes( "String" ) );
+                } catch ( any e ) {
+                    variables.out.println( "Unable to load any version of Clojure" );
+                    variables.out.println( "Aborting install of Clojure integration!" );
+                    // promote the only part of the API that will work
+                    this.isAvailable = this.__isAvailable;
+                    return this;
+                }
             }
             // promote API:
             this.install = this.__install;
+            this.isAvailable = this.__isAvailable;
             this.read = this.__read;
             var autoLoaded = "clojure.core";
             if ( cfmlInteropAvailable ) {
@@ -195,6 +204,12 @@ component {
         } finally {
             __releaseLock( variables.__lockFilePath );
         }
+    }
+
+    public boolean function __isAvailable() {
+        return structKeyExists( this, "_clj_var" ) ||
+            structKeyExists( variables, "_clj_root" ) &&
+            structKeyExists( variables._clj_root, "_clj_var" );
     }
 
     public any function __read( string expr ) {
