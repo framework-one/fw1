@@ -18,8 +18,13 @@ component {
             // create your FW/1 application:
             request._framework_one = new framework.one( {
 		        SESOmitIndex = true,
-                diLocations = "model, controllers, beans, services", // to account for the variety of D/I locations in our examples
-                // that allows all our subsystems to automatically have their own bean factory with the base factory as parent
+                diComponent = "framework.ioclj",
+                diLocations = [
+                    // must provide path to project.clj in Clojure example:
+                    getDirectoryFromPath( CGI.SCRIPT_NAME ) & "/subsystems/6helloclojure",
+                    "model", "controllers", "beans", "services" // to account for the variety of D/I locations in our examples
+                    // that allows all our subsystems to automatically have their own bean factory with the base factory as parent
+                ],
                 trace = true
             } );
 
