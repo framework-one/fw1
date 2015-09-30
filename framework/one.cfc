@@ -2608,29 +2608,24 @@ component {
                         var subLocations = "";
                         for ( var loc in locations ) {
                             var relLoc = trim( loc );
-                            var useLoc = true;
                             // make a relative location:
                             if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
                                 relLoc = right( relLoc, len( relLoc ) - 2 );
                             } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
-                                useLoc = false;
+                                relLoc = right( relLoc, len( relLoc ) - 1 );
                             }
-                            if ( useLoc ) {
-                                if ( usingSubsystems() ) {
-                                    subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
-                                } else {
-                                    subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
-                                }
+                            if ( usingSubsystems() ) {
+                                subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
+                            } else {
+                                subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
                             }
                         }
                         if ( len( sublocations ) ) {
                             var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
-                            var ioc = new "#diComponent#"(
-                                subLocations,
-                                ( structKeyExists( subsystemConfig, 'diConfig' ) ?
-                                  subsystemConfig.diConfig :
-                                  variables.framework.diConfig )
-                            );
+                            var cfg = structKeyExists( subsystemConfig, 'diConfig' ) ?
+                                subsystemConfig.diConfig : structCopy( variables.framework.diConfig );
+                            cfg.noClojure = true;
+                            var ioc = new "#diComponent#"( subLocations, cfg );
                             ioc.setParent( getDefaultBeanFactory() );
                             setSubsystemBeanFactory( subsystem, ioc );
                         }

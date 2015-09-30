@@ -1,6 +1,6 @@
 component extends=framework.ioc {
-    variables._fw1_version = "3.5.0-rc1";
-    variables._ioclj_version = "1.0.0-rc1";
+    variables._fw1_version = "3.5.0-snapshot";
+    variables._ioclj_version = "1.0.0-snapshot";
 /*
     Copyright (c) 2015, Sean Corfield
 
@@ -26,6 +26,7 @@ component extends=framework.ioc {
         }
         // initialize DI/1 parent
         super.init( folders, config );
+        if ( structKeyExist( config, "noClojure" ) && config.noClojure ) return;
         // find the first folder that includes project.clj - that's our project
         variables.project = findProjectFile();
         discoverClojureFiles();
