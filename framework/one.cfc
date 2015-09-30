@@ -442,13 +442,23 @@ component {
      * with getSubsystemSectionAndItem() below
      */
     public string function getFullyQualifiedAction( string action = request.action ) {
-        if ( actionSpecifiesSubsystem( action ) ) {
-            return getSubsystem( action ) & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+        var requested = getSubsystem( action );
+        if ( len( requested ) ) {
+            // request specifies non-empty subsystem, use it as-is:
+            return requested & variables.framework.subsystemDelimiter & getSectionAndItem( action );
         } else {
             var current = structKeyExists( request, 'action' ) ? getSubsystem( request.action ) : '';
             if ( len( current ) ) {
-                return current & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+                // request has no subsystem but we're in one, special case
+                if ( actionSpecifiesSubsystem( action ) ) {
+                    // request had explicit empty subsystem so it means top-level app
+                    return variables.framework.subsystemDelimiter & getSectionAndItem( action );
+                } else {
+                    // request was meant to be relative to current subsystem
+                    return current & variables.framework.subsystemDelimiter & getSectionAndItem( action );
+                }
             } else {
+                // neither appears to have subsystem, just use section and item
                 return getSectionAndItem( action );
             }
         }
@@ -2551,7 +2561,7 @@ component {
             if ( isDefined('form') ) structAppend(request.context,form);
             // figure out the request action before restoring flash context:
             if ( !structKeyExists(request.context, variables.framework.action) ) {
-                request.context[variables.framework.action] = variables.framework.home;
+                request.context[variables.framework.action] = getFullyQualifiedAction( variables.framework.home );
             } else {
                 request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
             }
