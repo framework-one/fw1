@@ -26,7 +26,8 @@ component extends=framework.ioc {
         }
         // initialize DI/1 parent
         super.init( folders, config );
-        if ( structKeyExist( config, "noClojure" ) && config.noClojure ) return;
+        variables.cljBeans = { };
+        if ( structKeyExists( config, "noClojure" ) && config.noClojure ) return;
         // find the first folder that includes project.clj - that's our project
         variables.project = findProjectFile();
         discoverClojureFiles();
@@ -155,7 +156,6 @@ component extends=framework.ioc {
         } catch ( any e ) {
             // assume bad path and ignore it
         }
-        variables.cljBeans = { };
         for ( var cljOSPath in cljs ) {
             var cljPath = replace( cljOSPath, chr(92), "/", "all" );
             cljPath = right( cljPath, len( cljPath ) - n );
