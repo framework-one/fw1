@@ -1542,7 +1542,7 @@ component {
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
             var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">' &
                       '<tr><th style="text-align:right;" width="5%">time</th><th style="text-align:right;" width="5%">delta</th>' &
-                      '<th width="10%">action</th><th>message</th></tr>';
+                      '<th style="text-align:center;">type</th><th width="10%">action</th><th>message</th></tr>';
             writeOutput( table );
             var colors = [ '##ccd4dd', '##ccddcc' ];
             var row = 0;
@@ -1551,6 +1551,10 @@ component {
             for ( var i = 1; i <= n; ++i ) {
                 var trace = request._fw1.trace[i];
                 var nextTraceTick = i + 1 <= n ? request._fw1.trace[i+1].tick : trace.tick;
+                var color =
+                    trace.msg.startsWith( 'no ' ) ? '##cc8888' :
+                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' :
+                            trace.t == 'WARNING' ? '##d44b0f' : '##000';
                 var action = '';
                 if ( trace.s == variables.magicApplicationController || trace.sub == variables.magicApplicationSubsystem ) {
                     action = '<em>Application.cfc</em>';
@@ -1578,10 +1582,12 @@ component {
                 }
                 lastDuration = duration;
                 writeOutput('</td>' );
+                if (trace.t == 'INFO') {
+                    writeOutput('<td></td>');
+                } else {
+                    writeOutput('<td style="text-align: center; color: #color#">#ucase(trace.t)#</td>');
+                }
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;padding-left: 5px;" width="10%">#action#</td>' );
-                var color =
-                    trace.msg.startsWith( 'no ' ) ? '##cc8888' :
-                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' : '##000';
                 writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#' );
                 if ( structKeyExists( trace, 'v' ) ) {
                     writeOutput( '<br />' );
@@ -1744,7 +1750,7 @@ component {
         }
     }
 
-    private void function internalFrameworkTrace( string message, string subsystem = '', string section = '', string item = '' ) {
+    private void function internalFrameworkTrace( string message, string subsystem = '', string section = '', string item = '', string traceType = 'INFO' ) {
         if ( request._fw1.doTrace ) {
             try {
                 if ( isDefined( 'session._fw1_trace' ) &&
@@ -1755,7 +1761,7 @@ component {
             } catch ( any _ ) {
                 // ignore if session is not enabled
             }
-            arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item } );
+            arrayAppend( request._fw1.trace, { tick = getTickCount(), msg = message, sub = subsystem, s = section, i = item, t = traceType } );
         }
     }
 
@@ -2133,11 +2139,14 @@ component {
                     key = trim( key );
                     if ( structKeyExists( request.context, key ) ) {
                         session[ preserveKeySessionKey ][ key ] = request.context[ key ];
+                    } else {
+                        internalFrameworkTrace(message='key "#key#" does not exist in RC, cannot preserve.', traceType='WARNING');
                     }
                 }
             }
         } catch ( any ex ) {
             // session scope not enabled, do nothing
+            internalFrameworkTrace(message='sessionManagement not enabled, cannot preserve RC keys.', traceType='WARNING');
         }
         return curPreserveKey;
     }
