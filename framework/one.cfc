@@ -1137,6 +1137,7 @@ component {
                     // we still log a warning because this is strange behavior
                     var out = createObject( "java", "java.lang.System" ).out;
                     out.println( "FW/1: WARNING: setBeanFactory() called more than once - use diEngine = 'none'?" );
+                    internalFrameworkTrace( message = "FW/1: WARNING: setBeanFactory() called more than once - use diEngine = 'none'?", traceType = 'WARNING' );
                 } else {
                     throw( type = "FW1.Warning",
                            message = "setBeanFactory() called more than once - use diEngine = 'none'?",
@@ -1410,6 +1411,7 @@ component {
         } else {
             var out = createObject( "java", "java.lang.System" ).out;
             out.println( "FW/1: DEPRECATED: " & message );
+            internalFrameworkTrace( message = "FW/1: DEPRECATED: " & message, traceType = 'DEPRECATED' );
         }
     }
 
@@ -1551,10 +1553,11 @@ component {
             for ( var i = 1; i <= n; ++i ) {
                 var trace = request._fw1.trace[i];
                 var nextTraceTick = i + 1 <= n ? request._fw1.trace[i+1].tick : trace.tick;
-                var color =
-                    trace.msg.startsWith( 'no ' ) ? '##cc8888' :
-                        trace.msg.startsWith( 'onError( ' ) ? '##cc0000' :
-                            trace.t == 'WARNING' ? '##d44b0f' : '##000';
+                var color = '##000';
+                var traceType = structKeyExists( trace, 't' ) ? trace.t : 'INFO';
+                if ( trace.msg.startsWith( 'no ' ) ) color = '##cc8888';
+                else if ( trace.msg.startsWith( 'onError( ' ) || traceType == 'ERROR' ) color = '##cc0000';
+                else if ( traceType == 'WARNING' ) color = '##d44b0f';
                 var action = '';
                 if ( trace.s == variables.magicApplicationController || trace.sub == variables.magicApplicationSubsystem ) {
                     action = '<em>Application.cfc</em>';
@@ -1581,11 +1584,11 @@ component {
                     writeOutput('#duration - lastDuration#ms');
                 }
                 lastDuration = duration;
-                writeOutput('</td>' );
-                if (trace.t == 'INFO') {
-                    writeOutput('<td></td>');
+                writeOutput( '</td>' );
+                if ( !structKeyExists( trace, 't' ) || trace.t == 'INFO' ) {
+                    writeOutput( '<td>&nbsp;</td>' );
                 } else {
-                    writeOutput('<td style="text-align: center; color: #color#">#ucase(trace.t)#</td>');
+                    writeOutput( '<td style="text-align: center; color: #color#">#ucase(trace.t)#</td>' );
                 }
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;padding-left: 5px;" width="10%">#action#</td>' );
                 writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#' );
@@ -2140,13 +2143,13 @@ component {
                     if ( structKeyExists( request.context, key ) ) {
                         session[ preserveKeySessionKey ][ key ] = request.context[ key ];
                     } else {
-                        internalFrameworkTrace(message='key "#key#" does not exist in RC, cannot preserve.', traceType='WARNING');
+                        internalFrameworkTrace( message = 'key "#key#" does not exist in RC, cannot preserve.', traceType = 'WARNING' );
                     }
                 }
             }
         } catch ( any ex ) {
             // session scope not enabled, do nothing
-            internalFrameworkTrace(message='sessionManagement not enabled, cannot preserve RC keys.', traceType='WARNING');
+            internalFrameworkTrace( message = 'sessionManagement not enabled, cannot preserve RC keys.', traceType = 'WARNING' );
         }
         return curPreserveKey;
     }
