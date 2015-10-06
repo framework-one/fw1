@@ -1,4 +1,5 @@
 component extends="framework.one" {
+    // Version: FW/1 3.5.0 RC 2
 
     // if you need to provide extension points, copy this to
     // your web root, next to your Application.cfc, and add
