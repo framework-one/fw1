@@ -262,4 +262,28 @@ component extends="mxunit.framework.TestCase" {
 		AssertEquals(7, arrayLen(request.callstack));
 		AssertEquals("init,setStackLogService,configure,doWrap,before,doFront,doRear", arrayToList(request.callstack));
 	}
+
+
+	function TestSingleInterceptorOnMultipleObjects() {
+		//Multiple Around Advisors
+		request.callstack = []; //reset
+		bf = new framework.aop('/tests/aop/services,/tests/aop/interceptors', {});
+
+
+		//Need to create different After interceptors
+		bf.declareBean("AroundInterceptorA", "tests.aop.interceptors.aop.AroundInterceptor", true, {name = "aroundA"});
+
+
+		bf.intercept("advReverse", "AroundInterceptorA", "doWrap");
+		bf.intercept("ReverseService", "AroundInterceptorA", "doReverse");
+
+		rs = bf.getBean("ReverseService");
+		ars = bf.getBean("advReverse");
+
+		result = ars.doWrap(rs.doReverse("Hello!"));
+
+		AssertEquals("aroundA,front-aroundA," & reverse("Hello!") & ",aroundA-rear,aroundA", result);
+		AssertEquals(8, arrayLen(request.callstack));
+		AssertEquals("init,setStackLogService,aroundA,doReverse,aroundA,doWrap,doFront,doRear", arrayToList(request.callstack));
+	}
 }
