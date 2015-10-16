@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "3.5.0-rc2";
+    variables._fw1_version = "3.5.0-snapshot";
 /*
     Copyright (c) 2009-2015, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -112,19 +112,7 @@ component {
         var pathData = resolveBaseURL( action, path );
         path = pathData.path;
         var omitIndex = pathData.omitIndex;
-        // if queryString is a struct, massage it into a string
-        if ( isStruct( queryString ) && structCount( queryString ) ) {
-            var q = '';
-            for( var key in queryString ) {
-                if ( isSimpleValue( queryString[key] ) ) {
-                    q &= '#urlEncodedFormat( key )#=#urlEncodedFormat( queryString[ key ] )#&';
-                }
-            }
-            queryString = q;
-        }
-        else if ( !isSimpleValue( queryString ) ) {
-            queryString = '';
-        }
+        queryString = normalizeQueryString( queryString );
         if ( queryString == '' ) {
             // extract query string from action section:
             var q = find( '?', action );
@@ -1017,6 +1005,7 @@ component {
         if ( preserve != 'none' ) {
             preserveKey = saveFlashContext( preserve );
         }
+        queryString = normalizeQueryString( queryString );
         var baseQueryString = '';
         if ( append != 'none' ) {
             if ( append == 'all' ) {
@@ -1825,6 +1814,23 @@ component {
             }
         }
         return '';
+    }
+
+    private string function normalizeQueryString( any queryString ) {
+        // if queryString is a struct, massage it into a string
+        if ( isStruct( queryString ) && structCount( queryString ) ) {
+            var q = '';
+            for( var key in queryString ) {
+                if ( isSimpleValue( queryString[key] ) ) {
+                    q &= urlEncodedFormat( key ) & '=' & urlEncodedFormat( queryString[ key ] ) & '&';
+                }
+            }
+            queryString = q;
+        }
+        else if ( !isSimpleValue( queryString ) ) {
+            queryString = '';
+        }
+        return queryString;
     }
 
     private string function segmentLast( string segments, string delimiter ) {
