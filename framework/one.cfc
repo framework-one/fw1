@@ -2247,7 +2247,7 @@ component {
 	}
 
     private void function setupFrameworkDefaults() {
-
+        if ( structKeyExists( variables, "_fw1_defaults_initialized" ) ) return;
         // default values for Application::variables.framework structure:
         if ( !structKeyExists(variables, 'framework') ) {
             variables.framework = { };
@@ -2452,6 +2452,7 @@ component {
         request._fw1.doTrace = variables.framework.trace;
         // add this as a fingerprint so autowire can detect FW/1 CFC:
         this.__fw1_version = variables.framework.version;
+        variables._fw1_defaults_initialized = true;
     }
 
     private string function setupFrameworkEnvironments() {
@@ -2513,8 +2514,8 @@ component {
     }
 
     private void function setupRequestDefaults() {
+        setupFrameworkDefaults();
         if ( !request._fw1.requestDefaultsInitialized ) {
-            setupFrameworkDefaults();
             var pathInfo = request._fw1.cgiPathInfo;
             request.base = variables.framework.base;
             request.cfcbase = variables.framework.cfcbase;
