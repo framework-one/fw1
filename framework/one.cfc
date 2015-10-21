@@ -1895,8 +1895,14 @@ component {
             if ( routeLen ) {
                 if ( left( routeRegEx.pattern, 1 ) == '$' ) {
                     // check HTTP method
-                    routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
-                    var methodLen = len( routeRegEx.method );
+                    var methodLen = 0;
+                    if ( routeLen >= 2 && left( routeRegEx.pattern, 2 ) == '$*' ) {
+                        // accept all methods so don't set method but...
+                        methodLen = 2; // ...consume 2 characters
+                    } else {
+                        routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
+                        methodLen = len( routeRegEx.method );
+                    }
                     if ( routeLen == methodLen ) {
                         routeRegEx.pattern = '*';
                     } else {
