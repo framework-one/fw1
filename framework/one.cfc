@@ -2576,18 +2576,18 @@ component {
                 }
             }
             // certain remote calls do not have URL or form scope:
-            if ( isDefined('URL') ) structAppend(request.context,URL);
-            if ( isDefined('form') ) structAppend(request.context,form);
+            if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
+            if ( isDefined( 'form' ) ) structAppend( request.context, form );
             // figure out the request action before restoring flash context:
-            if ( !structKeyExists(request.context, variables.framework.action) ) {
-                request.context[variables.framework.action] = getFullyQualifiedAction( variables.framework.home );
+            if ( !structKeyExists( request.context, variables.framework.action ) ) {
+                request.context[ variables.framework.action ] = getFullyQualifiedAction( variables.framework.home );
             } else {
-                request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
+                request.context[ variables.framework.action ] = getFullyQualifiedAction( request.context[ variables.framework.action ] );
             }
             if ( variables.framework.noLowerCase ) {
-                request.action = validateAction( request.context[variables.framework.action] );
+                request.action = validateAction( request.context[ variables.framework.action ] );
             } else {
-                request.action = validateAction( lCase(request.context[variables.framework.action]) );
+                request.action = validateAction( lCase(request.context[ variables.framework.action ]) );
             }
             request._fw1.requestDefaultsInitialized = true;
         }
