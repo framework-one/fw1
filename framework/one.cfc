@@ -2416,6 +2416,7 @@ component {
             throw( type = "FW1.IllegalConfiguration",
                    message = "ViewsFolder must be a plural word (ends in 's')." );
         }
+        variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
             variables.framework.diOverrideAllowed = false;
         }
@@ -2447,7 +2448,9 @@ component {
             }
             variables.framework.diComponent = diComponent;
         }
-        variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
+        if ( !structKeyExists( variables.framework, 'enableJSONPOST' ) ) {
+            variables.framework.enableJSONPOST = false;
+        }
         setupEnvironment( env );
         request._fw1.doTrace = variables.framework.trace;
         // add this as a fingerprint so autowire can detect FW/1 CFC:
@@ -2578,6 +2581,28 @@ component {
             // certain remote calls do not have URL or form scope:
             if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
             if ( isDefined( 'form' ) ) structAppend( request.context, form );
+            if ( variables.framework.enableJSONPOST ) {
+                // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
+                // seed of this code, inspired by Taffy's basic deserialization
+                var body = getHttpRequestData().content;
+                if ( isBinary( body ) ) body = charSetEncode( body, "utf-8" );
+                if ( len( body ) ) {
+                    switch ( CGI.CONTENT_TYPE ) {
+                    case "application/json":
+                    case "text/json":
+                        try {
+                            var bodyStruct = deserializeJSON( body );
+                            structAppend( request.context, bodyStruct );
+                        } catch ( any e ) {
+                            throw "Content-Type implies JSON but could not deserialize body: " & e.message;
+                        }
+                        break;
+                    default:
+                        // ignore -- either built-in (form handling) or unsupported
+                        break;
+                    }
+                }
+            }
             // figure out the request action before restoring flash context:
             if ( !structKeyExists( request.context, variables.framework.action ) ) {
                 request.context[ variables.framework.action ] = getFullyQualifiedAction( variables.framework.home );
