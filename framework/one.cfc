@@ -2594,7 +2594,8 @@ component {
                             var bodyStruct = deserializeJSON( body );
                             structAppend( request.context, bodyStruct );
                         } catch ( any e ) {
-                            throw "Content-Type implies JSON but could not deserialize body: " & e.message;
+                            throw( type = "FW1.JSONPOST",
+                                   message = "Content-Type implies JSON but could not deserialize body: " & e.message );
                         }
                         break;
                     default:
