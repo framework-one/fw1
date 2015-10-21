@@ -1,5 +1,8 @@
 <cfoutput>
 	<h1>Testbed for buildURL()</h1>
+	<p><a href="#buildURL('')#">buildURL('')</a></p>
+	<p><a href="#buildURL('.')#">buildURL('.')</a></p>
+	<p><a href="#buildURL(':')#">buildURL(':') -- only valid in a subsystem-based app</a></p>
 	<p><a href="#buildURL('main.default')#">buildURL('main.default')</a></p>
 	<p><a href="#buildURL('main.default##anchor')#">buildURL('main.default##anchor')</a></p>
 	<p><a href="#buildURL('main.default?##anchor')#">buildURL('main.default?##anchor')</a></p>

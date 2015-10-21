@@ -1,6 +1,7 @@
 component extends="mxunit.framework.TestCase" {
 
     public void function setUp() {
+        structDelete(request,"_fw1"); // force a reset of tracing vars
         variables.fw = new framework.one();
         variables.fw.enableTracing = _enableTracing;
         variables.fw.enableTracing();

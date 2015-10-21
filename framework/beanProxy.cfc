@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.1.1";
-    variables._aop1_version = "2.0.0";
+    variables._fw1_version = "3.5.0";
+    variables._aop1_version = "2.0.1";
 /*
 	Copyright (c) 2013-2015, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -24,6 +24,7 @@ component {
 	variables.beforeInterceptors = [];
 	variables.errorInterceptors = [];
 	variables.interceptedMethods = "";
+	variables.interceptID = createUUID();
 	variables.preName = "___";
 	variables.targetBean = "";
 	variables.targetBeanPath = "";
@@ -122,6 +123,75 @@ component {
 
 	// --- Interceptor Augmentation Methods --- //
 
+	/** Used to setup intercepted method lists on a per bean basis. */
+	public any function _addInterceptedMethods(required string interceptID, required string methods)
+	{
+		var interceptedMethods = "";
+		var methodName = "";
+
+
+		if (!structKeyExists(variables, "interceptedMethods"))
+		{
+			variables.interceptedMethods = {};
+		}
+
+		if (!structKeyExists(variables.interceptedMethods, arguments.interceptID))
+		{
+			variables.interceptedMethods[arguments.interceptID] = "";
+		}
+
+		interceptedMethods = variables.interceptedMethods[arguments.interceptID];
+
+
+		if (interceptedMethods != "*")
+		{
+			if (arguments.methods == "" || arguments.methods == "*")
+			{
+				variables.interceptedMethods[arguments.interceptID] = "*";
+			}
+			else
+			{
+				for (methodName in listToArray(arguments.methods))
+				{
+					if (!listFindNoCase(variables.interceptedMethods[arguments.interceptID], methodName))
+					{
+						interceptedMethods = listAppend(interceptedMethods, methodName);
+					}
+				}
+
+
+				interceptedMethods = listSort(interceptedMethods, "textnocase");
+				variables.interceptedMethods[arguments.interceptID] = interceptedMethods;
+			}
+		}
+	}
+
+
+	/** Used to setup intercepted method lists on a per bean basis. */
+	public any function _getInterceptedMethods(string interceptID)
+	{
+		var methods = {};
+
+		if (structKeyExists(variables, "interceptedMethods"))
+		{
+			methods = variables.interceptedMethods;
+		}
+
+		if (!structKeyExists(arguments, "interceptID"))
+		{
+			return methods;
+		}
+
+
+		if (structKeyExists(methods, arguments.interceptID))
+		{
+			return methods[arguments.interceptID];
+		}
+
+		return "";
+	}
+
+
 	/** Used to inject methods and data. */
 	public any function _inject(required string key, required any value, required string access="public")
 	{
@@ -144,8 +214,10 @@ component {
 	/** Runs the 'Around' method, skips to the next interceptor in the chain if the 'Around' should not be run, or calls the actual method. */
 	public any function _preAround(required any targetBean, required string methodName, struct args = {})
 	{
+		var interceptedMethods = getInterceptedMethods(arguments.targetBean.interceptID);
+
 		// Match if method is to be intercepted by this interceptor.
-		if (variables.interceptedMethods == "*" || listFindNoCase(variables.interceptedMethods, arguments.methodName))
+		if (interceptedMethods == "*" || listFindNoCase(interceptedMethods, arguments.methodName))
 		{
 			local.result = around(arguments.targetBean, arguments.methodName, arguments.args);
 		}
@@ -384,15 +456,19 @@ component {
 		// Maintain the list of intercepted methods. '*' and blank means all.
 		if (variables.interceptedMethods != "*")
 		{
-			if (!len(interceptor.methods) || interceptor.methods == "*")
+			if (!len(arguments.interceptor.methods) || arguments.interceptor.methods == "*")
 			{
 				variables.interceptedMethods = "*";
 			}
 			else
 			{
-				variables.interceptedMethods = listSort(listAppend(variables.interceptedMethods, interceptor.methods), "textnocase");
+				variables.interceptedMethods = listSort(listAppend(variables.interceptedMethods, arguments.interceptor.methods), "textnocase");
 			}
 		}
+
+
+		// Update the interceptor itself.
+		arguments.interceptor.bean.addInterceptedMethods(variables.interceptID, arguments.interceptor.methods);
 	}
 
 
@@ -437,7 +513,8 @@ component {
 		arguments.interceptor.bean._inject = _inject;
 
 		arguments.interceptor.bean._inject("interceptorAugmented", true);
-		arguments.interceptor.bean._inject("interceptedMethods", arguments.interceptor.methods, "private");
+		arguments.interceptor.bean._inject("addInterceptedMethods", _addInterceptedMethods);
+		arguments.interceptor.bean._inject("getInterceptedMethods", _getInterceptedMethods);
 		arguments.interceptor.bean._inject("translateArgs", _translateArgs, "private");
 
 		if (hasAroundMethod(arguments.interceptor))
@@ -709,6 +786,7 @@ component {
 		variables.targetBean.$inject("$call", $call);
 		variables.targetBean.$inject("$methodExists", $methodExists);
 		variables.targetBean.$inject("$getArgumentInfo", $getArgumentInfo);
+		variables.targetBean.$inject("interceptID", variables.interceptID);
 
 
 		for (key in beanMethodInfo)

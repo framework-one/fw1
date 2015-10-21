@@ -1,23 +1,23 @@
 component {
+    // Version: FW/1 3.5.0
     // copy this to your application root to use as your Application.cfc
     // or incorporate the logic below into your existing Application.cfc
 
     // you can provide a specific application name if you want:
-    //this.name = hash( getBaseTemplatePath() );
-    this.name = 'fw1-userManager';
+    this.name = hash( getBaseTemplatePath() );
 
     // any other application settings:
     this.sessionManagement = true;
 
     // set up per-application mappings as needed:
-    this.mappings[ '/framework' ] = expandPath( '../../framework' );
-    this.mappings[ '/userManager' ] = getDirectoryFromPath( getCurrentTemplatePath() );
+    // this.mappings[ '/framework' ] = expandPath( '../path/to/framework' );
+    // this.mappings[ '/app' ] expandPath( '../path/to/app' );
 
     function _get_framework_one() {
         if ( !structKeyExists( request, '_framework_one' ) ) {
 
             // create your FW/1 application:
-            request._framework_one = new MyApplication();
+            request._framework_one = new framework.one();
 
             // you can specify FW/1 configuration as an argument:
             // request._framework_one = new framework.one({

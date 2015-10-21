@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "3.1.1";
-    variables._di1_version = "1.1.0";
+    variables._fw1_version = "3.5.0";
+    variables._di1_version = "1.1.1";
 /*
     Copyright (c) 2010-2015, Sean Corfield
 
@@ -19,8 +19,18 @@ component {
 
     // CONSTRUCTOR
 
-    public any function init( string folders, struct config = { } ) {
-        variables.folders = folders;
+    public any function init( any folders, struct config = { } ) {
+        variables.folderList = folders;
+        variables.folderArray = folders;
+        if ( isSimpleValue( folders ) ) {
+            variables.folderArray = listToArray( folders );
+        } else {
+            variables.folderList = arrayToList( folders );
+        }
+        var n = arrayLen( variables.folderArray );
+        for ( var i = 1; i <= n; ++i ) {
+            variables.folderArray[ i ] = trim( variables.folderArray[ i ] );
+        }
         variables.config = config;
         variables.beanInfo = { };
         variables.beanCache = { };
@@ -29,11 +39,18 @@ component {
         variables.settersInfo = { };
         variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
+            '/Application.lc', '/Application.lucee',
+            // assume default name for intermediary:
+            '/MyApplication.cfc',
+            '/MyApplication.lc', '/MyApplication.lucee',
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
             // recent FW/1 + DI/1 + AOP/1 exclusions:
             '/framework/aop.cfc', '/framework/beanProxy.cfc',
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc'
+            '/framework/one.cfc',
+            // and Clojure-related exclusions:
+            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
+            '/framework/ioclj.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
@@ -47,7 +64,7 @@ component {
 
     // programmatically register an alias
     public any function addAlias( string aliasName, string beanName ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
@@ -55,7 +72,7 @@ component {
 
     // programmatically register new beans with the factory (add a singleton name/value pair)
     public any function addBean( string beanName, any beanValue ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         variables.beanInfo[ beanName ] = {
             name = beanName, value = beanValue, isSingleton = true
         };
@@ -65,7 +82,7 @@ component {
 
     // return true if the factory (or a parent factory) knows about the requested bean
     public boolean function containsBean( string beanName ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         return structKeyExists( variables.beanInfo, beanName ) ||
                 ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
     }
@@ -73,14 +90,20 @@ component {
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         var singleDir = '';
         if ( listLen( dottedPath, '.' ) > 1 ) {
             var cfc = listLast( dottedPath, '.' );
             var dottedPart = left( dottedPath, len( dottedPath ) - len( cfc ) - 1 );
             singleDir = singular( listLast( dottedPart, '.' ) );
         }
-        var cfcPath = replace( expandPath( '/' & replace( dottedPath, '.', '/', 'all' ) & '.cfc' ), chr(92), '/', 'all' );
+        var basePath = replace( dottedPath, '.', '/', 'all' );
+        var cfcPath = expandPath( '/' & basePath & '.cfc' );
+        var expPath = cfcPath;
+        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lc' );
+        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lucee' );
+        if ( !fileExists( expPath ) ) throw "Unable to find source file for #dottedPath#: expands to #cfcPath#";
+        var cfcPath = replace( expPath, chr(92), '/', 'all' );
         var metadata = {
             name = beanName, qualifier = singleDir, isSingleton = isSingleton,
             path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ),
@@ -91,7 +114,7 @@ component {
     }
 
     public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
@@ -104,7 +127,7 @@ component {
 
     // return the requested bean, fully populated
     public any function getBean( string beanName ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return resolveBean( beanName );
         } else if ( structKeyExists( variables, 'parent' ) ) {
@@ -117,7 +140,7 @@ component {
     // convenience API for metaprogramming perhaps?
     public any function getBeanInfo( string beanName = '', boolean flatten = false,
                                      string regex = '' ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         if ( len( beanName ) ) {
             // ask about a specific bean:
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
@@ -154,6 +177,13 @@ component {
     }
 
 
+    // return a copy of the DI/1 configuration
+    public struct function getConfig() {
+        // note: we only make a shallow copy
+        return structCopy( variables.config );
+    }
+
+
     // return the DI/1 version
     public string function getVersion() {
         return variables.config.version;
@@ -162,7 +192,7 @@ component {
 
     // return true iff bean is known to be a singleton
     public boolean function isSingleton( string beanName ) {
-        discoverBeans( variables.folders );
+        discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return variables.beanInfo[ beanName ].isSingleton;
         } else if ( structKeyExists( variables, 'parent' ) ) {
@@ -201,12 +231,16 @@ component {
     // if you reload the parent, you must reload *all* child factories to ensure
     // things stay consistent!)
     public any function load() {
-        discoverBeans( variables.folders );
+        discoverBeans();
         variables.beanCache = { };
         variables.resolutionCache = { };
         variables.initMethodCache = { };
         for ( var key in variables.beanInfo ) {
-            if ( variables.beanInfo[ key ].isSingleton ) getBean( key );
+            if ( !structKeyExists( variables.beanInfo[ key ], "isSingleton" ) )
+                throw "internal error: bean #key# has no isSingleton flag!";
+            if ( variables.beanInfo[ key ].isSingleton ) {
+                getBean( key );
+            }
         }
         return this;
     }
@@ -339,10 +373,17 @@ component {
 
 
     private string function deduceDottedPath( string baseMapping, string basePath ) {
+        if ( right( basePath, 1 ) == '/' && len( basePath ) > 1 ) {
+            basePath = left( basePath, len( basePath ) - 1 );
+        }
         var cfcPath = left( baseMapping, 1 ) == '/' ?
             ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
             getFileFromPath( baseMapping );
+        if ( right( cfcPath, 1 ) == '/' && len( cfcPath ) > 1 ) {
+            cfcPath = left( cfcPath, len( cfcPath ) - 1 );
+        }
         var expPath = basePath;
+        var notFound = true;
         var dotted = '';
         do {
             var mapped = cfcPath;
@@ -350,6 +391,7 @@ component {
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
             if ( mappedPath == basePath ) {
                 dotted = replace( cfcPath, '/', '.', 'all' );
+                notFound = false;
                 break;
             }
             var prevPath = expPath;
@@ -361,21 +403,20 @@ component {
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
         } while ( progress );
-        if ( dotted == '' ) {
+        if ( notFound ) {
             throw 'unable to deduce dot-relative path for: #baseMapping# (#basePath#) root #expandPath("/")#';
         }
         return dotted;
     }
 
 
-    private void function discoverBeans( string folders ) {
+    private void function discoverBeans() {
         if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
-        lock name="#application.applicationName#_ioc1_#folders#" type="exclusive" timeout="30" {
+        lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
             if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
-            var folderArray = listToArray( folders );
             variables.pathMapCache = { };
-            for ( var f in folderArray ) {
-                discoverBeansInFolder( replace( trim( f ), chr(92), '/', 'all' ) );
+            for ( var f in variables.folderArray ) {
+                discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
             }
             variables.discoveryComplete = true;
         }
@@ -389,6 +430,10 @@ component {
         var cfcs = [ ];
         try {
             cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
+            var lcs = directoryList( folder, variables.config.recurse, 'path', '*.lc' );
+            for ( var l in lcs ) arrayAppend( cfcs, l );
+            lcs = directoryList( folder, variables.config.recurse, 'path', '*.lucee' );
+            for ( l in lcs ) arrayAppend( cfcs, l );
         } catch ( any e ) {
             // assume bad path - ignore it, cfcs is empty list
         }
@@ -404,29 +449,39 @@ component {
             }
             if ( excludePath ) continue;
             var relPath = right( cfcPath, len( cfcPath ) - len( folder ) );
-            relPath = left( relPath, len( relPath ) - 4 );
+            var extN = 1 + len( listLast( cfcPath, "." ) );
+            relPath = left( relPath, len( relPath ) - extN );
             var dir = listLast( getDirectoryFromPath( cfcPath ), '/' );
             var singleDir = singular( dir );
             var beanName = listLast( relPath, '/' );
             var dottedPath = dotted & replace( relPath, '/', '.', 'all' );
-            var metadata = {
-                name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
-                path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
-            };
-            if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
-                continue;
-            }
-            if ( structKeyExists( variables.beanInfo, beanName ) ) {
-                if ( variables.config.omitDirectoryAliases ) {
-                    throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+            try {
+                var metadata = {
+                    name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
+                    path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
+                };
+                if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
+                    continue;
                 }
-                structDelete( variables.beanInfo, beanName );
-                variables.beanInfo[ beanName & singleDir ] = metadata;
-            } else {
-                variables.beanInfo[ beanName ] = metadata;
-                if ( !variables.config.omitDirectoryAliases ) {
+                if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                    if ( variables.config.omitDirectoryAliases ) {
+                        throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+                    }
+                    structDelete( variables.beanInfo, beanName );
                     variables.beanInfo[ beanName & singleDir ] = metadata;
+                } else {
+                    variables.beanInfo[ beanName ] = metadata;
+                    if ( !variables.config.omitDirectoryAliases ) {
+                        variables.beanInfo[ beanName & singleDir ] = metadata;
+                    }
                 }
+            } catch ( any e ) {
+                // wrap the exception so we can add bean name for debugging
+                // this trades off any stack trace information for the bean name but
+                // since we are only trying to get metadata, the latter should be
+                // more useful than the former
+                var except = "Problem with metadata for #beanName# (#dottedPath#) because: " &
+                    e.message & ( len( e.detail ) ? " (#e.detail#)" : "" );
             }
         }
     }
@@ -436,10 +491,14 @@ component {
         var liveMeta = { setters = iocMeta.setters };
         if ( !iocMeta.pruned ) {
             // need to prune known setters of transients:
+            var prunable = { };
             for ( var known in iocMeta.setters ) {
                 if ( !isSingleton( known ) ) {
-                    structDelete( iocMeta.setters, known );
+                    prunable[ known ] = true;
                 }
+            }
+            for ( known in prunable ) {
+                structDelete( iocMeta.setters, known );
             }
             iocMeta.pruned = true;
         }
@@ -778,6 +837,12 @@ component {
         if ( !structKeyExists( variables.config, 'omitDirectoryAliases' ) ) {
             variables.config.omitDirectoryAliases = false;
         }
+        if ( !structKeyExists( variables.config, 'singulars' ) ) {
+            variables.config.singulars = { };
+        }
+        if ( !structKeyExists( variables.config, 'liberal' ) ) {
+            variables.config.liberal = false;
+        }
 
         variables.config.version = variables._di1_version;
     }
@@ -790,15 +855,18 @@ component {
 
 
     private string function singular( string plural ) {
-        if ( structKeyExists( variables.config, 'singulars' ) &&
-                structKeyExists( variables.config.singulars, plural ) ) {
+        if ( structKeyExists( variables.config.singulars, plural ) ) {
             return variables.config.singulars[ plural ];
         }
         var single = plural;
         var n = len( plural );
         var last = right( plural, 1 );
         if ( last == 's' ) {
-            single = left( plural, n - 1 );
+            if ( variables.config.liberal && n > 3 && right( plural, 3 ) == 'ies' ) {
+                single = left( plural, n - 3 ) & 'y';
+            } else {
+                single = left( plural, n - 1 );
+            }
         }
         return single;
     }
