@@ -2593,7 +2593,7 @@ component {
                 var body = getHttpRequestData().content;
                 if ( isBinary( body ) ) body = charSetEncode( body, "utf-8" );
                 if ( len( body ) ) {
-                    switch ( CGI.CONTENT_TYPE ) {
+                    switch ( listFirst( CGI.CONTENT_TYPE, ';' ) ) {
                     case "application/json":
                     case "text/json":
                         try {
