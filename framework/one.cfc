@@ -1265,8 +1265,10 @@ component {
             if ( beanFactory.containsBean( property ) ) {
                 var args = { };
                 args[ property ] = beanFactory.getBean( property );
-                // cfc['set'&property](argumentCollection = args) does not work on ACF9
-                evaluate( 'cfc.set#property#( argumentCollection = args )' );
+                
+                // testing in acf902,acf10,acf11,railo4.2,lucee4.5
+                cfc.dynanmicFunction = cfc["set#property#"]; 
+                cfc.dynanmicFunction( argumentcollection = args );
             }
         }
     }
@@ -1409,7 +1411,10 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context )' );
+                // testing in acf902,acf10,acf11,railo4.2,lucee4.5
+                cfc.dynamicFunction = cfc["#method#"]; 
+                cfc.dynamicFunction( rc = request.context );
+                
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1417,7 +1422,9 @@ component {
         } else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
+                /// testing in acf902,acf10,acf11,railo4.2,lucee4.5
+                cfc.dynamicFunction = cfc["#method#"]; 
+                cfc.dynamicFunction( rc = request.context, method = lifecycle );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1716,7 +1723,11 @@ component {
     }
 
     private any function getProperty( struct cfc, string property ) {
-        if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+        if ( structKeyExists( cfc, 'get#property#' ) ){ 
+            // testing in acf902,acf10,acf11,railo4.2,lucee4.5 
+            cfc.dynamicFunction = cfc["get#property#"]; 
+            return cfc.dynamicFunction();
+        }
     }
 
     private string function getSubsystemDirPrefix( string subsystem ) {
@@ -1738,7 +1749,9 @@ component {
             // allow alternative spellings
             args.fw = this;
             args.fw1 = this;
-            evaluate( 'cfc.setFramework( argumentCollection = args )' );
+                // testing in acf902,acf10,acf11,railo4.2,lucee4.5 
+                cfc.dynamicFunction = cfc["setFramework"]; 
+                cfc.dynamicFunction( argumentCollection = args );
         }
     }
 
@@ -2189,7 +2202,10 @@ component {
                 if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
             }
         } else {
-            evaluate( 'cfc.set#property#( argumentCollection = args )' );
+           // testing in acf902,acf10,acf11,railo4.2,lucee4.5 
+           cfc.dynamicFunction = cfc["set#property#"]; 
+           cfc.dynamicFunction( argumentcollection = args );
+
         }
     }
 
