@@ -2,7 +2,6 @@ language: java
 env:
   matrix:
     - PLATFORM=acf10-linux64
-    - PLATFORM=acf902-linux64
     - PLATFORM=railo42beta
     - PLATFORM=railo41
 

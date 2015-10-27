@@ -22,7 +22,7 @@
     "engines" : [
         { "type" : "railo", "version" : ">=4.1.x" },
         { "type" : "lucee", "version" : ">=4.5.x" },
-        { "type" : "adobe", "version" : ">=9.0.2" }
+        { "type" : "adobe", "version" : ">=10.0.x" }
     ],
     "License" : [
         { "type" : "Apache 2.0", "URL" : "http://www.apache.org/licenses/LICENSE-2.0" }

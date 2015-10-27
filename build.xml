@@ -21,7 +21,6 @@
   <property name="railo41-osx.local.url" value="/opt/ci/railo-express-4.1.2.005-macosx.zip" />
   <property name="acf10-linux32.local.url" value="/opt/ci/cf10-linux32.tar.gz" />
   <property name="acf10-linux64.local.url" value="/opt/ci/cf10-linux64.tar.gz" />
-  <property name="acf902-linux64.local.url" value="/opt/ci/cf902-linux64.tar.gz" />
 
   <!-- test frameworks -->
   <property name="mxunit.local.url" value="/opt/ci/fix-railo-nulls.zip" />
@@ -31,7 +30,6 @@
   <property name="railo42beta.remote.url" value="http://cfml-ci.s3.amazonaws.com/railo-express-4.2.0.000-nojre.tar.gz" />
   <property name="acf10-linux32.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf10-linux32.tar.gz" />
   <property name="acf10-linux64.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf10-linux64.tar.gz" />
-  <property name="acf902-linux64.remote.url" value="http://cfml-ci.s3.amazonaws.com/cf902-linux64.tar.gz" />
 
   <property name="mxunit.remote.url" value="https://github.com/marcins/mxunit/archive/fix-railo-nulls.zip" />
 
@@ -42,7 +40,6 @@
   <property name="railo42beta.helper" value="railo" />
   <property name="acf10-linux32.helper" value="acf" />
   <property name="acf10-linux64.helper" value="acf" />
-  <property name="acf902-linux64.helper" value="acf9" />
 
   <fail unless="platform" message="Platform is not set" />
   <fail unless="${platform}.${source}.url">Unkown platform ${platform} for source ${source}.
@@ -52,8 +49,7 @@ Valid values are:
  railo41-osx
  railo42beta
  acf10-linux32
- acf10-linux64
- acf902-linux64</fail>
+ acf10-linux64</fail>
 
   <macrodef name="propertycopy">
     <attribute name="name"/>
