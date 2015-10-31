@@ -1109,8 +1109,41 @@ component {
     }
 
     // call this to render data rather than a view and layouts
-    public void function renderData( string type, any data, numeric statusCode = 200, string jsonpCallback = "" ) {
-        request._fw1.renderData = { type = type, data = data, statusCode = statusCode, jsonpCallback = jsonpCallback };
+    // arguments are deprecated in favor of build syntax as of 4.0
+    public any function renderData( string type = '', any data = '', numeric statusCode = 200, string jsonpCallback = "" ) {
+        request._fw1.renderData = {
+            type = type,
+            data = data,
+            statusCode = statusCode,
+            statusText = '',
+            jsonpCallback = jsonpCallback
+        };
+        // return a build to support nicer rendering syntax
+        var builder = { };
+        structAppend( builder, {
+            // allow type and data to be overridden just for completeness
+            type : function( v ) {
+                request._fw1.renderData.type = v;
+                return builder;
+            },
+            data : function( v ) {
+                request._fw1.renderData.data = v;
+                return builder;
+            },
+            statusCode : function( v ) {
+                request._fw1.renderData.statusCode = v;
+                return builder;
+            },
+            statusText : function( v ) {
+                request._fw1.renderData.statusText = v;
+                return builder;
+            },
+            jsonpCallback : function( v ) {
+                request._fw1.renderData.jsonpCallback = v;
+                return builder;
+            }
+        } );
+        return builder;
     }
 
     /*
@@ -2030,6 +2063,7 @@ component {
         var type = request._fw1.renderData.type;
         var data = request._fw1.renderData.data;
         var statusCode = request._fw1.renderData.statusCode;
+        var statusText = request._fw1.renderData.statusText;
         switch ( type ) {
         case 'json':
             contentType = 'application/json; charset=utf-8';
@@ -2079,7 +2113,17 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        getPageContext().getResponse().setStatus( statusCode );
+        if ( len( statusText ) ) {
+            try {
+                // deprecated in Servlet 2.1 but still useful
+                getPageContext().getResponse().setStatus( statusCode, statusText );
+            } catch ( any e ) {
+                // revert to sendError() if setStatus() fails with message
+                getPageContext().getResponse().sendError( statusCode, statusText );
+            }
+        } else {
+            getPageContext().getResponse().setStatus( statusCode );
+        }
         getPageContext().getResponse().setContentType( contentType );
         return out;
     }
