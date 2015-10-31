@@ -2372,6 +2372,9 @@ component {
         if ( !structKeyExists( variables.framework, 'routes' ) ) {
             variables.framework.routes = [ ];
         }
+        if ( !structKeyExists( variables.framework, 'perResourceError' ) ) {
+            variables.framework.perResourceError = true;
+        }
         if ( !structKeyExists( variables.framework, 'resourceRouteTemplates' ) ) {
             variables.framework.resourceRouteTemplates = [
                 { method = 'default', httpMethods = [ '$GET' ] },
@@ -2381,6 +2384,9 @@ component {
                 { method = 'update', httpMethods = [ '$PUT','$PATCH' ], includeId = true },
                 { method = 'destroy', httpMethods = [ '$DELETE' ], includeId = true }
             ];
+            if ( variables.framework.perResourceError ) {
+                arrayAppend( variables.framework.resourceRouteTemplates, { method = 'error', httpMethods = [ '$*' ] } );
+            }
         }
         if ( !structKeyExists( variables.framework, 'routesCaseSensitive' ) ) {
             variables.framework.routesCaseSensitive = true;
