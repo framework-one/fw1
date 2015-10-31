@@ -133,7 +133,7 @@ component {
         } else if ( structKeyExists( variables, 'parent' ) ) {
             return variables.parent.getBean( beanName );
         } else {
-            throw 'bean not found: #beanName#';
+            return missingBean( beanName = beanName, dependency = false );
         }
     }
 
@@ -558,8 +558,12 @@ component {
     }
 
 
-    private void function missingBean( string beanName, string resolvingBeanName = '' ) {
-        if ( variables.config.strict ) {
+    /*
+     * override this if you want to add a convention-based bean factory hook, that returns
+     * beans instead of throwing an exception
+     */
+    private any function missingBean( string beanName, string resolvingBeanName = '', boolean dependency = true ) {
+        if ( variables.config.strict || !dependency ) {
             if ( len( resolvingBeanName ) ) {
                 throw 'bean not found: #beanName#; while resolving #resolvingBeanName#';
             } else {
@@ -654,8 +658,9 @@ component {
                     } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
                         args[ property ] = variables.parent.getBean( property );
                     } else {
-                        missingBean( property, beanName );
-                        continue;
+                        // allow for possible convention-based bean factory
+                        args[ property ] = missingBean( property, beanName );
+                        if ( isNull( args[ property ] ) ) continue;
                     }
                     evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
                 }
@@ -797,12 +802,16 @@ component {
             } else {
                 throw 'internal error: invalid metadata for #beanName#';
             }
-        } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
-            bean = variables.parent.getBean( beanName );
-            accumulator.injection[ beanName ] = { bean = bean, setters = { } };
-            accumulator.bean = bean;
         } else {
-            missingBean( beanName );
+            if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
+                bean = variables.parent.getBean( beanName );
+            } else {
+                bean = missingBean( beanName = beanName, dependency = true );
+            }
+            if ( !isNull( bean ) ) {
+                accumulator.injection[ beanName ] = { bean = bean, setters = { } };
+                accumulator.bean = bean;
+            }
         }
         return accumulator;
     }
