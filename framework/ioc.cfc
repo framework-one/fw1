@@ -367,6 +367,13 @@ component {
         } catch ( any e ) {
             var except = "Unable to getComponentMetadata(#dottedPath#) because: " &
                 e.message & ( len( e.detail ) ? " (#e.detail#)" : "" );
+            try {
+                except = except & ", near line " & e.tagContext[1].line &
+                    " in " & e.tagContext[1].template;
+            } catch ( any e ) {
+                // unable to determine template / line number so just use
+                // the exception message we built so far
+            }
             throw except;
         }
     }
@@ -482,6 +489,7 @@ component {
                 // more useful than the former
                 var except = "Problem with metadata for #beanName# (#dottedPath#) because: " &
                     e.message & ( len( e.detail ) ? " (#e.detail#)" : "" );
+                throw except;
             }
         }
     }
