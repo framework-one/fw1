@@ -2115,18 +2115,16 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
+        var errorResponse = statusCode >= 400;
+        var resp = getPageContext().getResponse();
         if ( len( statusText ) ) {
-            try {
-                // deprecated in Servlet 2.1 but still useful
-                getPageContext().getResponse().setStatus( statusCode, statusText );
-            } catch ( any e ) {
-                // revert to sendError() if setStatus() fails with message
-                getPageContext().getResponse().sendError( statusCode, statusText );
-            }
+            if ( errorResponse ) resp.sendError( statusCode, statusText );
+            else resp.setStatus( statusCode, statusText );
         } else {
-            getPageContext().getResponse().setStatus( statusCode );
+            if ( errorResponse ) resp.sendError( statusCode );
+            else resp.setStatus( statusCode );
         }
-        getPageContext().getResponse().setContentType( contentType );
+        resp.setContentType( contentType );
         return out;
     }
 
