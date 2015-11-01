@@ -1111,6 +1111,8 @@ component {
     // call this to render data rather than a view and layouts
     // arguments are deprecated in favor of build syntax as of 4.0
     public any function renderData( string type = '', any data = '', numeric statusCode = 200, string jsonpCallback = "" ) {
+        if ( statusCode != 200 ) deprecated( false, "Use the .statusCode() builder syntax instead of the inline argument." );
+        if ( len( jsonpCallback ) ) deprecated( false, "Use the .jsonpCallback() builder syntax instead of the inline argument." );
         request._fw1.renderData = {
             type = type,
             data = data,
