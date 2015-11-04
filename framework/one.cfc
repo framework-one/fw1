@@ -2115,14 +2115,14 @@ component {
                    detail = 'renderData() called with unknown type: ' & type );
             break;
         }
-        var errorResponse = statusCode >= 400;
+        // in theory, we should use sendError() instead of setStatus() but some
+        // Servlet containers interpret that to mean "Send my error page" instead
+        // of just sending the response you actually want!
         var resp = getPageContext().getResponse();
         if ( len( statusText ) ) {
-            if ( errorResponse ) resp.sendError( statusCode, statusText );
-            else resp.setStatus( statusCode, statusText );
+            resp.setStatus( statusCode, statusText );
         } else {
-            if ( errorResponse ) resp.sendError( statusCode );
-            else resp.setStatus( statusCode );
+            resp.setStatus( statusCode );
         }
         resp.setContentType( contentType );
         return out;
