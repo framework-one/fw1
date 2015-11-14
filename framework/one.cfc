@@ -24,6 +24,7 @@ component {
             cgiRequestMethod = CGI.REQUEST_METHOD,
             controllers = [ ],
             requestDefaultsInitialized = false,
+            routeMethodsMatched = { },
             doTrace = false,
             trace = [ ]
         };
@@ -803,30 +804,43 @@ component {
         var n = 0;
 
         request._fw1.controllerExecutionStarted = true;
-        try {
-            n = arrayLen( request._fw1.controllers );
-            for ( i = 1; i <= n; i = i + 1 ) {
-                tuple = request._fw1.controllers[ i ];
-                // run before once per controller:
-                if ( !structKeyExists( once, tuple.key ) ) {
-                    once[ tuple.key ] = i;
-                    doController( tuple, 'before', 'before' );
+        if ( variables.framework.preflightOptions &&
+             structCount( request._fw1.routeMethodsMatched ) ) {
+            // OPTIONS support enabled and at least one possible match
+            // bypass all normal controllers and render headers and data:
+            var resp = getPageContext().getResponse();
+            resp.setHeader( "Access-Control-Allow-Origin", variables.framework.optionsAccessControl.origin );
+            resp.setHeader( "Access-Control-Allow-Methods", "OPTIONS," & uCase( structKeyList( request._fw1.routeMethodsMatched ) ) );
+            resp.setHeader( "Access-Control-Allow-Headers", variables.framework.optionsAccessControl.headers );
+            resp.setHeader( "Access-Control-Allow-Credentials", variables.framework.optionsAccessControl ? "true" : "false" );
+            resp.setHeader( "Access-Control-Max-Age", "#variables.framework.optionsAccessControl#" );
+            renderData( "text", "" );
+        } else {
+            try {
+                n = arrayLen( request._fw1.controllers );
+                for ( i = 1; i <= n; i = i + 1 ) {
+                    tuple = request._fw1.controllers[ i ];
+                    // run before once per controller:
+                    if ( !structKeyExists( once, tuple.key ) ) {
+                        once[ tuple.key ] = i;
+                        doController( tuple, 'before', 'before' );
+                        if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                    }
+                    doController( tuple, tuple.item, 'item' );
                     if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
                 }
-                doController( tuple, tuple.item, 'item' );
-                if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-            }
-            n = arrayLen( request._fw1.controllers );
-            for ( i = n; i >= 1; i = i - 1 ) {
-                tuple = request._fw1.controllers[ i ];
-                // run after once per controller (in reverse order):
-                if ( once[ tuple.key ] eq i ) {
-                    doController( tuple, 'after', 'after' );
-                    if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                n = arrayLen( request._fw1.controllers );
+                for ( i = n; i >= 1; i = i - 1 ) {
+                    tuple = request._fw1.controllers[ i ];
+                    // run after once per controller (in reverse order):
+                    if ( once[ tuple.key ] eq i ) {
+                        doController( tuple, 'after', 'after' );
+                        if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                    }
                 }
+            } catch ( FW1.AbortControllerException e ) {
+                // do "nothing" since this is a control flow exception
             }
-        } catch ( FW1.AbortControllerException e ) {
-            // do "nothing" since this is a control flow exception
         }
         request._fw1.controllerExecutionComplete = true;
 
@@ -1985,11 +1999,25 @@ component {
         var routeMatch = { matched = false };
         structAppend( routeMatch, regExCache[ cacheKey ] );
         if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
-        var matched = len( routeMatch.method ) ? ( '$' & httpMethod == routeMatch.method ) : true;
-        if ( matched && routeRegexFind( routeMatch.pattern, path ) ) {
-            routeMatch.matched = true;
-            routeMatch.route = route;
-            routeMatch.path = path;
+        if ( routeRegexFind( routeMatch.pattern, path ) ) {
+            if ( len( routeMatch.method ) > 1 ) {
+                if ( '$' & httpMethod == routeMatch.method ) {
+                    routeMatch.matched = true;
+                } else if ( variables.framework.preflightOptions ) {
+                    // it matched apart from the method so record this
+                    request._fw1.routeMethodsMatched[ right( routeMatch.method, len( routeMatch.method ) - 1 ) ] = true;
+                }
+            } else if ( variables.framework.preflightOptions && httpMethod == "OPTIONS" ) {
+                // it would have matched but we should special case OPTIONS
+                request._fw1.routeMethodsMatched.get = true;
+                request._fw1.routeMethodsMatched.post = true;
+            } else {
+                routeMatch.matched = true;
+            }
+            if ( routeMatch.matched ) {
+                routeMatch.route = route;
+                routeMatch.path = path;
+            }
         }
         return routeMatch;
     }
@@ -2507,7 +2535,22 @@ component {
         if ( !structKeyExists( variables.framework, 'enableJSONPOST' ) ) {
             variables.framework.enableJSONPOST = false;
         }
+        if ( !structKeyExists( variables.framework, 'preflightOptions' ) ) {
+            variables.framework.preflightOptions = false;
+        }
+        if ( !structKeyExists( variables.framework, 'optionsAccessControl' ) ) {
+            variables.framework.optionsAccessControl = { };
+        }
         setupEnvironment( env );
+        if ( variables.framework.preflightOptions ) {
+            var defaultAccessControl = {
+                origin = "*",
+                headers = "Accept,Authorization,Content-Type",
+                credentials = true,
+                maxAge = 1728000
+            };
+            structAppend( variables.framework.optionsAccessControl, defaultAccessControl, false );
+        }
         request._fw1.doTrace = variables.framework.trace;
         // add this as a fingerprint so autowire can detect FW/1 CFC:
         this.__fw1_version = variables.framework.version;
@@ -2603,6 +2646,10 @@ component {
                         request._fw1.route = routeMatch.route;
                     }
                 }
+            } else if ( variables.framework.preflightOptions && request._fw1.cgiRequestMethod == "OPTIONS" ) {
+                // non-route matching but we have OPTIONS support enabled
+                request._fw1.routeMethodsMatched.get = true;
+                request._fw1.routeMethodsMatched.post = true;
             }
             try {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
