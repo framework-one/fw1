@@ -126,10 +126,10 @@ component {
 
 
     // return the requested bean, fully populated
-    public any function getBean( string beanName ) {
+    public any function getBean( string beanName, struct constructorArgs = { } ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
-            return resolveBean( beanName );
+            return resolveBean( beanName, constructorArgs );
         } else if ( structKeyExists( variables, 'parent' ) ) {
             return variables.parent.getBean( beanName );
         } else {
@@ -625,11 +625,11 @@ component {
     }
 
 
-    private any function resolveBean( string beanName ) {
+    private any function resolveBean( string beanName, struct constructorArgs = { } ) {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } } );
+        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } }, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -704,7 +704,7 @@ component {
     }
 
 
-    private struct function resolveBeanCreate( string beanName, struct accumulator ) {
+    private struct function resolveBeanCreate( string beanName, struct accumulator, struct constructorArgs = { } ) {
         var bean = 0;
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             var info = variables.beanInfo[ beanName ];
@@ -713,6 +713,7 @@ component {
 /*******************************************************/
                 var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
+                structAppend( overrides, constructorArgs );
                 bean = metaBean.bean;
                 if ( metaBean.newObject ) {
                     if ( structKeyExists( info.metadata, 'constructor' ) ) {
