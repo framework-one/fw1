@@ -29,7 +29,15 @@ component {
         }
         var n = arrayLen( variables.folderArray );
         for ( var i = 1; i <= n; ++i ) {
-            variables.folderArray[ i ] = trim( variables.folderArray[ i ] );
+            var folderName = trim( variables.folderArray[ i ] );
+            // strip trailing slash since it can cause weirdness in path
+            // deduction on some engines on some platforms (guess which!)
+            if ( len( folderName ) > 1 &&
+                 ( right( folderName, 1 ) == '/' ||
+                   right( folderName, 1 ) == chr(92) ) ) {
+                folderName = left( folderName, len( folderName ) - 1 );
+            }
+            variables.folderArray[ i ] = folderName;
         }
         variables.config = config;
         variables.beanInfo = { };
@@ -131,7 +139,10 @@ component {
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return resolveBean( beanName, constructorArgs );
         } else if ( structKeyExists( variables, 'parent' ) ) {
-            return variables.parent.getBean( beanName );
+            // ideally throw an exception for non-DI/1 parent when args passed
+            // WireBox adapter can do that since we control it but we can't do
+            // anything for other bean factories - will revisit before release
+            return variables.parent.getBean( beanName, constructorArgs );
         } else {
             return missingBean( beanName = beanName, dependency = false );
         }
