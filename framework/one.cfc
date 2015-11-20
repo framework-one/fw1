@@ -812,8 +812,8 @@ component {
             resp.setHeader( "Access-Control-Allow-Origin", variables.framework.optionsAccessControl.origin );
             resp.setHeader( "Access-Control-Allow-Methods", "OPTIONS," & uCase( structKeyList( request._fw1.routeMethodsMatched ) ) );
             resp.setHeader( "Access-Control-Allow-Headers", variables.framework.optionsAccessControl.headers );
-            resp.setHeader( "Access-Control-Allow-Credentials", variables.framework.optionsAccessControl ? "true" : "false" );
-            resp.setHeader( "Access-Control-Max-Age", "#variables.framework.optionsAccessControl#" );
+            resp.setHeader( "Access-Control-Allow-Credentials", variables.framework.optionsAccessControl.credentials ? "true" : "false" );
+            resp.setHeader( "Access-Control-Max-Age", "#variables.framework.optionsAccessControl.maxAge#" );
             renderData( "text", "" );
         } else {
             try {
