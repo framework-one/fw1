@@ -805,7 +805,7 @@ component {
 
         request._fw1.controllerExecutionStarted = true;
         if ( variables.framework.preflightOptions &&
-             && request._fw1.cgiRequestMethod == "OPTIONS"
+             request._fw1.cgiRequestMethod == "OPTIONS" &&
              structCount( request._fw1.routeMethodsMatched ) ) {
             // OPTIONS support enabled and at least one possible match
             // bypass all normal controllers and render headers and data:
