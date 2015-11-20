@@ -29,7 +29,15 @@ component {
         }
         var n = arrayLen( variables.folderArray );
         for ( var i = 1; i <= n; ++i ) {
-            variables.folderArray[ i ] = trim( variables.folderArray[ i ] );
+            var folderName = trim( variables.folderArray[ i ] );
+            // strip trailing slash since it can cause weirdness in path
+            // deduction on some engines on some platforms (guess which!)
+            if ( len( folderName ) > 1 &&
+                 ( right( folderName, 1 ) == '/' ||
+                   right( folderName, 1 ) == chr(92) ) ) {
+                folderName = left( folderName, len( folderName ) - 1 );
+            }
+            variables.folderArray[ i ] = folderName;
         }
         variables.config = config;
         variables.beanInfo = { };
@@ -126,12 +134,15 @@ component {
 
 
     // return the requested bean, fully populated
-    public any function getBean( string beanName ) {
+    public any function getBean( string beanName, struct constructorArgs = { } ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
-            return resolveBean( beanName );
+            return resolveBean( beanName, constructorArgs );
         } else if ( structKeyExists( variables, 'parent' ) ) {
-            return variables.parent.getBean( beanName );
+            // ideally throw an exception for non-DI/1 parent when args passed
+            // WireBox adapter can do that since we control it but we can't do
+            // anything for other bean factories - will revisit before release
+            return variables.parent.getBean( beanName, constructorArgs );
         } else {
             return missingBean( beanName = beanName, dependency = false );
         }
@@ -629,11 +640,11 @@ component {
     }
 
 
-    private any function resolveBean( string beanName ) {
+    private any function resolveBean( string beanName, struct constructorArgs = { } ) {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } } );
+        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } }, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -707,7 +718,7 @@ component {
     }
 
 
-    private struct function resolveBeanCreate( string beanName, struct accumulator ) {
+    private struct function resolveBeanCreate( string beanName, struct accumulator, struct constructorArgs = { } ) {
         var bean = 0;
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             var info = variables.beanInfo[ beanName ];
@@ -716,6 +727,7 @@ component {
 /*******************************************************/
                 var metaBean = cachable( beanName );
                 var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
+                structAppend( overrides, constructorArgs );
                 bean = metaBean.bean;
                 if ( metaBean.newObject ) {
                     if ( structKeyExists( info.metadata, 'constructor' ) ) {
