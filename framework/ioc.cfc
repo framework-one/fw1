@@ -318,8 +318,12 @@ component {
                          ( !structKeyExists( property, 'setter' ) ||
                            isBoolean( property.setter ) && property.setter ) ) {
                         if ( structKeyExists( property, 'type' ) &&
-                             property.type != 'any' ) {
-                            iocMeta.setters[ property.name ] = 'typed';
+                             property.type != 'any' &&
+                             variables.config.omitTypedProperties ) {
+                            iocMeta.setters[ property.name ] = 'ignored';
+                        } else if ( structKeyExists( property, 'default' ) &&
+                                    variables.config.omitDefaultedProperties ) {
+                            iocMeta.setters[ property.name ] = 'ignored';
                         } else {
                             iocMeta.setters[ property.name ] = 'implicit';
                         }
@@ -645,9 +649,8 @@ component {
                     postInjectables[ name ] = true;
                 }
                 for ( var property in injection.setters ) {
-                    if ( injection.setters[ property ] == 'typed' &&
-                        variables.config.omitTypedProperties ) {
-                        // we do not inject typed properties!
+                    if ( injection.setters[ property ] == 'ignored' ) {
+                        // do not inject defaulted/typed properties!
                         continue;
                     }
                     var args = { };
@@ -848,8 +851,11 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 
+        if ( !structKeyExists( variables.config, 'omitDefaultedProperties' ) ) {
+            variables.config.omitDefaultedProperties = true;
+        }
         if ( !structKeyExists( variables.config, 'omitTypedProperties' ) ) {
-            variables.config.omitTypedProperties = false;
+            variables.config.omitTypedProperties = true;
         }
         if ( !structKeyExists( variables.config, 'omitDirectoryAliases' ) ) {
             variables.config.omitDirectoryAliases = false;

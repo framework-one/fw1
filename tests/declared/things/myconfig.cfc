@@ -1,6 +1,7 @@
 component accessors=true {
 
     property string name;
+    property dftname default="default";
 
     function init( string data = "none" ) {
         setConfig( data );

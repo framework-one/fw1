@@ -41,18 +41,30 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldDeclareAndAdd() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.declared.things.myconfig" ).addBean( "name", "test" ).addBean( "config", "some" );
+        var bf = new framework.ioc( "", { omitTypedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig" )
+            .addBean( "name", "test" ).addBean( "config", "some" );
         var item = bf.getBean( "foo" );
         assertEquals( "test", item.getName() );
         assertEquals( "some", item.getConfig() );
     }
 
     function shouldDeclareWithOverride() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.declared.things.myconfig", true, { name = "test", config = "some" } )
+        var bf = new framework.ioc( "", { omitTypedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig", true, { name = "test", config = "some" } )
             .addBean( "name", "not-test" ).addBean( "config", "config" );
         var item = bf.getBean( "foo" );
         assertEquals( "test", item.getName() );
         assertEquals( "some", item.getConfig() );
+    }
+
+    function shouldDeclareInteractWithDefault() {
+        var bf = new framework.ioc( "", { omitDefaultedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig" )
+            .addBean( "dftname", "injected" );
+        var item = bf.getBean( "foo" );
+        assertEquals( "injected", item.getDftName() );
+        var bf = new framework.ioc( "", { omitDefaultedProperties = true } ).declareBean( "foo", "tests.declared.things.myconfig" )
+            .addBean( "dftname", "injected" );
+        var item = bf.getBean( "foo" );
+        assertEquals( "default", item.getDftName() );
     }
 
 }
