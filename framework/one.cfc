@@ -875,10 +875,16 @@ component {
         }
         if ( isSimpleValue( out ) ) {
             writeOutput( out );
-        } else if ( structKeyExists( out, 'writer' ) ) {
-            out.writer( out.output );
         } else {
-            writeOutput( out.output );
+            if ( structKeyExists( out, 'contentType' ) ) {
+                var resp = getPageContext().getResponse();
+                resp.setContentType( out.contentType );
+            }
+            if ( structKeyExists( out, 'writer' ) ) {
+                out.writer( out.output );
+            } else {
+                writeOutput( out.output );
+            }
         }
         setupResponseWrapper();
     }
@@ -2185,7 +2191,6 @@ component {
         } else {
             resp.setStatus( statusCode );
         }
-        resp.setContentType( out.contentType );
         return out;
     }
 
