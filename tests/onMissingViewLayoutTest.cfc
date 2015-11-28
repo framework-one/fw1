@@ -7,6 +7,7 @@ component extends="tests.InjectableTest" {
         variables.fwvars.framework = {
             base = "/tests/omv"
         };
+        structDelete( request, "layout" );
     }
 
     public void function testSetLayout() {
