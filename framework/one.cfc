@@ -873,7 +873,13 @@ component {
                 out = internalLayout( request._fw1.layouts[i], out );
             }
         }
-        writeOutput( out );
+        if ( isSimpleValue( out ) ) {
+            writeOutput( out );
+        } else if ( structKeyExists( out, 'writer' ) ) {
+            out.writer( out.output );
+        } else {
+            writeOutput( out.output );
+        }
         setupResponseWrapper();
     }
 
@@ -2088,61 +2094,87 @@ component {
         return resourceCache[ cacheKey ];
     }
 
-    private string function renderDataWithContentType() {
-        var out = '';
-        var contentType = '';
-        var type = request._fw1.renderData.type;
-        var data = request._fw1.renderData.data;
+    private struct function render_json( struct renderData ) {
+        return {
+            contentType = 'application/json; charset=utf-8',
+            output = serializeJSON( renderData.data ),
+        };
+    }
+
+    private struct function render_jsonp( struct renderData ) {
+        if ( !structKeyExists( renderData, 'jsonpCallback' ) || !len( renderData.jsonpCallback ) ){
+            throw( type = 'FW1.jsonpCallbackRequired',
+                   message = 'Callback was not defined',
+                   detail = 'renderData() called with jsonp type requires a jsonpCallback' );
+        }
+        return {
+            contentType = 'application/javascript; charset=utf-8',
+            output = renderData.jsonpCallback & "(" & serializeJSON( renderData.data ) & ");"
+        };
+    }
+
+    private struct function render_rawjson( struct renderData ) {
+        return {
+            contentType = 'application/json; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function render_html( struct renderData ) {
+        structDelete( request._fw1, 'renderData' );
+        return {
+            contentType = 'text/html; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function render_xml( struct renderData ) {
+        var output = '';
+        if ( isXML( renderData.data ) ) {
+            if ( isSimpleValue( renderData.data ) ) {
+                // XML as string already
+                output = renderData.data;
+            } else {
+                // XML object
+                output = toString( renderData.data );
+            }
+        } else {
+            throw( type = 'FW1.UnsupportXMLRender',
+                   message = 'Data is not XML',
+                   detail = 'renderData() called with XML type but unrecognized data format' );
+        }
+        return {
+            contentType = 'text/xml; charset=utf-8',
+            output = output
+        };
+    }
+
+    private struct function render_text( struct renderData ) {
+        return {
+            contentType = 'text/plain; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function renderDataWithContentType() {
+        var out = { };
+        var renderType = request._fw1.renderData.type;
         var statusCode = request._fw1.renderData.statusCode;
         var statusText = request._fw1.renderData.statusText;
-        switch ( type ) {
-        case 'json':
-            contentType = 'application/json; charset=utf-8';
-            out = serializeJSON( data );
-            break;
-        case 'jsonp':
-            contentType = 'application/javascript; charset=utf-8';
-            if ( !len(request._fw1.renderData.jsonpCallback) ){
-                throw( type = 'FW1.jsonpCallbackRequired',
-                       message = 'Callback was not defined',
-                       detail = 'renderData() called with jsonp type requires a jsonpCallback' );
-            }
-            out = request._fw1.renderData.jsonpCallback & "(" & serializeJSON( data ) & ");";
-            break;
-        case 'rawjson':
-            contentType = 'application/json; charset=utf-8';
-            out = data;
-            break;
-        case 'html':
-            contentType = 'text/html; charset=utf-8';
-            out = data;
-            structDelete( request._fw1, 'renderData' );
-            break;
-        case 'xml':
-            contentType = 'text/xml; charset=utf-8';
-            if ( isXML( data ) ) {
-                if ( isSimpleValue( data ) ) {
-                    // XML as string already
-                    out = data;
-                } else {
-                    // XML object
-                    out = toString( data );
-                }
+        if ( isSimpleValue( renderType ) ) {
+            var fn_type = 'render_' & renderType;
+            if ( structKeyExists( variables, fn_type ) ) {
+                renderType = variables[ fn_type ];
+                // evaluate with no FW/1 context!
+                out = renderType( request._fw1.renderData );
             } else {
-                throw( type = 'FW1.UnsupportXMLRender',
-                       message = 'Data is not XML',
-                       detail = 'renderData() called with XML type but unrecognized data format' );
+                throw( type = 'FW1.UnsupportedRenderType',
+                       message = 'Only HTML, JSON, JSONP, RAWJSON, XML, and TEXT are supported',
+                       detail = 'renderData() called with unknown type: ' & renderType );
             }
-            break;
-        case 'text':
-            contentType = 'text/plain; charset=utf-8';
-            out = data;
-            break;
-        default:
-            throw( type = 'FW1.UnsupportedRenderType',
-                   message = 'Only HTML, JSON, JSONP, RAWJSON, XML, and TEXT are supported',
-                   detail = 'renderData() called with unknown type: ' & type );
-            break;
+        } else {
+            // assume it is a function
+            out = renderType( request._fw1.renderData );
         }
         // in theory, we should use sendError() instead of setStatus() but some
         // Servlet containers interpret that to mean "Send my error page" instead
@@ -2153,7 +2185,7 @@ component {
         } else {
             resp.setStatus( statusCode );
         }
-        resp.setContentType( contentType );
+        resp.setContentType( out.contentType );
         return out;
     }
 

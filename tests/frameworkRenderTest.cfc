@@ -132,5 +132,25 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( output, "custom trace render" );
     }
 
+    public void function testRenderFunction() {
+        request.fw.onApplicationStart();
+        variables.fw.renderData().type( function( renderData ) {
+            return {
+                contentType = "text/html; charset=utf-8",
+                output = "string",
+                writer = function( out ) {
+                    writeOutput( "my written " & out );
+                }
+            };
+        } ).data( "myteststring" );
+        var output = "";
+        savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
+            request.fw.onRequestEnd();
+        }
+        assertTrue( output contains "my written string" );
+        assertFalse( output contains "framework lifecycle trace" );
+    }
+
 
 }
