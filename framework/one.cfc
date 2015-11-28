@@ -2103,7 +2103,7 @@ component {
     private struct function render_json( struct renderData ) {
         return {
             contentType = 'application/json; charset=utf-8',
-            output = serializeJSON( renderData.data ),
+            output = serializeJSON( renderData.data )
         };
     }
 
