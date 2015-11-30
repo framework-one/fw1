@@ -11,7 +11,8 @@ component extends="framework.one" {
 		  { "$GET/todo" = "/main/list/" },
 		  { "$DELETE/todo/:id" = "/main/delete/id/:id" },
 		  { "$POST/todo/" = "/main/save" }
-		]	
+		],
+		preflightOptions=TRUE
 	};
 	
 	function setupApplication() {
