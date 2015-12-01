@@ -92,7 +92,7 @@ component {
     public boolean function containsBean( string beanName ) {
         discoverBeans();
         return structKeyExists( variables.beanInfo, beanName ) ||
-                ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
+            ( hasParent() && variables.parent.containsBean( beanName ) );
     }
 
     // return true if this factory has a parent
@@ -142,7 +142,7 @@ component {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return resolveBean( beanName, constructorArgs );
-        } else if ( structKeyExists( variables, 'parent' ) ) {
+        } else if ( hasParent() ) {
             // ideally throw an exception for non-DI/1 parent when args passed
             // WireBox adapter can do that since we control it but we can't do
             // anything for other bean factories - will revisit before release
@@ -161,13 +161,13 @@ component {
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
                 return variables.beanInfo[ beanName ];
             }
-            if ( structKeyExists( variables, 'parent' ) ) {
+            if ( hasParent() ) {
                 return parentBeanInfo( beanName );
             }
             throw 'bean not found: #beanName#';
         } else {
             var result = { beanInfo = { } };
-            if ( structKeyExists( variables, 'parent' ) ) {
+            if ( hasParent() ) {
                 if ( flatten || len( regex ) ) {
                     structAppend( result.beanInfo, parentBeanInfoList( flatten ).beanInfo );
                     structAppend( result.beanInfo, variables.beanInfo );
@@ -210,7 +210,7 @@ component {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return variables.beanInfo[ beanName ].isSingleton;
-        } else if ( structKeyExists( variables, 'parent' ) ) {
+        } else if ( hasParent() ) {
             try {
                 return variables.parent.isSingleton( beanName );
             } catch ( any e ) {
@@ -673,7 +673,7 @@ component {
                         args[ property ] = injection.overrides[ property ];
                     } else if ( structKeyExists( partialBean.injection, property ) ) {
                         args[ property ] = partialBean.injection[ property ].bean;
-                    } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
+                    } else if ( hasParent() && variables.parent.containsBean( property ) ) {
                         args[ property ] = variables.parent.getBean( property );
                     } else {
                         // allow for possible convention-based bean factory
@@ -822,7 +822,7 @@ component {
                 throw 'internal error: invalid metadata for #beanName#';
             }
         } else {
-            if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
+            if ( hasParent() && variables.parent.containsBean( beanName ) ) {
                 bean = variables.parent.getBean( beanName );
             } else {
                 bean = missingBean( beanName = beanName, dependency = true );
