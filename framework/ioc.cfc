@@ -87,6 +87,15 @@ component {
                 ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
     }
 
+    // return true if this factory has a parent.
+  	public boolean function hasParent() {
+  		return structKeyExists(variables, 'parent');
+  	}
+
+  	// return all beanNames of this factory as an array
+  	public array function getBeanNames() {
+  		return listToArray( structKeyList( variables.beanInfo ) );
+  	}
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
