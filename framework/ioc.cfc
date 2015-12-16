@@ -43,6 +43,7 @@ component {
         variables.beanInfo = { };
         variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.getBeanCache = { };
         variables.initMethodCache = { };
         variables.settersInfo = { };
         variables.autoExclude = [
@@ -141,7 +142,12 @@ component {
     public any function getBean( string beanName, struct constructorArgs = { } ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
-            return resolveBean( beanName, constructorArgs );
+            if ( structKeyExists( variables.getBeanCache, beanName ) ) {
+                return variables.getBeanCache[ beanName ];
+            }
+            var bean = resolveBean( beanName, constructorArgs );
+            if ( isSingleton( beanName ) ) variables.getBeanCache[ beanName ] = bean;
+            return bean;
         } else if ( hasParent() ) {
             // ideally throw an exception for non-DI/1 parent when args passed
             // WireBox adapter can do that since we control it but we can't do
