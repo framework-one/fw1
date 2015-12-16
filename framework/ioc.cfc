@@ -738,7 +738,7 @@ component {
         var bean = 0;
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             var info = variables.beanInfo[ beanName ];
-            accumulator.dependencies[ beanName ] = { };
+            if ( !structKeyExists( accumulator.dependencies, beanName ) ) accumulator.dependencies[ beanName ] = { };
             if ( structKeyExists( info, 'cfc' ) ) {
 /*******************************************************/
                 var metaBean = cachable( beanName );
