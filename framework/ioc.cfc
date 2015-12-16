@@ -44,6 +44,7 @@ component {
         variables.beanCache = { };
         variables.resolutionCache = { };
         variables.getBeanCache = { };
+        variables.accumulatorCache = { };
         variables.initMethodCache = { };
         variables.settersInfo = { };
         variables.autoExclude = [
@@ -255,6 +256,8 @@ component {
         discoverBeans();
         variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.accumulatorCache = { };
+        variables.getBeanCache = { };
         variables.initMethodCache = { };
         for ( var key in variables.beanInfo ) {
             if ( !structKeyExists( variables.beanInfo[ key ], "isSingleton" ) )
@@ -654,7 +657,10 @@ component {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } }, constructorArgs );
+        if ( !structKeyExists( variables.accumulatorCache, beanName ) ) {
+            variables.accumulatorCache[ beanName ] = { injection = { }, dependencies = { } };
+        }
+        var partialBean = resolveBeanCreate( beanName, variables.accumulatorCache[ beanName ], constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
