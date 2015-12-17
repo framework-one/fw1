@@ -10,6 +10,8 @@ Look at `run-tests-example.sh` to see how to run tests locally (copy that shell 
 
 Please follow the same formatting as the existing code, especially in terms of spacing around operators, parentheses, braces and so on. If in doubt, ask on the mailing list.
 
+By submitting a Pull Request, you are granting copyright license to Sean Corfield and that your submission may be legally released under the Apache Source License 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+
 The **master** branch represents the current stable release of FW/1. Do not submit Pull Requests against **master**. Showstopping bugs should be raised as issues and fixes will be applied to **develop** (if appropriate) and backported to **master** manually.
 
 **Note:** Do not submit Pull Requests against [Sean's personal fork](https://github.com/seancorfield/fw1) - that exists for historical reasons and Github doesn't let you turn Pull Requests off.

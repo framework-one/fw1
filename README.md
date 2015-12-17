@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1)
 
+# Overview
+
 This FW/1 directory is a complete web application and expects to live in its own
 webroot if you plan to run the applications within it. To use FW/1 in a separate
 webroot you can either copy the `framework` directory to that webroot or add a mapping
@@ -8,6 +10,8 @@ your `Application.cfc` needs to extend `framework.one`, you have to add the mapp
 in your admin - you can't just use a per-application mapping.
 
 Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
+
+# Resources
 
 **Project home:** http://fw1.riaforge.org
 
@@ -19,7 +23,7 @@ Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW
 
 **Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a [dedicated #fw1 channel](https://cfml.slack.com/messages/fw1/).
 
-**Running the tests:**
+# Running the Tests
 
 The Ant `build.xml` file is primarily designed to be used by Travis to run the tests automatically, but it is possible to run the tests locally, with some setup:
 
@@ -40,3 +44,10 @@ See the `run-tests-example.sh` file for a template (for Mac/Linux).
 * `server.name` should be the test domain you have configured
 * `server.port` should be the port on which you access that test domain
 * `run-tests-mxunit` is the actual Ant task that does the testing
+
+# Copyright and License
+
+Copyright (c) 2009-2015 Sean Corfield (and others -- see individual files for additional copyright holders). All rights reserved.
+The use and distribution terms for this software are covered by the Apache Software License 2.0 (http://www.apache.org/licenses/LICENSE-2.0) which can also be found in the file LICENSE at the root of this distribution and in individual licensed files.
+By using this software in any fashion, you are agreeing to be bound by the terms of this license. You must not remove this notice, or any other, from this software.
+
