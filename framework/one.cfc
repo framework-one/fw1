@@ -714,7 +714,6 @@ component {
             request.event = event;
             // reset lifecycle flags:
             structDelete( request, 'layout' );
-            structDelete( request._fw1, 'controllerExecutionComplete' );
             structDelete( request._fw1, 'controllerExecutionStarted' );
             structDelete( request._fw1, 'overrideViewAction' );
             if ( structKeyExists( request._fw1, 'renderData' ) ) {
@@ -843,7 +842,6 @@ component {
                 // do "nothing" since this is a control flow exception
             }
         }
-        request._fw1.controllerExecutionComplete = true;
 
         if ( structKeyExists( request._fw1, 'renderData' ) ) {
             out = renderDataWithContentType();
@@ -1825,10 +1823,6 @@ component {
         // integration point with Mura:
         if ( structKeyExists( rc, '$' ) ) {
             $ = rc.$;
-        }
-        if ( !structKeyExists( request._fw1, 'controllerExecutionComplete' ) ) {
-            throw( type='FW1.layoutExecutionFromController', message='Invalid to call the layout method at this point.',
-                detail='The layout method should not be called prior to the completion of the controller execution phase.' );
         }
         var response = '';
         savecontent variable="response" {
