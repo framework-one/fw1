@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1)
-[![Stories in Ready](https://badge.waffle.io/framework-one/fw1.png?label=ready&title=Ready)](http://waffle.io/framework-one/fw1)
+Travis CI: [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1) -- 
+Waffle.IO: [![Stories in Ready](https://badge.waffle.io/framework-one/fw1.png?label=ready&title=Ready)](http://waffle.io/framework-one/fw1)
 
 # Overview
 
