@@ -1,6 +1,6 @@
 component extends=framework.ioc {
     variables._fw1_version = "4.0.0-snapshot";
-    variables._ioclj_version = "1.0.1-snapshot";
+    variables._ioclj_version = "1.1.0-snapshot";
 /*
     Copyright (c) 2015, Sean Corfield
 
@@ -28,8 +28,10 @@ component extends=framework.ioc {
         super.init( folders, config );
         variables.cljBeans = { };
         if ( structKeyExists( config, "noClojure" ) && config.noClojure ) return;
-        // find the first folder that includes project.clj - that's our project
-        variables.project = findProjectFile();
+        var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
+        var boot = structKeyExists( config, "boot" ) ? config.boot : ""; // default is not Boot
+        // find the first folder that includes project.clj (or build.boot) - that's our project
+        variables.project = findProjectFile( len( boot ) ? "build.boot" : "project.clj" );
         discoverClojureFiles();
         // list of namespaces to expose:
         var ns = [ ];
@@ -38,16 +40,15 @@ component extends=framework.ioc {
         }
         // and create a cfmljure instance
         var timeout = structKeyExists( config, "timeout" ) ? config.timeout : 300;
-        var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
         var useServerScope = structKeyExists( config, "server" ) ? config.server : false;
         var cfmljure = 0;
         if ( useServerScope ) {
             if ( !structKeyExists( server, "__cfmljure" ) ) {
-                server.__cfmljure = new framework.cfmljure( variables.project, timeout, lein );
+                server.__cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot );
             }
             cfmljure = server.__cfmljure;
         } else {
-            cfmljure = new framework.cfmljure( variables.project, timeout, lein );
+            cfmljure = new framework.cfmljure( variables.project, timeout, lein, boot );
         }
         if ( cfmljure.isAvailable() ) {
             // Clojure loaded -- install the discovered namespaces
@@ -207,7 +208,7 @@ component extends=framework.ioc {
         }
     }
 
-    private string function findProjectFile() {
+    private string function findProjectFile( string buildFile ) {
         for ( var folder in variables.folderArray ) {
             if ( right( folder, 1 ) == "/" ) {
                 if ( len( folder ) == 1 ) folder = "";
@@ -222,13 +223,13 @@ component extends=framework.ioc {
                 if ( len( path ) == 1 ) path = "";
                 else path = left( path, len( path ) - 1 );
             }
-            if ( fileExists( path & "/project.clj" ) ) {
+            if ( fileExists( path & "/" & buildFile ) ) {
                 // found our Clojure project, return it
-                if ( variables.debug ) variables.stdout.println( "ioclj: using #path#/project.clj for Clojure root" );
+                if ( variables.debug ) variables.stdout.println( "ioclj: using #path#/#buildFile# for Clojure root" );
                 return path;
             }
         }
-        throw "Unable to find project.clj in any of: #variables.folderList#";
+        throw "Unable to find #buildFile# in any of: #variables.folderList#";
     }
 
 }
