@@ -1469,7 +1469,7 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context )' );
+                evaluate( 'cfc.#method#( rc = request.context, headers = request._fw1.headers )' );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1477,7 +1477,7 @@ component {
         } else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
+                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle, headers = request._fw1.headers )' );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -2716,10 +2716,11 @@ component {
             // certain remote calls do not have URL or form scope:
             if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
             if ( isDefined( 'form' ) ) structAppend( request.context, form );
+            var httpData = getHttpRequestData();
             if ( variables.framework.enableJSONPOST ) {
                 // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
                 // seed of this code, inspired by Taffy's basic deserialization
-                var body = getHttpRequestData().content;
+                var body = httpData.content;
                 if ( isBinary( body ) ) body = charSetEncode( body, "utf-8" );
                 if ( len( body ) ) {
                     switch ( listFirst( CGI.CONTENT_TYPE, ';' ) ) {
@@ -2739,6 +2740,7 @@ component {
                     }
                 }
             }
+            request._fw1.headers = httpData.headers;
             // figure out the request action before restoring flash context:
             if ( !structKeyExists( request.context, variables.framework.action ) ) {
                 request.context[ variables.framework.action ] = getFullyQualifiedAction( variables.framework.home );
