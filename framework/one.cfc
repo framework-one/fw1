@@ -1145,27 +1145,44 @@ component {
             statusText = '',
             jsonpCallback = jsonpCallback
         };
-        // return a build to support nicer rendering syntax
+        // return a builder to support nicer rendering syntax
+        return renderer();
+    }
+
+    public any function renderer() {
         var builder = { };
         structAppend( builder, {
             // allow type and data to be overridden just for completeness
             type : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
                 request._fw1.renderData.type = v;
                 return builder;
             },
             data : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
                 request._fw1.renderData.data = v;
                 return builder;
             },
+            header : function( h, v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                if ( !structKeyExists( request._fw1.renderData, 'headers' ) ) {
+                    request._fw1.renderData.headers = [ ];
+                }
+                arrayAppend( request._fw1.renderData.headers, { name = h, value = v } );
+                return builder;
+            },
             statusCode : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
                 request._fw1.renderData.statusCode = v;
                 return builder;
             },
             statusText : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
                 request._fw1.renderData.statusText = v;
                 return builder;
             },
             jsonpCallback : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
                 request._fw1.renderData.jsonpCallback = v;
                 return builder;
             }
@@ -2161,6 +2178,8 @@ component {
         var renderType = request._fw1.renderData.type;
         var statusCode = request._fw1.renderData.statusCode;
         var statusText = request._fw1.renderData.statusText;
+        var headers = structKeyExists( request._fw1.renderData, 'headers' ) ?
+            request._fw1.renderData.headers : [ ];
         if ( isSimpleValue( renderType ) ) {
             var fn_type = 'render_' & renderType;
             if ( structKeyExists( variables, fn_type ) ) {
@@ -2176,10 +2195,13 @@ component {
             // assume it is a function
             out = renderType( request._fw1.renderData );
         }
+        var resp = getPageContext().getResponse();
+        for ( var h in headers ) {
+            resp.setHeader( h.name, h.value );
+        }
         // in theory, we should use sendError() instead of setStatus() but some
         // Servlet containers interpret that to mean "Send my error page" instead
         // of just sending the response you actually want!
-        var resp = getPageContext().getResponse();
         if ( len( statusText ) ) {
             resp.setStatus( statusCode, statusText );
         } else {
