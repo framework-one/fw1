@@ -24,8 +24,22 @@ component extends=framework.ioc {
         if ( variables.debug ) {
             variables.stdout = createObject( "java", "java.lang.System" ).out;
         }
+        if ( isSimpleValue( folders ) ) {
+            folders = listToArray( folders );
+        }
+        var cfmlFolders = [ ];
+        var allFolders = [ ];
+        for ( var folder in folders ) {
+            if ( len( folder ) > 4 && left( folder, 4 ) == "clj:" ) {
+                arrayAppend( allFolders, right( folder, len( folder ) - 4 ) );
+            } else {
+                arrayAppend( cfmlFolders, folder );
+                arrayAppend( allFolders, folder );
+            }
+        }
+        variables.allFolderArray = allFolders;
         // initialize DI/1 parent
-        super.init( folders, config );
+        super.init( cfmlFolders, config );
         variables.cljBeans = { };
         if ( structKeyExists( config, "noClojure" ) && config.noClojure ) return;
         var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
@@ -154,62 +168,67 @@ component extends=framework.ioc {
 
     private void function discoverClojureFiles() {
         var cljs = [ ];
-        var src = variables.project & "/src";
-        var n = len( src ) + 1; // allow for trailing /
-        try {
-            cljs = directoryList( src, true, "path", "*.clj" );
-            // we also support .cljc files
-            var cljcs = directoryList( src, true, "path", "*.cljc" );
-            for ( var cljcOSPath in cljcs ) cljs.append( cljcOSPath );
-        } catch ( any e ) {
-            // assume bad path and ignore it
-        }
-        for ( var cljOSPath in cljs ) {
-            var cljPath = replace( cljOSPath, chr(92), "/", "all" );
-            cljPath = right( cljPath, len( cljPath ) - n );
-            // allow for extension being either .clj or .cljc
-            cljPath = left( cljPath, len( cljPath ) - ( right( cljPath, 1 ) == "c" ? 5 : 4 ) );
-            var ns = replace( replace( cljPath, "/", ".", "all" ), "_", "-", "all" );
-            // per #366, the pattern allowed is
-            // top-level(.optional)*.plural.(prefix.)*name
-            // and this will generate prefixNameSingular
-            var parts = listToArray( cljPath, "/" );
-            var nParts = arrayLen( parts );
-            // ignore temp files from editors (starting with .)
-            if ( left( parts[ nParts ], 1 ) == "." ) continue;
-            if ( nParts >= 3 ) {
-                var pluralCandidate = 2;
-                do {
-                    var lbo = parts[ pluralCandidate ];
-                    var lbo1 = singular( lbo );
-                    ++pluralCandidate;
-                } while ( lbo == lbo1 && pluralCandidate < nParts );
-                if ( lbo1 != lbo ) {
-                    var beanName = "";
-                    while ( pluralCandidate <= nParts ) {
-                        beanName &= parts[ pluralCandidate ];
+        for ( var folder in variables.allFolderArray ) {
+            var src = folder & "/src";
+            var expandedFolder = expandPath( src );
+            if ( directoryExists( expandedFolder ) ) src = expandedFolder;
+            if ( !directoryExists( src ) ) continue;
+            var n = len( src ) + 1; // allow for trailing /
+            try {
+                cljs = directoryList( src, true, "path", "*.clj" );
+                // we also support .cljc files
+                var cljcs = directoryList( src, true, "path", "*.cljc" );
+                for ( var cljcOSPath in cljcs ) cljs.append( cljcOSPath );
+            } catch ( any e ) {
+                // assume bad path and ignore it
+            }
+            for ( var cljOSPath in cljs ) {
+                var cljPath = replace( cljOSPath, chr(92), "/", "all" );
+                cljPath = right( cljPath, len( cljPath ) - n );
+                // allow for extension being either .clj or .cljc
+                cljPath = left( cljPath, len( cljPath ) - ( right( cljPath, 1 ) == "c" ? 5 : 4 ) );
+                var ns = replace( replace( cljPath, "/", ".", "all" ), "_", "-", "all" );
+                // per #366, the pattern allowed is
+                // top-level(.optional)*.plural.(prefix.)*name
+                // and this will generate prefixNameSingular
+                var parts = listToArray( cljPath, "/" );
+                var nParts = arrayLen( parts );
+                // ignore temp files from editors (starting with .)
+                if ( left( parts[ nParts ], 1 ) == "." ) continue;
+                if ( nParts >= 3 ) {
+                    var pluralCandidate = 2;
+                    do {
+                        var lbo = parts[ pluralCandidate ];
+                        var lbo1 = singular( lbo );
                         ++pluralCandidate;
-                    }
-                    beanName &= lbo1;
-                    if ( structKeyExists( variables.cljBeans, beanName ) ) {
-                        throw "#beanName# is not unique (from #cljPath#)";
-                    } else {
-                        variables.cljBeans[ beanName ] = {
-                            ns : ns, nsx : parts, type : lbo1,
-                            isSingleton : true // for DI/1 compatibility
-                        };
+                    } while ( lbo == lbo1 && pluralCandidate < nParts );
+                    if ( lbo1 != lbo ) {
+                        var beanName = "";
+                        while ( pluralCandidate <= nParts ) {
+                            beanName &= parts[ pluralCandidate ];
+                            ++pluralCandidate;
+                        }
+                        beanName &= lbo1;
+                        if ( structKeyExists( variables.cljBeans, beanName ) ) {
+                            throw "#beanName# is not unique (from #cljPath#)";
+                        } else {
+                            variables.cljBeans[ beanName ] = {
+                                ns : ns, nsx : parts, type : lbo1,
+                                isSingleton : true // for DI/1 compatibility
+                            };
+                        }
+                    } else if ( variables.debug ) {
+                        variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it has no plural segment" );
                     }
                 } else if ( variables.debug ) {
-                    variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it has no plural segment" );
+                    variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it does not have at least three segments" );
                 }
-            } else if ( variables.debug ) {
-                variables.stdout.println( "ioclj: ignoring #cljPath#.clj because it does not have at least three segments" );
             }
         }
     }
 
     private string function findProjectFile( string buildFile ) {
-        for ( var folder in variables.folderArray ) {
+        for ( var folder in variables.allFolderArray ) {
             if ( right( folder, 1 ) == "/" ) {
                 if ( len( folder ) == 1 ) folder = "";
                 else folder = left( folder, len( folder ) - 1 );
@@ -229,7 +248,7 @@ component extends=framework.ioc {
                 return path;
             }
         }
-        throw "Unable to find #buildFile# in any of: #variables.folderList#";
+        throw "Unable to find #buildFile# in any of: #arrayToList( variables.allFolderArray )#";
     }
 
 }
