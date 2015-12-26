@@ -28,16 +28,18 @@ component extends=framework.ioc {
             folders = listToArray( folders );
         }
         var cfmlFolders = [ ];
-        var allFolders = [ ];
+        var cljFolders = [ ];
         for ( var folder in folders ) {
             if ( len( folder ) > 4 && left( folder, 4 ) == "clj:" ) {
-                arrayAppend( allFolders, right( folder, len( folder ) - 4 ) );
+                arrayAppend( cljFolders, right( folder, len( folder ) - 4 ) );
+            } else if ( len( folder ) > 5 && left( folder, 4 ) == "cfml:" ) {
+                arrayAppend( cfmlFolders, right( folder, len( folder ) - 5 );
             } else {
                 arrayAppend( cfmlFolders, folder );
-                arrayAppend( allFolders, folder );
+                arrayAppend( cljFolders, folder );
             }
         }
-        variables.allFolderArray = allFolders;
+        variables.cljFolderArray = cljFolders;
         // initialize DI/1 parent
         super.init( cfmlFolders, config );
         variables.cljBeans = { };
@@ -168,7 +170,7 @@ component extends=framework.ioc {
 
     private void function discoverClojureFiles() {
         var cljs = [ ];
-        for ( var folder in variables.allFolderArray ) {
+        for ( var folder in variables.cljFolderArray ) {
             var src = folder & "/src";
             var expandedFolder = expandPath( src );
             if ( directoryExists( expandedFolder ) ) src = expandedFolder;
@@ -228,7 +230,7 @@ component extends=framework.ioc {
     }
 
     private string function findProjectFile( string buildFile ) {
-        for ( var folder in variables.allFolderArray ) {
+        for ( var folder in variables.cljFolderArray ) {
             if ( right( folder, 1 ) == "/" ) {
                 if ( len( folder ) == 1 ) folder = "";
                 else folder = left( folder, len( folder ) - 1 );
@@ -248,7 +250,7 @@ component extends=framework.ioc {
                 return path;
             }
         }
-        throw "Unable to find #buildFile# in any of: #arrayToList( variables.allFolderArray )#";
+        throw "Unable to find #buildFile# in any of: #arrayToList( variables.cljFolderArray )#";
     }
 
 }
