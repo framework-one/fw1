@@ -689,7 +689,8 @@ component {
                     } else {
                         // allow for possible convention-based bean factory
                         args[ property ] = missingBean( property, beanName );
-                        if ( isNull( args[ property ] ) ) continue;
+                        // isNull() does not always work on ACF10...
+                        try { if ( isNull( args[ property ] ) ) continue; } catch ( any e ) { continue; }
                     }
                     evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
                 }
