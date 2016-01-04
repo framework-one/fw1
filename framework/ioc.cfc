@@ -520,18 +520,20 @@ component {
     }
 
 
-    private struct function findSetters( any cfc, struct iocMeta ) {
+    private struct function findSetters( any cfc, struct iocMeta, boolean isSingleton ) {
         var liveMeta = { setters = iocMeta.setters };
         if ( !iocMeta.pruned ) {
-            // need to prune known setters of transients:
-            var prunable = { };
-            for ( var known in iocMeta.setters ) {
-                if ( !isSingleton( known ) ) {
-                    prunable[ known ] = true;
+            // for transients, we need to prune known setters of transients:
+            if ( !isSingleton ) {
+                var prunable = { };
+                for ( var known in iocMeta.setters ) {
+                    if ( !this.isSingleton( known ) ) {
+                        prunable[ known ] = true;
+                    }
                 }
-            }
-            for ( known in prunable ) {
-                structDelete( iocMeta.setters, known );
+                for ( known in prunable ) {
+                    structDelete( iocMeta.setters, known );
+                }
             }
             iocMeta.pruned = true;
         }
@@ -541,8 +543,8 @@ component {
             var n = len( member );
             if ( isCustomFunction( method ) && left( member, 3 ) == 'set' && n > 3 ) {
                 var property = right( member, n - 3 );
-                if ( !isSingleton( property ) ) {
-                    // ignore properties that we know to be transients...
+                if ( !isSingleton && !this.isSingleton( property ) ) {
+                    // for transients, ignore properties that we know to be transients...
                     continue;
                 }
                 if ( !structKeyExists( liveMeta.setters, property ) ) {
@@ -792,7 +794,7 @@ component {
 /*******************************************************/
                 if ( !structKeyExists( accumulator.injection, beanName ) ) {
                     if ( !structKeyExists( variables.settersInfo, beanName ) ) {
-                        variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
+                        variables.settersInfo[ beanName ] = findSetters( bean, info.metadata, info.isSingleton );
                     }
                     var setterMeta = {
                         setters = variables.settersInfo[ beanName ].setters,
