@@ -74,7 +74,7 @@ component {
 
     // programmatically register an alias
     public any function addAlias( string aliasName, string beanName ) {
-        discoverBeans();
+        discoverBeans(); // still need this since we rely on beanName having been discovered :(
         variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
@@ -82,7 +82,6 @@ component {
 
     // programmatically register new beans with the factory (add a singleton name/value pair)
     public any function addBean( string beanName, any beanValue ) {
-        discoverBeans();
         variables.beanInfo[ beanName ] = {
             name = beanName, value = beanValue, isSingleton = true
         };
@@ -104,7 +103,6 @@ component {
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
-        discoverBeans();
         var singleDir = '';
         if ( listLen( dottedPath, '.' ) > 1 ) {
             var cfc = listLast( dottedPath, '.' );
@@ -128,7 +126,6 @@ component {
     }
 
     public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
-        discoverBeans();
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
