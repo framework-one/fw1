@@ -125,7 +125,7 @@ component {
         return this;
     }
 
-    public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
+    public any function factoryBean( string beanName, any factory, string methodName = "", array args = [ ], struct overrides = { } ) {
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
@@ -828,7 +828,13 @@ component {
                         argStruct[ i ] = this.getBean( argName );
                     }
                 }
-                accumulator.bean = evaluate( 'fmBean.#info.method#(argumentCollection=argStruct)' );
+                if ( isCustomFunction( fmBean ) ||
+                     ( listFirst( server.coldfusion.productVersion ) >= 10 &&
+                       isClosure( fmBean ) ) ) {
+                    accumulator.bean = fmBean( argumentCollection = argStruct );
+                } else {
+                    accumulator.bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                }
                 accumulator.injection[ beanName ] = { bean = accumulator.bean, setters = { } };
             } else {
                 throw 'internal error: invalid metadata for #beanName#';
