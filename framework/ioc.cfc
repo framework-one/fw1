@@ -675,9 +675,7 @@ component {
     private void function onLoadEvent() {
         var head = variables.listeners;
         while ( isStruct( head ) ) {
-            if ( isCustomFunction( head.listener ) ||
-                 ( listFirst( server.coldfusion.productVersion ) >= 10 &&
-                   isClosure( head.listener ) ) ) {
+            if ( isCustomFunction( head.listener ) || isClosure( head.listener ) ) {
                 head.listener( this );
             } else if ( isObject( head.listener ) ) {
                 head.listener.onLoad( this );
@@ -898,9 +896,7 @@ component {
                         argStruct[ i ] = this.getBean( argName );
                     }
                 }
-                if ( isCustomFunction( fmBean ) ||
-                     ( listFirst( server.coldfusion.productVersion ) >= 10 &&
-                       isClosure( fmBean ) ) ) {
+                if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
                     accumulator.bean = fmBean( argumentCollection = argStruct );
                 } else {
                     accumulator.bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
