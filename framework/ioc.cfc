@@ -810,8 +810,18 @@ component {
             if ( structKeyExists( info, 'cfc' ) ) {
 /*******************************************************/
                 var metaBean = cachable( beanName );
-                var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
-                structAppend( overrides, constructorArgs );
+                var overrides = { };
+                // be careful not to modify overrides metadata:
+                if ( structCount( constructorArgs ) ) {
+                    if ( structKeyExists( info, 'overrides' ) ) {
+                        structAppend( overrides, info.overrides );
+                    }
+                    structAppend( overrides, constructorArgs );
+                } else {
+                    if ( structKeyExists( info, 'overrides' ) ) {
+                        overrides = info.overrides;
+                    }
+                }
                 bean = metaBean.bean;
                 if ( metaBean.newObject ) {
                     if ( structKeyExists( info.metadata, 'constructor' ) ) {
