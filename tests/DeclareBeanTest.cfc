@@ -1,7 +1,8 @@
 component extends="mxunit.framework.TestCase" {
 
     function shouldDeclareSingleton() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.extrabeans.sheep.item" );
+        var bf = new framework.ioc( "" )
+            .declare( "foo" ).instanceOf( "tests.extrabeans.sheep.item" ).done();
         structDelete( application, "itemCount" );
         var item1 = bf.getBean( "foo" );
         assertEquals( 1, application.itemCount );
@@ -11,7 +12,11 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldDeclareTransient() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.extrabeans.sheep.item", false );
+        var bf = new framework.ioc( "" )
+            .declare( "foo" )
+            .instanceOf( "tests.extrabeans.sheep.item" )
+            .asTransient()
+            .done();
         structDelete( application, "itemCount" );
         var item1 = bf.getBean( "foo" );
         assertEquals( 1, application.itemCount );
@@ -21,7 +26,11 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldDeclareSingletonWithOverride() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.extrabeans.sheep.item", true, { start = 100 } );
+        var bf = new framework.ioc( "" )
+            .declare( "foo" )
+            .instanceOf( "tests.extrabeans.sheep.item" )
+            .withOverrides( { start = 100 } )
+            .done();
         structDelete( application, "itemCount" );
         var item1 = bf.getBean( "foo" );
         assertEquals( 101, application.itemCount );
@@ -31,7 +40,12 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldDeclareTransientWithOverride() {
-        var bf = new framework.ioc( "" ).declareBean( "foo", "tests.extrabeans.sheep.item", false, { start = 100 } );
+        var bf = new framework.ioc( "" )
+            .declare( "foo" )
+            .instanceOf( "tests.extrabeans.sheep.item" )
+            .asTransient()
+            .withOverrides( { start = 100 } )
+            .done();
         structDelete( application, "itemCount" );
         var item1 = bf.getBean( "foo" );
         assertEquals( 101, application.itemCount );
@@ -41,15 +55,20 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldDeclareAndAdd() {
-        var bf = new framework.ioc( "", { omitTypedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig" )
-            .addBean( "name", "test" ).addBean( "config", "some" );
+        var bf = new framework.ioc( "", { omitTypedProperties = false } )
+            .declare( "foo" ).instanceOf( "tests.declared.things.myconfig" ).done()
+            .declare( "name" ).asValue( "test" ).done()
+            .declare( "config" ).asValue( "some" ).done();
         var item = bf.getBean( "foo" );
         assertEquals( "test", item.getName() );
         assertEquals( "some", item.getConfig() );
     }
 
     function shouldDeclareWithOverride() {
-        var bf = new framework.ioc( "", { omitTypedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig", true, { name = "test", config = "some" } )
+        var bf = new framework.ioc( "", { omitTypedProperties = false } )
+            .declare( "foo" )
+            .instanceOf( "tests.declared.things.myconfig" )
+            .withOverrides( { name = "test", config = "some" } ).done()
             .addBean( "name", "not-test" ).addBean( "config", "config" );
         var item = bf.getBean( "foo" );
         assertEquals( "test", item.getName() );

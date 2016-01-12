@@ -2,7 +2,7 @@ component {
     variables._fw1_version = "4.0.0-snapshot";
     variables._di1_version = "1.2.0-snapshot";
 /*
-    Copyright (c) 2010-2015, Sean Corfield
+    Copyright (c) 2010-2016, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -96,10 +96,76 @@ component {
             ( hasParent() && variables.parent.containsBean( beanName ) );
     }
 
-    // return true if this factory has a parent
-  	public boolean function hasParent() {
-  		return structKeyExists( variables, 'parent' );
-  	}
+
+    // builder syntax for declaring new beans
+    public any function declare( string beanName ) {
+        var declaration = { beanName : beanName, built : false };
+        var beanFactory = this; // to make the builder functions less confusing
+        structAppend( declaration, {
+            // builder for addAlias()
+            aliasFor : function( string beanName ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                beanFactory.addAlias( declaration.beanName, beanName );
+                return declaration;
+            },
+            // builder for addBean()
+            asValue : function( any beanValue ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                beanFactory.addBean( declaration.beanName, beanValue );
+                return declaration;
+            },
+            // builder for factoryBean()
+            fromFactory : function( any factory, string methodName = "" ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                // use defaults -- we can override later
+                beanFactory.factoryBean( declaration.beanName, factory, methodName );
+                return declaration;
+            },
+            // builder for declareBean()
+            instanceOf : function( string dottedPath ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                // use defaults -- we can override later
+                beanFactory.declareBean( declaration.beanName, dottedPath );
+                return declaration;
+            },
+            // modifiers for metadata
+            asSingleton : function() {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                variables.beanInfo[ declaration.beanName ].isSingleton = true;
+                return declaration;
+            },
+            asTransient : function() {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                variables.beanInfo[ declaration.beanName ].isSingleton = false;
+                return declaration;
+            },
+            withArguments : function( array args ) {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                var info = variables.beanInfo[ declaration.beanName ];
+                if ( !structKeyExists( info, 'factory' ) ) throw "withArguments() requires fromFactory()!";
+                info.args = args;
+                return declaration;
+            },
+            withOverrides : function( struct overrides ) {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                var info = variables.beanInfo[ declaration.beanName ];
+                if ( !structKeyExists( info, 'factory' ) &&
+                     !structKeyExists( info, 'cfc' ) ) throw "withOverrides() requires fromFactory() or instanceOf()!";
+                info.overrides = overrides;
+                return declaration;
+            },
+            // to allow chaining
+            done : function() {
+                return beanFactory;
+            }
+        } );
+        return declaration;
+    }
+
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
@@ -207,6 +273,12 @@ component {
     public string function getVersion() {
         return variables.config.version;
     }
+
+
+    // return true if this factory has a parent
+  	public boolean function hasParent() {
+  		return structKeyExists( variables, 'parent' );
+  	}
 
 
     // return true iff bean is known to be a singleton
