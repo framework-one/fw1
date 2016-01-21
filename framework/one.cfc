@@ -467,6 +467,12 @@ component {
         return listLast( getSectionAndItem( action ), '.' );
     }
 
+    /*
+     * return this request's CGI method
+     */
+    public string function getCGIRequestMethod() {
+        return request._fw1.cgiRequestMethod;
+    }
 
     /*
      * return the current route (if any)
