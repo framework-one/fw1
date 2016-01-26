@@ -891,6 +891,9 @@ component {
                     }
                 }
                 accumulator.bean = bean;
+                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
+                    accumulator.injection[ beanName ].bean = accumulator.bean;
+                }
             } else if ( isConstant( beanName ) ) {
                 accumulator.bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
