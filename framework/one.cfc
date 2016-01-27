@@ -2699,7 +2699,11 @@ component {
                 var routeMatch = processRoutes( pathInfo, routes );
                 if ( routeMatch.matched ) {
                     internalFrameworkTrace( 'route matched - #routeMatch.route# - #pathInfo#' );
-                    pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                    if ( variables.framework.routesCaseSensitive ) {
+                        pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                    } else {
+                        pathInfo = rereplacenocase( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                    }
                     if ( routeMatch.redirect ) {
                         location( pathInfo, false, routeMatch.statusCode );
                     } else {
