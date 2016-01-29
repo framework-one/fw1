@@ -136,8 +136,13 @@ component extends=framework.ioc {
             }
             return super.getBeanInfo( beanName, flatten, regex );
         } else {
-            var result = super.getBeanInfo( beanName, flatten, regex );
+            var result = { beanInfo = { } };
+            var superInfo = super.getBeanInfo( beanName, flatten, regex );
             structAppend( result.beanInfo, variables.cljBeans );
+            structAppend( result.beanInfo, superInfo.beanInfo );
+            if ( structKeyExists( superInfo, 'parent' ) ) {
+                result.parent = superInfo.parent;
+            }
             if ( len( regex ) ) {
                 var matched = { };
                 for ( var name in result.beanInfo ) {
