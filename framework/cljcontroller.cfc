@@ -30,15 +30,14 @@ component {
             var rc = missingMethodArguments.rc;
             try {
                 var rcClj = variables.cfmljure.toClojure( rc );
-                var result = variables.cfmljure.toCFML(
-                    evaluate( "variables.ns.#missingMethodName#( rcClj )" )
-                );
+                var rawResult = evaluate( "variables.ns.#missingMethodName#( rcClj )" );
+                var result = variables.cfmljure.toCFML( rawResult );
                 structClear( rc );
                 structAppend( rc, result );
                 // post-process special keys in rc for abort / redirect etc
                 var core = variables.cfmljure.clojure.core;
                 if ( structKeyExists( rc, "redirect" ) && isStruct( rc.redirect ) &&
-                           structKeyExists( rc.redirect, "action" ) ) {
+                     structKeyExists( rc.redirect, "action" ) ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.redirect(
                             action = rc.redirect["action"],
@@ -52,11 +51,15 @@ component {
                     }
                 }
                 if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
-                           structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
+                     structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
                     if ( isObject( variables.fw ) ) {
+                        var core = variables.cfmljure.clojure.core;
+                        var walk = variables.cfmljure.clojure.walk;
                         variables.fw.renderData(
                             core.name( rc.render["type"] ),
-                            rc.render["data"],
+                            // since Clojure generated the render data we must be careful to
+                            // preserve case but still convert keys to strings...
+                            walk.stringify_keys( core.get( core.get( rawResult, core.keyword( "render" ) ), core.keyword( "data" ) ) ),
                             structKeyExists( rc.render, "statusCode" ) ? rc.render["statusCode"] : "200"
                         );
                     } else {

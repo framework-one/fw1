@@ -2,7 +2,7 @@ component {
     variables._fw1_version = "4.0.0-snapshot";
     variables._cfmljure_version = "1.1.0-snapshot";
 /*
-	Copyright (c) 2012-2015, Sean Corfield
+	Copyright (c) 2012-2016, Sean Corfield
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -158,7 +158,7 @@ component {
             this.install = this.__install;
             this.isAvailable = this.__isAvailable;
             this.read = this.__read;
-            var autoLoaded = "clojure.core";
+            var autoLoaded = "clojure.core,clojure.walk";
             if ( cfmlInteropAvailable ) {
                 variables.out.println( "Detected cfml-interop for interop" );
                 // perform the best interop we can:
@@ -168,7 +168,6 @@ component {
             } else {
                 variables.out.println( "Falling back to clojure.walk for interop" );
                 // fall back to basic interop:
-                autoLoaded = listAppend( autoLoaded, "clojure.walk" );
                 this.toCFML = this.__toCFML;
                 this.toClojure = this.__toClojure;
             }
