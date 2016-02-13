@@ -1,21 +1,21 @@
 component {
     variables._fw1_version = "4.0.0-snapshot";
     variables._ioclj_version = "1.0.1-snapshot";
-/*
-    Copyright (c) 2015, Sean Corfield
+    /*
+      Copyright (c) 2015-2016, Sean Corfield
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+      Licensed under the Apache License, Version 2.0 (the "License");
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+    */
 
     function init( any fw, any cfmljure, any ns ) {
         variables.fw = fw;
@@ -67,15 +67,15 @@ component {
                     }
                 }
                 if ( structKeyExists( rc, "view" ) && isStruct( rc.view ) &&
-                           structKeyExists( rc.view, "action" ) ) {
+                     structKeyExists( rc.view, "action" ) ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.setView( rc.view["action"] );
                     } else {
-                        throw "Unable to renderData() due to lack of injected FW/1";
+                        throw "Unable to setView() due to lack of injected FW/1";
                     }
                 }
                 if ( structKeyExists( rc, "abort" ) && core.keyword_qmark_( rc.abort ) &&
-                    core.name( rc.abort ) == "controller" ) {
+                     core.name( rc.abort ) == "controller" ) {
                     if ( isObject( variables.fw ) ) {
                         variables.fw.abortController();
                     } else {
