@@ -55,13 +55,14 @@ component {
                     if ( isObject( variables.fw ) ) {
                         var core = variables.cfmljure.clojure.core;
                         var walk = variables.cfmljure.clojure.walk;
-                        variables.fw.renderData(
+                        var renderer = variables.fw.renderData(
                             core.name( rc.render["type"] ),
                             // since Clojure generated the render data we must be careful to
                             // preserve case but still convert keys to strings...
-                            walk.stringify_keys( core.get( core.get( rawResult, core.keyword( "render" ) ), core.keyword( "data" ) ) ),
-                            structKeyExists( rc.render, "statusCode" ) ? rc.render["statusCode"] : "200"
+                            walk.stringify_keys( core.get( core.get( rawResult, core.keyword( "render" ) ), core.keyword( "data" ) ) )
                         );
+                        if ( structKeyExists( rc.render, "statusCode" ) ) renderer.statusCode( rc.render["statusCode"] );
+                        if ( structKeyExists( rc.render, "statusText" ) ) renderer.statusText( rc.render["statusText"] );
                     } else {
                         throw "Unable to renderData() due to lack of injected FW/1";
                     }
