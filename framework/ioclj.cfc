@@ -2,7 +2,7 @@ component extends=framework.ioc {
     variables._fw1_version = "4.0.0-snapshot";
     variables._ioclj_version = "1.1.0-snapshot";
 /*
-    Copyright (c) 2015, Sean Corfield
+    Copyright (c) 2015-2016, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -80,8 +80,26 @@ component extends=framework.ioc {
             // patch DI/1 bean info to include Clojure "beans" -- this allows Clojure
             // to be autowired like any other "value" bean:
             for ( var cljBean in variables.cljBeans ) {
+                var info = variables.cljBeans[ cljBean ];
+                // navigate to actual namespace "object":
+                var ns = variables.clojureApp;
+                for ( var x in info.nsx ) {
+                    ns = ns[ x ];
+                }
+                var bean = ns;
+                if ( info.type == "controller" ) {
+                    // need a wrapper - try to find FW/1 instance via bean factory:
+                    var fw = containsBean( "fw" ) ? getBean( "fw" ) :
+                        ( containsBean( "fw1" ) ? getBean( "fw1" ) :
+                          ( containsBean( "framework" ) ? getBean( "framework" ) :
+                            "" ) );
+                    var controller = new framework.cljcontroller(
+                        fw, variables.cfmljure, ns
+                    );
+                    bean = controller;
+                }
                 variables.beanInfo[ cljBean ] = {
-                    name : cljBean, value : getBean( cljBean ), isSingleton : true
+                    name : cljBean, value : bean, isSingleton : true
                 };
             }
             // add cfmljure to expose Clojure-related functions:
@@ -91,40 +109,6 @@ component extends=framework.ioc {
     }
 
     // PUBLIC METHODS
-
-    // return true if the factory (or a parent factory) knows about the requested bean
-    public boolean function containsBean( string beanName ) {
-        return structKeyExists( variables.cljBeans, beanName ) || super.containsBean( beanName );
-    }
-
-    // return the requested bean, fully populated
-    public any function getBean( string beanName ) {
-        if ( structKeyExists( variables.cljBeans, beanName ) ) {
-            var info = variables.cljBeans[ beanName ];
-            // navigate to actual namespace "object":
-            var ns = variables.clojureApp;
-            for ( var x in info.nsx ) {
-                ns = ns[ x ];
-            }
-            if ( info.type == "controller" ) {
-                // need a wrapper - try to find FW/1 instance via bean factory:
-                var fw = super.containsBean( "fw" ) ? super.getBean( "fw" ) :
-                    ( super.containsBean( "fw1" ) ? super.getBean( "fw1" ) :
-                        ( super.containsBean( "framework" ) ? super.getBean( "framework" ) :
-                            "" ) );
-                var controller = new framework.cljcontroller(
-                    fw, variables.cfmljure, ns
-                );
-                return controller;
-            } else {
-                // expose as a regular bean
-                return ns;
-            }
-        } else {
-            return super.getBean( beanName );
-        }
-    }
-
 
     // convenience API for metaprogramming perhaps?
     public any function getBeanInfo( string beanName = '', boolean flatten = false,
