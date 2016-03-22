@@ -25,8 +25,7 @@ component {
     }
 
     function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
-        if ( structKeyExists( missingMethodArguments, "method" ) &&
-             missingMethodArguments.method == "item" ) {
+        if ( structKeyExists( missingMethodArguments, "rc" ) ) {
             var rc = missingMethodArguments.rc;
             try {
                 var rcClj = variables.cfmljure.toClojure( rc );
@@ -86,11 +85,16 @@ component {
             } catch ( java.lang.IllegalStateException e ) {
                 if ( e.message.startsWith( "Attempting to call unbound fn" ) ) {
                     // no such controller method - ignore it
+                    this[ missingMethodName ] = __dummy;
                 } else {
                     throw e;
                 }
             }
         }
     }
+
+    function setFramework() { }
+
+    function __dummy() { }
 
 }
