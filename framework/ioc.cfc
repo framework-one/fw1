@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "4.0.0-alpha1";
-    variables._di1_version = "1.2.0-alpha1";
+    variables._fw1_version = "4.0.0-snapshot";
+    variables._di1_version = "1.2.0-snapshot";
 /*
     Copyright (c) 2010-2016, Sean Corfield
 

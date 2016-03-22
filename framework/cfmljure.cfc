@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version      = "4.0.0-alpha1";
-    variables._cfmljure_version = "1.1.0-alpha1";
+    variables._fw1_version      = "4.0.0-snapshot";
+    variables._cfmljure_version = "1.1.0-snapshot";
 /*
 	Copyright (c) 2012-2016, Sean Corfield
 
