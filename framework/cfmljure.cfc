@@ -369,6 +369,10 @@ component {
         }
     }
 
+    public string function __name() {
+        return variables._clj_ns;
+    }
+
     public void function __require( string ns ) {
         if ( !structKeyExists( variables, "_clj_require" ) ) {
             variables._clj_require = __var( "clojure.core", "require" );
