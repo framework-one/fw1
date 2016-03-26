@@ -17,6 +17,8 @@ component extends=framework.one {
     private string function internalView( string viewPath, struct args = { } ) {
         var writer = createObject( "java", "java.io.StringWriter" ).init();
         var template = application.mustache.compile( viewPath );
+        var buildURLProxy = createDynamicProxy( new framework.BuildURL( this ), [ "java.util.function.Function" ] );
+        request.context.buildURL = buildURLProxy;
         template.execute( writer, request.context );
         writer.flush();
         return writer.toString();
