@@ -9,4 +9,19 @@ component extends=framework.one {
         );
     }
 
+    function render_mustache( struct renderData ) {
+        // NOTE: evaluated outside FW/1 context as a pure function
+        var viewPath = "main/default.html"; // TODO: calculate this!
+        var writer = createObject( "java", "java.io.StringWriter" ).init();
+        var template = application.mustache.compile( viewPath );
+        template.execute( writer, request.context );
+        writer.flush();
+        // since we're rendering HTML
+        structDelete( request._fw1, "renderData" );
+        return {
+            contentType = "text/html; charset=utf-8",
+            output = writer.toString()
+        };
+    }
+
 }
