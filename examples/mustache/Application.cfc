@@ -15,16 +15,28 @@ component extends=framework.one {
     }
 
     private string function internalView( string viewPath, struct args = { } ) {
-        var writer = createObject( "java", "java.io.StringWriter" ).init();
-        var template = application.mustache.compile( viewPath );
+        // normal view setup:
+        var rc = request.context;
+        var $ = { };
+        // integration point with Mura:
+        if ( structKeyExists( rc, '$' ) ) {
+            $ = rc.$;
+        }
+        structAppend( local, args );
+        // *** start of specific rendering logic ***
+        // add proxies for useful FW/1 methods:
+        var fw1 = { };
         var methods = [ "buildURL", "view" ];
         for ( var method in methods ) {
-            request.context[ "fw1_" & method ] = createDynamicProxy(
+            fw1[ method ] = createDynamicProxy(
                 new framework.methodProxy( this, method ),
                 [ "java.util.function.Function" ]
             );
         }
-        template.execute( writer, request.context );
+        // compile & execute the template:
+        var template = application.mustache.compile( viewPath );
+        var writer = createObject( "java", "java.io.StringWriter" ).init();
+        template.execute( writer, local );
         writer.flush();
         return writer.toString();
     }
