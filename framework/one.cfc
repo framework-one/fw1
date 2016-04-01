@@ -1946,11 +1946,11 @@ component {
             pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
         }
         var defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lucee';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lc';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             // can't find it so assume .cfm default value
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
         return customizeViewOrLayoutPath( pathInfo, type, defaultPath );
