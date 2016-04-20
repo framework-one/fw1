@@ -1,8 +1,18 @@
 (ns hello.controllers.main
   (:require [hello.services.greeter :as greet]))
 
+(defn call-method [rc cfc method & args]
+  (let [pc (:pc rc)]
+    (.call cfc pc method (into-array Object args))))
+
+(defn get-bean [rc bean-name]
+  (let [ioc (:ioc rc)]
+    (call-method rc ioc "getBean" bean-name)))
+
 (defn default [rc]
-  (assoc rc :greeting (greet/hello (:name rc "anonymous"))))
+  (-> rc
+      (assoc :greeting     (greet/hello (:name rc "anonymous")))
+      (assoc :cfmlgreeting (call-method rc (get-bean rc "test") "greet" "CFML"))))
 
 (defn do-redirect [rc]
   (assoc rc :redirect {:action "main.default" :queryString "name=Mr. Redirect"}))
