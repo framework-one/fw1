@@ -476,11 +476,19 @@ component {
 
     /*
      * return the current route (if any)
+     * this is the raw, matched route that we mapped
      */
     public string function getRoute() {
         return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
     }
 
+    /*
+     * return the part of the pathinfo that was used as the route
+     * prefixed by the HTTP method
+     */
+    public string function getRoutePath() {
+        return '$' & request._fw1.cgiRequestMethod & request._fw1.currentRoute;
+    }
 
     /*
      * return the configured routes
@@ -2693,17 +2701,22 @@ component {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
+            request._fw1.currentRoute = '';
             var routes = getRoutes();
             if ( arrayLen( routes ) ) {
                 internalFrameworkTrace( 'processRoutes() called' );
                 var routeMatch = processRoutes( pathInfo, routes );
                 if ( routeMatch.matched ) {
                     internalFrameworkTrace( 'route matched - #routeMatch.route# - #pathInfo#' );
+                    var routeTail = '';
                     if ( variables.framework.routesCaseSensitive ) {
                         pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                        routeTail = rereplace( routeMatch.path, routeMatch.pattern, '' );
                     } else {
                         pathInfo = rereplacenocase( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                        routeTail = rereplacenocase( routeMatch.path, routeMatch.pattern, '' );
                     }
+                    request._fw1.currentRoute = left( routeMatch.path, len( routeMatch.path ) - len( routeTail ) );
                     if ( routeMatch.redirect ) {
                         location( pathInfo, false, routeMatch.statusCode );
                     } else {
@@ -2731,6 +2744,13 @@ component {
                 pathInfo = listToArray( pathInfo, '/' );
             }
             var sesN = arrayLen( pathInfo );
+            if ( !len( request._fw1.currentRoute ) ) {
+                switch ( sesN ) {
+                case 0 : request._fw1.currentRoute = '/'; break;
+                case 1 : request._fw1.currentRoute = '/' & pathInfo[1] & '/'; break;
+                default: request._fw1.currentRoute = '/' & pathInfo[1] & '/' & pathInfo[2] & '/'; break;
+                }
+            }
             if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
                 request._fw1.generateSES = true;
             }
