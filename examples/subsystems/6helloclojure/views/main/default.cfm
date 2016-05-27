@@ -2,7 +2,6 @@
   <cfif getBeanFactory().getBean( "cfmljure" ).isAvailable()>
     <h1>Hello!</h1>
     <p>Clojure produced the greeting "#rc.greeting#"</p>
-    <p>Clojure called CFML to produce "#rc.cfmlgreeting#"</p>
     <p>We can also get a greeterService in Clojure and use that:
         #getBeanFactory().getBean("greeterService").hello("Earthling")#<p>
     <p>Display this page with <a href="#buildURL( action = 'main', queryString = 'name=Clojure is alive' )#">a value specified for 'name'</a>.</p>
