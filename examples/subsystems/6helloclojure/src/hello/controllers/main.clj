@@ -3,7 +3,11 @@
 
 (defn call-method [rc cfc method & args]
   (let [pc (:pc rc)]
-    (.call cfc pc method (into-array Object args))))
+    (try
+      (.call cfc pc method (into-array Object args))
+      (catch Exception _
+        ;; Adobe ColdFusion PageContext does not support .call
+        "a failure"))))
 
 (defn get-bean [rc bean-name]
   (let [ioc (:ioc rc)]
