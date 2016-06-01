@@ -2814,6 +2814,7 @@ component {
         request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
         request.section = getSection( request.action );
         request.item = getItem( request.action );
+        request._fw1.theFramework = this; // for use in the facade (only!)
 
         if ( runSetup ) {
             controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
