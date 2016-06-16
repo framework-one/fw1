@@ -921,7 +921,7 @@ component {
         if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
             setupApplicationWrapper();
         } else {
-            variables.fw1App = getFw1App();
+            request._fw1.theApp = getFw1App();
         }
 
         restoreFlashContext();
@@ -1767,8 +1767,8 @@ component {
     }
 
     private struct function getFw1App() {
-        if ( structKeyExists( variables, "fw1App" ) ) {
-            return variables.fw1App;
+        if ( structKeyExists( request._fw1, 'theApp' ) ) {
+            return request._fw1.theApp;
         } else {
             return application[variables.framework.applicationKey];
         }
@@ -1879,7 +1879,8 @@ component {
 
     private boolean function isFrameworkInitialized() {
         return structKeyExists( variables, 'framework' ) &&
-            structKeyExists( application, variables.framework.applicationKey );
+            ( structKeyExists( request._fw1, 'theApp' ) ||
+              structKeyExists( application, variables.framework.applicationKey ) );
     }
 
     private boolean function isSubsystemInitialized( string subsystem ) {
@@ -2336,7 +2337,7 @@ component {
     private void function setupApplicationWrapper() {
         if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
         request._fw1.appWrapped = true;
-        variables.fw1App = {
+        request._fw1.theApp = {
             cache = {
                 lastReload = now(),
                 fileExists = { },
@@ -2388,7 +2389,7 @@ component {
         // this will recreate the main bean factory on a reload:
         internalFrameworkTrace( 'setupApplication() called' );
         setupApplication();
-		application[variables.framework.applicationKey] = variables.fw1App;
+		application[variables.framework.applicationKey] = request._fw1.theApp;
 
 	}
 
