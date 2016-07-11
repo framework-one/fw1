@@ -2773,6 +2773,8 @@ component {
             if ( variables.framework.enableJSONPOST ) {
                 // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
                 // seed of this code, inspired by Taffy's basic deserialization
+                // also thanks to John Whish for the URL-encoded form support
+                // which adds support for PUT etc
                 var body = httpData.content;
                 if ( isBinary( body ) ) body = charSetEncode( body, "utf-8" );
                 if ( len( body ) ) {
@@ -2790,7 +2792,7 @@ component {
                     case "application/x-www-form-urlencoded":
                         try {
                             var paramPairs = listToArray( body, "&" );
-                            for (var pair in paramPairs) {
+                            for ( var pair in paramPairs ) {
     	                          var parts = listToArray( pair, "=", true ); // handle blank values
     	                          request.context[ parts[ 1 ] ] = urlDecode( parts[ 2 ] );
                             }
