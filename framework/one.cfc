@@ -2601,8 +2601,12 @@ component {
             }
             variables.framework.diComponent = diComponent;
         }
-        if ( !structKeyExists( variables.framework, 'enableJSONPOST' ) ) {
-            variables.framework.enableJSONPOST = false;
+        if ( structKeyExists( variables.framework, 'enableJSONPOST' ) ) {
+            throw( type="FW1.IllegalConfiguration",
+                   message="The enableJSONPOST setting has been renamed to decodeRequestBody." );
+        }
+        if ( !structKeyExists( variables.framework, 'decodeRequestBody' ) ) {
+            variables.framework.decodeRequestBody = false;
         }
         if ( !structKeyExists( variables.framework, 'preflightOptions' ) ) {
             variables.framework.preflightOptions = false;
@@ -2770,7 +2774,7 @@ component {
             if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
             if ( isDefined( 'form' ) ) structAppend( request.context, form );
             var httpData = getHttpRequestData();
-            if ( variables.framework.enableJSONPOST ) {
+            if ( variables.framework.decodeRequestBody ) {
                 // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
                 // seed of this code, inspired by Taffy's basic deserialization
                 // also thanks to John Whish for the URL-encoded form support
