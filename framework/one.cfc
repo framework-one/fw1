@@ -2886,8 +2886,13 @@ component {
                         }
                         if ( len( sublocations ) ) {
                             var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
-                            var cfg = structKeyExists( subsystemConfig, 'diConfig' ) ?
-                                subsystemConfig.diConfig : structCopy( variables.framework.diConfig );
+                            var cfg = { };
+                            if ( structKeyExists( subsystemConfig, 'diConfig' ) ) {
+                                cfg = subsystemConfig.diConfig;
+                            } else {
+                                cfg = structCopy( variables.framework.diConfig );
+                                structDelete( cfg, 'loadListener' );
+                            }
                             cfg.noClojure = true;
                             var ioc = new "#diComponent#"( subLocations, cfg );
                             ioc.setParent( getDefaultBeanFactory() );
