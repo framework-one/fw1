@@ -2126,6 +2126,10 @@ component {
         return resourceCache[ cacheKey ];
     }
 
+    private any function read_json( string json ) {
+        return deserializeJSON( json );
+    }
+
     private struct function render_json( struct renderData ) {
         return {
             contentType = 'application/json; charset=utf-8',
@@ -2786,7 +2790,7 @@ component {
                     case "application/json":
                     case "text/json":
                         try {
-                            var bodyStruct = deserializeJSON( body );
+                            var bodyStruct = read_json( body );
                             structAppend( request.context, bodyStruct );
                         } catch ( any e ) {
                             throw( type = "FW1.JSONPOST",
