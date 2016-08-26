@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "4.0.0-rc1";
+    variables._fw1_version = "4.0.0-SNAPSHOT";
     /*
       Copyright (c) 2009-2016, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -2071,7 +2071,7 @@ component {
 
     private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
         var resourceCache = isFrameworkInitialized() ? getFw1App().cache.routes.resources : { };
-        var cacheKey = hash( serializeJSON( resourcesToRoute ) );
+        var cacheKey = hash( serializeJSON( { rtr = resourcesToRoute, ss = subsystem, pr = pathRoot, ta = targetAppend } ) );
         if ( !structKeyExists( resourceCache, cacheKey ) ) {
             // get passed in resourcesToRoute (string,array,struct) to match following struct
             var resources = { resources = [ ], subsystem = subsystem, pathRoot = pathRoot, methods = [ ], nested = [ ] };
