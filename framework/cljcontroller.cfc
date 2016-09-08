@@ -29,7 +29,7 @@ component {
             var rc = missingMethodArguments.rc;
             try {
                 var rcClj = variables.cfmljure.toClojure( rc );
-                var rawResult = evaluate( "variables.ns.#missingMethodName#( rcClj )" );
+                var rawResult = callClojure( missingMethodName, rcClj );
                 var result = variables.cfmljure.toCFML( rawResult );
                 structClear( rc );
                 structAppend( rc, result );
@@ -52,7 +52,6 @@ component {
                 if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
                      structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
                     if ( isObject( variables.fw ) ) {
-                        var core = variables.cfmljure.clojure.core;
                         var walk = variables.cfmljure.clojure.walk;
                         var renderer = variables.fw.renderData(
                             core.name( rc.render["type"] ),
@@ -96,5 +95,9 @@ component {
     function setFramework() { }
 
     function __dummy() { }
+
+    function callClojure( string qualifiedName, any rcClj ) {
+        return evaluate( "variables.ns.#qualifiedName#( rcClj )" );
+    }
 
 }

@@ -46,6 +46,7 @@ component extends=framework.ioc {
         if ( structKeyExists( config, "noClojure" ) && config.noClojure ) return;
         var lein = structKeyExists( config, "lein" ) ? config.lein : "lein";
         var boot = structKeyExists( config, "boot" ) ? config.boot : ""; // default is not Boot
+        var cljcontroller = structKeyExists( config, "cljcontroller" ) ? config.cljcontroller : "framework.cljcontroller";
         // find the first folder that includes project.clj (or build.boot) - that's our project
         variables.project = findProjectFile( len( boot ) ? "build.boot" : "project.clj" );
         discoverClojureFiles();
@@ -93,7 +94,7 @@ component extends=framework.ioc {
                         ( containsBean( "fw1" ) ? getBean( "fw1" ) :
                           ( containsBean( "framework" ) ? getBean( "framework" ) :
                             "" ) );
-                    var controller = new framework.cljcontroller(
+                    var controller = new "#cljcontroller#"(
                         fw, variables.cfmljure, ns
                     );
                     bean = controller;
