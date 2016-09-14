@@ -24,11 +24,11 @@ component {
                               string boot = "", // to allow Boot to be selected instead
                               string ns = "", any root = 0 ) {
         variables.refCache = { };
+        var javaLangSystem = createObject( "java", "java.lang.System" );
+        variables.out = javaLangSystem.out;
         if ( project != "" ) {
             variables._clj_root = this;
             variables._clj_ns = "";
-            var javaLangSystem = createObject( "java", "java.lang.System" );
-            variables.out = javaLangSystem.out;
             var nl = javaLangSystem.getProperty( "line.separator" );
             var fs = javaLangSystem.getProperty( "file.separator" );
             var nixLike = fs == "/";
@@ -395,7 +395,11 @@ component {
         if ( left( missingMethodName, 1 ) == "_" ) {
             return __( right( missingMethodName, len( missingMethodName ) - 1 ), true );
         } else {
-            return __call( __( missingMethodName, false ), missingMethodArguments );
+            var clj_var = __( missingMethodName, false );
+            if ( isNull( clj_var ) ) {
+                throw "Unable to resolve #variables._clj_ns#/#missingMethodName#";
+            }
+            return __call( clj_var, missingMethodArguments );
         }
     }
 
