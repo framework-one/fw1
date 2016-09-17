@@ -3,7 +3,7 @@
     "slug" : "fw1",
     "version" : "4.0.0",
     "author" : "Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
-    "location" : "https://github.com/framework-one/fw1/archive/4.0.0.zip",
+    "location" : "https://github.com/framework-one/fw1/archive/v4.0.0.zip",
     "createPackageDirectory" : true,
     "packageDirectory" : "framework",
     "Homepage" : "http://framework-one.github.io/",
