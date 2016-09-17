@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version   = "4.0.0";
-    variables._ioclj_version = "1.0.1";
+    variables._fw1_version   = "4.1.0-SNAPSHOT";
+    variables._ioclj_version = "1.0.2-SNAPSHOT";
     /*
       Copyright (c) 2015-2016, Sean Corfield
 
