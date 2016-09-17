@@ -890,12 +890,11 @@ component {
                         }
                     }
                 }
-                accumulator.bean = bean;
                 if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
-                    accumulator.injection[ beanName ].bean = accumulator.bean;
+                    accumulator.injection[ beanName ].bean = bean;
                 }
             } else if ( isConstant( beanName ) ) {
-                accumulator.bean = info.value;
+                bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
             } else if ( structKeyExists( info, 'factory' ) ) {
                 var fmBean = isSimpleValue( info.factory ) ? this.getBean( info.factory ) : info.factory;
@@ -910,11 +909,11 @@ component {
                     }
                 }
                 if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
-                    accumulator.bean = fmBean( argumentCollection = argStruct );
+                    bean = fmBean( argumentCollection = argStruct );
                 } else {
-                    accumulator.bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                    bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
                 }
-                accumulator.injection[ beanName ] = { bean = accumulator.bean, setters = { } };
+                accumulator.injection[ beanName ] = { bean = bean, setters = { } };
             } else {
                 throw 'internal error: invalid metadata for #beanName#';
             }
@@ -926,10 +925,13 @@ component {
             }
             if ( !isNull( bean ) ) {
                 accumulator.injection[ beanName ] = { bean = bean, setters = { } };
-                accumulator.bean = bean;
             }
         }
-        return accumulator;
+        return {
+            bean = bean,
+            injection = accumulator.injection,
+            dependencies = accumulator.dependencies
+        };
     }
 
 
