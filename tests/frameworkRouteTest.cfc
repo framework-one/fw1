@@ -17,6 +17,11 @@ component extends="tests.InjectableTest" {
         assertEquals("/test/(.*)", match.pattern);
         assertEquals("routed/\1", match.target);
 
+        match = variables.fw.processRouteMatch("/", "routed", "/test", "GET");
+        assertTrue(match.matched);
+        assertEquals("/(.*)", match.pattern);
+        assertEquals("routed/\1", match.target);
+
         match = variables.fw.processRouteMatch("/test2/:id", "default.main?id=:id", "/test2/5", "GET");
         assertTrue(match.matched);
         assertEquals("/test2/([^/]*)/(.*)", match.pattern);
@@ -87,6 +92,24 @@ component extends="tests.InjectableTest" {
 
         match = variables.fw.processRouteMatch("$POST^/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
         assertFalse(match.matched);
+
+        match = variables.fw.processRouteMatch("$*^/test/:id", "default.main?id=:id", "/test/5", "GET");
+        assertTrue(match.matched);
+
+        match = variables.fw.processRouteMatch("$*^/test/:id", "default.main?id=:id", "/test/5", "POST");
+        assertTrue(match.matched);
+
+        match = variables.fw.processRouteMatch("$*^/test/:id", "default.main?id=:id", "/foo/test/5", "GET");
+        assertFalse(match.matched);
+
+        match = variables.fw.processRouteMatch("$*^/test/:id", "default.main?id=:id", "/foo/test/5", "POST");
+        assertFalse(match.matched);
+
+        match = variables.fw.processRouteMatch("$*", "default.error", "/foo/test/5", "GET");
+        assertTrue(match.matched);
+
+        match = variables.fw.processRouteMatch("$*", "default.error", "/foo/test/5", "POST");
+        assertTrue(match.matched);
     }
 
     public void function testRouteMatchRedirect()

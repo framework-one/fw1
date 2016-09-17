@@ -1,9 +1,9 @@
 {
     "name" : "Framework One",
     "slug" : "fw1",
-    "version" : "3.5.1",
+    "version" : "4.0.0",
     "author" : "Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
-    "location" : "https://github.com/framework-one/fw1/archive/v3.5.1.zip",
+    "location" : "https://github.com/framework-one/fw1/archive/4.0.0.zip",
     "createPackageDirectory" : true,
     "packageDirectory" : "framework",
     "Homepage" : "http://framework-one.github.io/",
@@ -22,7 +22,7 @@
     "engines" : [
         { "type" : "railo", "version" : ">=4.1.x" },
         { "type" : "lucee", "version" : ">=4.5.x" },
-        { "type" : "adobe", "version" : ">=9.0.2" }
+        { "type" : "adobe", "version" : ">=10.0.x" }
     ],
     "License" : [
         { "type" : "Apache 2.0", "URL" : "http://www.apache.org/licenses/LICENSE-2.0" }

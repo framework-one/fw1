@@ -17,6 +17,7 @@ component extends="tests.InjectableTest" {
             { 'hint' = 'Resource Routes', '$RESOURCES' = 'dogs' }
         ];
         variables.fwVars.framework.routesCaseSensitive = true;
+        variables.fwVars.framework.preflightOptions = true;
     }
 
     public void function testProcessRoutes() {
@@ -41,7 +42,7 @@ component extends="tests.InjectableTest" {
         assertEquals( '/dogs/update/id/42/', rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target ) );
 
     }
-    
+
     public void function testProcessRoutesExplicit() {
 
         request._fw1.cgiRequestMethod = 'FOO';
@@ -62,7 +63,35 @@ component extends="tests.InjectableTest" {
         assertEquals( '/dogs/update/id/42/', rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target ) );
 
     }
-    
+
+    public void function testProcessRoutesOptions() {
+
+        request._fw1.cgiRequestMethod = 'OPTIONS';
+
+        request._fw1.routeMethodsMatched = { };
+        var routeMatch = variables.fw.processRoutes( '/no/match', variables.fw.getRoutes() );
+        assertFalse( routeMatch.matched );
+        assertEquals( { }, request._fw1.routeMethodsMatched );
+
+        request._fw1.routeMethodsMatched = { };
+        routeMatch = variables.fw.processRoutes( '/old/path/foo', variables.fw.getRoutes() );
+        assertFalse( routeMatch.matched );
+        assertEquals( { get : true }, request._fw1.routeMethodsMatched );
+
+        // these show we correctly get methods back based on the ACTUAL route matched
+
+        request._fw1.routeMethodsMatched = { };
+        routeMatch = variables.fw.processRoutes( '/dogs/42', variables.fw.getRoutes() );
+        assertFalse( routeMatch.matched );
+        assertEquals( { get : true, delete : true, patch : true, put : true }, request._fw1.routeMethodsMatched );
+
+        request._fw1.routeMethodsMatched = { };
+        routeMatch = variables.fw.processRoutes( '/dogs', variables.fw.getRoutes() );
+        assertFalse( routeMatch.matched );
+        assertEquals( { get : true, post : true }, request._fw1.routeMethodsMatched );
+
+    }
+
     // PRIVATE
 
     private boolean function isFrameworkInitialized() {

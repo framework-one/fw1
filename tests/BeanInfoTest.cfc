@@ -29,7 +29,7 @@ component extends="mxunit.framework.TestCase" {
 
     function shouldBeFlat() {
         var parent = new framework.ioc( "" );
-        parent.addBean( "father", "figure" );
+        parent.declare( "father" ).asValue( "figure" );
         variables.factory.setParent( parent );
         var info = variables.factory.getBeanInfo( flatten = true );
         assertFalse( structKeyExists( info, "parent" ) );
@@ -38,8 +38,9 @@ component extends="mxunit.framework.TestCase" {
     }
 
     function shouldMatchRegex() {
-        variables.factory.addBean( "father", "figure" );
-        variables.factory.addBean( "mother", "figure" );
+        variables.factory
+            .declare( "father" ).asValue( "figure" ).done()
+            .addBean( "mother", "figure" );
         var info = variables.factory.getBeanInfo( regex = "her$" );
         assertEquals( 2, structCount( info.beaninfo ) );
         assertTrue( structKeyExists( info.beaninfo, "father" ) );

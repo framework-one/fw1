@@ -1,4 +1,4 @@
-# FW/1 (Framework One) [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1) [![Join the chat at https://gitter.im/framework-one/fw1](https://badges.gitter.im/framework-one/fw1.svg)](https://gitter.im/framework-one/fw1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# FW/1 (Framework One) [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1) [![Stories in Ready](https://badge.waffle.io/framework-one/fw1.png?label=ready&title=Ready)](http://waffle.io/framework-one/fw1) [![Join the chat at https://gitter.im/framework-one/fw1](https://badges.gitter.im/framework-one/fw1.svg)](https://gitter.im/framework-one/fw1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This FW/1 directory is a complete web application and expects to live in its own
 webroot if you plan to run the applications within it. To use FW/1 in a separate
@@ -9,7 +9,9 @@ in your admin - you can't just use a per-application mapping.
 
 Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
 
-**Project home:** http://fw1.riaforge.org
+# Resources
+
+**Project home:** https://github.com/framework-one/fw1
 
 **Documentation / Wiki:** http://framework-one.github.io/documentation/ / http://github.com/framework-one/fw1/wiki
 
@@ -19,7 +21,7 @@ Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW
 
 **Chat:** The [CFML team Slack](http://cfml-slack.herokuapp.com) has a [dedicated #fw1 channel](https://cfml.slack.com/messages/fw1/).
 
-**Running the tests:**
+# Running the Tests
 
 The Ant `build.xml` file is primarily designed to be used by Travis to run the tests automatically, but it is possible to run the tests locally, with some setup:
 
@@ -40,3 +42,9 @@ See the `run-tests-example.sh` file for a template (for Mac/Linux).
 * `server.name` should be the test domain you have configured
 * `server.port` should be the port on which you access that test domain
 * `run-tests-mxunit` is the actual Ant task that does the testing
+
+# Copyright and License
+
+Copyright (c) 2009-2016 Sean Corfield (and others -- see individual files for additional copyright holders). All rights reserved.
+The use and distribution terms for this software are covered by the Apache Software License 2.0 (http://www.apache.org/licenses/LICENSE-2.0) which can also be found in the file LICENSE at the root of this distribution and in individual licensed files.
+By using this software in any fashion, you are agreeing to be bound by the terms of this license. You must not remove this notice, or any other, from this software.

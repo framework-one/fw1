@@ -21,4 +21,42 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( isObject( product ) );
     }
 
+    function shouldInitializeWithBeans() {
+        variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
+                                               { transients = [ "fish" ], singulars = { sheep = "bean" } } )
+            .addBean( "one", 1 ).addBean( "two", "two" );
+        var i = variables.factory.getBean( "item" );
+        var n1 = application.itemCount;
+        var c = variables.factory.getBean( "construct" );
+        assertEquals( 1, c.getOne() );
+        assertEquals( "two", c.two );
+        assertEquals( n1 + 1, application.itemCount );
+    }
+
+    function shouldInitializeWithConstructorArgs() {
+        variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
+                                               { transients = [ "fish" ], singulars = { sheep = "bean" } } )
+            .addBean( "one", 1 ).addBean( "two", "two" );
+        var i = variables.factory.getBean( "item" );
+        var n1 = application.itemCount;
+        var c = variables.factory.getBean( "construct", { one : "one", two : 2, item : "no-op" } );
+        assertEquals( "one", c.getOne() );
+        assertEquals( 2, c.two );
+        assertEquals( n1, application.itemCount );
+    }
+
+    function shouldInitializeWithOnlyConstructorArgs() {
+        variables.factory = new framework.ioc( "/tests/extrabeans",
+                                               { singulars = { sheep = "bean" } } );
+        var i = variables.factory.getBean( "item" );
+        var n1 = application.itemCount;
+        var c1 = variables.factory.getBean( "construct", { one : "one", two : 2, item : "no-op" } );
+        assertTrue( isNull( c1.getOne() ) );
+        assertEquals( 2, c1.two );
+        assertEquals( n1, application.itemCount );
+        var c2 = variables.factory.getBean( "construct", { one : 1, two : "two", item : "something" } );
+        assertTrue( isNull( c2.getOne() ) );
+        assertEquals( "two", c2.two );
+    }
+
 }

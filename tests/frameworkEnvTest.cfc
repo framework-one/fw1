@@ -17,6 +17,10 @@ component extends="tests.InjectableTest" {
         };
     }
 
+    public void function testRequestMethod() {
+        assertEquals( CGI.REQUEST_METHOD, variables.fw.getCGIRequestMethod() );
+    }
+
     public void function testGetEnvironmentIsCalled() {
         variables.fw.getEnvironment = recordCalls;
         variables.fwvars.getEnvironment = recordCalls;

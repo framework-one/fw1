@@ -15,3 +15,4 @@ settings.xml
 run-tests.sh
 /examples/6helloclojure/target/stale/extract-native.dependencies
 /taskmanager/
+/server.json

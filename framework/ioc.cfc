@@ -1,8 +1,8 @@
 component {
-    variables._fw1_version = "3.5.1";
-    variables._di1_version = "1.1.1";
+    variables._fw1_version = "4.0.0";
+    variables._di1_version = "1.2.0";
 /*
-    Copyright (c) 2010-2015, Sean Corfield
+    Copyright (c) 2010-2016, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,12 +29,22 @@ component {
         }
         var n = arrayLen( variables.folderArray );
         for ( var i = 1; i <= n; ++i ) {
-            variables.folderArray[ i ] = trim( variables.folderArray[ i ] );
+            var folderName = trim( variables.folderArray[ i ] );
+            // strip trailing slash since it can cause weirdness in path
+            // deduction on some engines on some platforms (guess which!)
+            if ( len( folderName ) > 1 &&
+                 ( right( folderName, 1 ) == '/' ||
+                   right( folderName, 1 ) == chr(92) ) ) {
+                folderName = left( folderName, len( folderName ) - 1 );
+            }
+            variables.folderArray[ i ] = folderName;
         }
         variables.config = config;
         variables.beanInfo = { };
         variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.getBeanCache = { };
+        variables.accumulatorCache = { };
         variables.initMethodCache = { };
         variables.settersInfo = { };
         variables.autoExclude = [
@@ -64,7 +74,7 @@ component {
 
     // programmatically register an alias
     public any function addAlias( string aliasName, string beanName ) {
-        discoverBeans();
+        discoverBeans(); // still need this since we rely on beanName having been discovered :(
         variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
@@ -72,7 +82,6 @@ component {
 
     // programmatically register new beans with the factory (add a singleton name/value pair)
     public any function addBean( string beanName, any beanValue ) {
-        discoverBeans();
         variables.beanInfo[ beanName ] = {
             name = beanName, value = beanValue, isSingleton = true
         };
@@ -84,13 +93,82 @@ component {
     public boolean function containsBean( string beanName ) {
         discoverBeans();
         return structKeyExists( variables.beanInfo, beanName ) ||
-                ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) );
+            ( hasParent() && variables.parent.containsBean( beanName ) );
+    }
+
+
+    // builder syntax for declaring new beans
+    public any function declare( string beanName ) {
+        var declaration = { beanName : beanName, built : false };
+        var beanFactory = this; // to make the builder functions less confusing
+        structAppend( declaration, {
+            // builder for addAlias()
+            aliasFor : function( string beanName ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                beanFactory.addAlias( declaration.beanName, beanName );
+                return declaration;
+            },
+            // builder for addBean()
+            asValue : function( any beanValue ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                beanFactory.addBean( declaration.beanName, beanValue );
+                return declaration;
+            },
+            // builder for factoryBean()
+            fromFactory : function( any factory, string methodName = "" ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                // use defaults -- we can override later
+                beanFactory.factoryBean( declaration.beanName, factory, methodName );
+                return declaration;
+            },
+            // builder for declareBean()
+            instanceOf : function( string dottedPath ) {
+                if ( declaration.built ) throw "Declaration builder already completed!";
+                declaration.built = true;
+                // use defaults -- we can override later
+                beanFactory.declareBean( declaration.beanName, dottedPath );
+                return declaration;
+            },
+            // modifiers for metadata
+            asSingleton : function() {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                variables.beanInfo[ declaration.beanName ].isSingleton = true;
+                return declaration;
+            },
+            asTransient : function() {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                variables.beanInfo[ declaration.beanName ].isSingleton = false;
+                return declaration;
+            },
+            withArguments : function( array args ) {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                var info = variables.beanInfo[ declaration.beanName ];
+                if ( !structKeyExists( info, 'factory' ) ) throw "withArguments() requires fromFactory()!";
+                info.args = args;
+                return declaration;
+            },
+            withOverrides : function( struct overrides ) {
+                if ( !declaration.built ) throw "No declaration builder to modify!";
+                var info = variables.beanInfo[ declaration.beanName ];
+                if ( !structKeyExists( info, 'factory' ) &&
+                     !structKeyExists( info, 'cfc' ) ) throw "withOverrides() requires fromFactory() or instanceOf()!";
+                info.overrides = overrides;
+                return declaration;
+            },
+            // to allow chaining
+            done : function() {
+                return beanFactory;
+            }
+        } );
+        return declaration;
     }
 
 
     // programmatically register new beans with the factory (add an actual CFC)
     public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
-        discoverBeans();
         var singleDir = '';
         if ( listLen( dottedPath, '.' ) > 1 ) {
             var cfc = listLast( dottedPath, '.' );
@@ -113,8 +191,7 @@ component {
         return this;
     }
 
-    public any function factoryBean( string beanName, any factory, string methodName, array args = [ ], struct overrides = { } ) {
-        discoverBeans();
+    public any function factoryBean( string beanName, any factory, string methodName = "", array args = [ ], struct overrides = { } ) {
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
@@ -126,14 +203,22 @@ component {
 
 
     // return the requested bean, fully populated
-    public any function getBean( string beanName ) {
+    public any function getBean( string beanName, struct constructorArgs = { } ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
-            return resolveBean( beanName );
-        } else if ( structKeyExists( variables, 'parent' ) ) {
-            return variables.parent.getBean( beanName );
+            if ( structKeyExists( variables.getBeanCache, beanName ) ) {
+                return variables.getBeanCache[ beanName ];
+            }
+            var bean = resolveBean( beanName, constructorArgs );
+            if ( isSingleton( beanName ) ) variables.getBeanCache[ beanName ] = bean;
+            return bean;
+        } else if ( hasParent() ) {
+            // ideally throw an exception for non-DI/1 parent when args passed
+            // WireBox adapter can do that since we control it but we can't do
+            // anything for other bean factories - will revisit before release
+            return variables.parent.getBean( beanName, constructorArgs );
         } else {
-            throw 'bean not found: #beanName#';
+            return missingBean( beanName = beanName, dependency = false );
         }
     }
 
@@ -146,13 +231,13 @@ component {
             if ( structKeyExists( variables.beanInfo, beanName ) ) {
                 return variables.beanInfo[ beanName ];
             }
-            if ( structKeyExists( variables, 'parent' ) ) {
+            if ( hasParent() ) {
                 return parentBeanInfo( beanName );
             }
             throw 'bean not found: #beanName#';
         } else {
             var result = { beanInfo = { } };
-            if ( structKeyExists( variables, 'parent' ) ) {
+            if ( hasParent() ) {
                 if ( flatten || len( regex ) ) {
                     structAppend( result.beanInfo, parentBeanInfoList( flatten ).beanInfo );
                     structAppend( result.beanInfo, variables.beanInfo );
@@ -190,12 +275,18 @@ component {
     }
 
 
+    // return true if this factory has a parent
+  	public boolean function hasParent() {
+  		return structKeyExists( variables, 'parent' );
+  	}
+
+
     // return true iff bean is known to be a singleton
     public boolean function isSingleton( string beanName ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return variables.beanInfo[ beanName ].isSingleton;
-        } else if ( structKeyExists( variables, 'parent' ) ) {
+        } else if ( hasParent() ) {
             try {
                 return variables.parent.isSingleton( beanName );
             } catch ( any e ) {
@@ -234,6 +325,8 @@ component {
         discoverBeans();
         variables.beanCache = { };
         variables.resolutionCache = { };
+        variables.accumulatorCache = { };
+        variables.getBeanCache = { };
         variables.initMethodCache = { };
         for ( var key in variables.beanInfo ) {
             if ( !structKeyExists( variables.beanInfo[ key ], "isSingleton" ) )
@@ -318,8 +411,12 @@ component {
                          ( !structKeyExists( property, 'setter' ) ||
                            isBoolean( property.setter ) && property.setter ) ) {
                         if ( structKeyExists( property, 'type' ) &&
-                             property.type != 'any' ) {
-                            iocMeta.setters[ property.name ] = 'typed';
+                             property.type != 'any' &&
+                             variables.config.omitTypedProperties ) {
+                            iocMeta.setters[ property.name ] = 'ignored';
+                        } else if ( structKeyExists( property, 'default' ) &&
+                                    variables.config.omitDefaultedProperties ) {
+                            iocMeta.setters[ property.name ] = 'ignored';
                         } else {
                             iocMeta.setters[ property.name ] = 'implicit';
                         }
@@ -558,8 +655,12 @@ component {
     }
 
 
-    private void function missingBean( string beanName, string resolvingBeanName = '' ) {
-        if ( variables.config.strict ) {
+    /*
+     * override this if you want to add a convention-based bean factory hook, that returns
+     * beans instead of throwing an exception
+     */
+    private any function missingBean( string beanName, string resolvingBeanName = '', boolean dependency = true ) {
+        if ( variables.config.strict || !dependency ) {
             if ( len( resolvingBeanName ) ) {
                 throw 'bean not found: #beanName#; while resolving #resolvingBeanName#';
             } else {
@@ -574,9 +675,7 @@ component {
     private void function onLoadEvent() {
         var head = variables.listeners;
         while ( isStruct( head ) ) {
-            if ( isCustomFunction( head.listener ) ||
-                 ( listFirst( server.coldfusion.productVersion ) >= 10 &&
-                   isClosure( head.listener ) ) ) {
+            if ( isCustomFunction( head.listener ) || isClosure( head.listener ) ) {
                 head.listener( this );
             } else if ( isObject( head.listener ) ) {
                 head.listener.onLoad( this );
@@ -621,11 +720,14 @@ component {
     }
 
 
-    private any function resolveBean( string beanName ) {
+    private any function resolveBean( string beanName, struct constructorArgs = { } ) {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        var partialBean = resolveBeanCreate( beanName, { injection = { }, dependencies = { } } );
+        if ( !structKeyExists( variables.accumulatorCache, beanName ) ) {
+            variables.accumulatorCache[ beanName ] = { injection = { }, dependencies = { } };
+        }
+        var partialBean = resolveBeanCreate( beanName, variables.accumulatorCache[ beanName ], constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -641,9 +743,8 @@ component {
                     postInjectables[ name ] = true;
                 }
                 for ( var property in injection.setters ) {
-                    if ( injection.setters[ property ] == 'typed' &&
-                        variables.config.omitTypedProperties ) {
-                        // we do not inject typed properties!
+                    if ( injection.setters[ property ] == 'ignored' ) {
+                        // do not inject defaulted/typed properties!
                         continue;
                     }
                     var args = { };
@@ -651,11 +752,13 @@ component {
                         args[ property ] = injection.overrides[ property ];
                     } else if ( structKeyExists( partialBean.injection, property ) ) {
                         args[ property ] = partialBean.injection[ property ].bean;
-                    } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( property ) ) {
+                    } else if ( hasParent() && variables.parent.containsBean( property ) ) {
                         args[ property ] = variables.parent.getBean( property );
                     } else {
-                        missingBean( property, beanName );
-                        continue;
+                        // allow for possible convention-based bean factory
+                        args[ property ] = missingBean( property, beanName );
+                        // isNull() does not always work on ACF10...
+                        try { if ( isNull( args[ property ] ) ) continue; } catch ( any e ) { continue; }
                     }
                     evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
                 }
@@ -699,15 +802,26 @@ component {
     }
 
 
-    private struct function resolveBeanCreate( string beanName, struct accumulator ) {
+    private struct function resolveBeanCreate( string beanName, struct accumulator, struct constructorArgs = { } ) {
         var bean = 0;
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             var info = variables.beanInfo[ beanName ];
-            accumulator.dependencies[ beanName ] = { };
+            if ( !structKeyExists( accumulator.dependencies, beanName ) ) accumulator.dependencies[ beanName ] = { };
             if ( structKeyExists( info, 'cfc' ) ) {
 /*******************************************************/
                 var metaBean = cachable( beanName );
-                var overrides = structKeyExists( info, 'overrides' ) ? info.overrides : { };
+                var overrides = { };
+                // be careful not to modify overrides metadata:
+                if ( structCount( constructorArgs ) ) {
+                    if ( structKeyExists( info, 'overrides' ) ) {
+                        structAppend( overrides, info.overrides );
+                    }
+                    structAppend( overrides, constructorArgs );
+                } else {
+                    if ( structKeyExists( info, 'overrides' ) ) {
+                        overrides = info.overrides;
+                    }
+                }
                 bean = metaBean.bean;
                 if ( metaBean.newObject ) {
                     if ( structKeyExists( info.metadata, 'constructor' ) ) {
@@ -776,9 +890,11 @@ component {
                         }
                     }
                 }
-                accumulator.bean = bean;
+                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
+                    accumulator.injection[ beanName ].bean = bean;
+                }
             } else if ( isConstant( beanName ) ) {
-                accumulator.bean = info.value;
+                bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
             } else if ( structKeyExists( info, 'factory' ) ) {
                 var fmBean = isSimpleValue( info.factory ) ? this.getBean( info.factory ) : info.factory;
@@ -792,19 +908,30 @@ component {
                         argStruct[ i ] = this.getBean( argName );
                     }
                 }
-                accumulator.bean = evaluate( 'fmBean.#info.method#(argumentCollection=argStruct)' );
-                accumulator.injection[ beanName ] = { bean = accumulator.bean, setters = { } };
+                if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
+                    bean = fmBean( argumentCollection = argStruct );
+                } else {
+                    bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                }
+                accumulator.injection[ beanName ] = { bean = bean, setters = { } };
             } else {
                 throw 'internal error: invalid metadata for #beanName#';
             }
-        } else if ( structKeyExists( variables, 'parent' ) && variables.parent.containsBean( beanName ) ) {
-            bean = variables.parent.getBean( beanName );
-            accumulator.injection[ beanName ] = { bean = bean, setters = { } };
-            accumulator.bean = bean;
         } else {
-            missingBean( beanName );
+            if ( hasParent() && variables.parent.containsBean( beanName ) ) {
+                bean = variables.parent.getBean( beanName );
+            } else {
+                bean = missingBean( beanName = beanName, dependency = true );
+            }
+            if ( !isNull( bean ) ) {
+                accumulator.injection[ beanName ] = { bean = bean, setters = { } };
+            }
         }
-        return accumulator;
+        return {
+            bean = bean,
+            injection = accumulator.injection,
+            dependencies = accumulator.dependencies
+        };
     }
 
 
@@ -839,8 +966,11 @@ component {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 
+        if ( !structKeyExists( variables.config, 'omitDefaultedProperties' ) ) {
+            variables.config.omitDefaultedProperties = true;
+        }
         if ( !structKeyExists( variables.config, 'omitTypedProperties' ) ) {
-            variables.config.omitTypedProperties = false;
+            variables.config.omitTypedProperties = true;
         }
         if ( !structKeyExists( variables.config, 'omitDirectoryAliases' ) ) {
             variables.config.omitDirectoryAliases = false;

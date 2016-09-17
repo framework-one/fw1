@@ -3,7 +3,7 @@ component extends="mxunit.framework.TestCase" {
     function setup() {
         variables.added =
             new framework.ioc( "" )
-            .addBean( "known", 42 );
+            .declare( "known" ).asValue( 42 ).done();
     }
 
     function shouldHaveKnownValue() {

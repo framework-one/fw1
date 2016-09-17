@@ -7,6 +7,7 @@ component extends="tests.InjectableTest" {
         variables.fwvars.framework = {
             base = "/tests/omv"
         };
+        structDelete( request, "layout" );
     }
 
     public void function testSetLayout() {
@@ -31,6 +32,24 @@ component extends="tests.InjectableTest" {
             variables.fw.onRequest( "" );
         }
         assertEquals( "TWOTEST", trim( output ) );
+    }
+
+    public void function testCustomRenderer() {
+        var omv = function( rc ) {
+            request.layout = false;
+            return {
+                contentType = "text/html; charset=utf-8",
+                output = "custom output"
+            };
+        };
+        variables.fw.onMissingView = omv;
+        variables.fwvars.onMissingView = omv;
+        variables.fw.onRequestStart( "" );
+        var output = "";
+        savecontent variable="output" {
+            variables.fw.onRequest( "" );
+        }
+        assertEquals( "custom output", trim( output ) );
     }
 
     private string function selectLayoutTwo( struct rc ) {

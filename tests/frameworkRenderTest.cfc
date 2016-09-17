@@ -79,6 +79,40 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( output contains "framework lifecycle trace" );
     }
 
+    public void function testNoTraceRenderVarBuilder() {
+        variables.fw.onApplicationStart();
+        variables.fw.renderData( "text" ).data( "test" );
+        var output = "";
+        savecontent variable="output" {
+            variables.fw.onRequestEnd();
+        }
+        assertFalse( output contains "framework lifecycle trace" );
+    }
+
+    public void function testTraceOutputReqBuilder() {
+        request.fw.onApplicationStart();
+        variables.fw.renderData().type( "text" ).data( "myteststring" );
+        var output = "";
+        savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
+            request.fw.onRequestEnd();
+        }
+        assertTrue( output contains "myteststring" );
+        assertFalse( output contains "framework lifecycle trace" );
+    }
+
+    public void function testTraceOutputHTMLReqBuilder() {
+        request.fw.onApplicationStart();
+        variables.fw.renderData( data = "<p>myteststring</p>" ).type( "html" );
+        var output = "";
+        savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
+            request.fw.onRequestEnd();
+        }
+        assertTrue( output contains "myteststring" );
+        assertTrue( output contains "framework lifecycle trace" );
+    }
+
     public void function testSetupTraceRenderHtml() {
         variables.fwExtended.onApplicationStart();
         var output = "";
@@ -96,6 +130,26 @@ component extends="mxunit.framework.TestCase" {
             variables.fwExtended.onRequestEnd();
         }
         assertEquals( output, "custom trace render" );
+    }
+
+    public void function testRenderFunction() {
+        request.fw.onApplicationStart();
+        variables.fw.renderData().type( function( renderData ) {
+            return {
+                contentType = "text/html; charset=utf-8",
+                output = "string",
+                writer = function( out ) {
+                    writeOutput( "my written " & out );
+                }
+            };
+        } ).data( "myteststring" );
+        var output = "";
+        savecontent variable="output" {
+            request.fw.onRequest("/index.cfm");
+            request.fw.onRequestEnd();
+        }
+        assertTrue( output contains "my written string" );
+        assertFalse( output contains "framework lifecycle trace" );
     }
 
 

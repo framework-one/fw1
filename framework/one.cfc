@@ -1,20 +1,20 @@
 component {
-    variables._fw1_version = "3.5.1";
-/*
-    Copyright (c) 2009-2015, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
+    variables._fw1_version = "4.0.0";
+    /*
+      Copyright (c) 2009-2016, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+      Licensed under the Apache License, Version 2.0 (the "License");
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+      http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+    */
 
     this.name = hash( getBaseTemplatePath() );
     if ( !structKeyExists( request, '_fw1' ) ) {
@@ -24,6 +24,7 @@ component {
             cgiRequestMethod = CGI.REQUEST_METHOD,
             controllers = [ ],
             requestDefaultsInitialized = false,
+            routeMethodsMatched = { },
             doTrace = false,
             trace = [ ]
         };
@@ -251,7 +252,7 @@ component {
 
         if ( structKeyExists( request._fw1, 'controllerExecutionStarted' ) ) {
             throw( type='FW1.controllerExecutionStarted', message="Controller '#action#' may not be added at this point.",
-                detail='The controller execution phase has already started. Controllers may not be added by other controller methods.' );
+                   detail='The controller execution phase has already started. Controllers may not be added by other controller methods.' );
         }
 
         tuple.controller = getController( section = section, subsystem = subsystem );
@@ -391,7 +392,7 @@ component {
 
         if ( variables.framework.defaultSubsystem == '' ) {
             throw( type='FW1.subsystemNotSpecified', message='No subsystem specified and no default configured.',
-                    detail='When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured.' );
+                   detail='When using subsystems, every request should specify a subsystem or variables.framework.defaultSubsystem should be configured.' );
         }
 
         return variables.framework.defaultSubsystem;
@@ -466,14 +467,28 @@ component {
         return listLast( getSectionAndItem( action ), '.' );
     }
 
+    /*
+     * return this request's CGI method
+     */
+    public string function getCGIRequestMethod() {
+        return request._fw1.cgiRequestMethod;
+    }
 
     /*
      * return the current route (if any)
+     * this is the raw, matched route that we mapped
      */
     public string function getRoute() {
         return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
     }
 
+    /*
+     * return the part of the pathinfo that was used as the route
+     * prefixed by the HTTP method
+     */
+    public string function getRoutePath() {
+        return '$' & request._fw1.cgiRequestMethod & request._fw1.currentRoute;
+    }
 
     /*
      * return the configured routes
@@ -700,9 +715,9 @@ component {
         try {
             if ( !structKeyExists( variables, 'framework' ) ||
                  !structKeyExists( variables.framework, 'version' ) ) {
-              // error occurred before framework was initialized
-              failure( exception, event, false, true );
-              return;
+                // error occurred before framework was initialized
+                failure( exception, event, false, true );
+                return;
             }
 
             // record details of the exception:
@@ -713,7 +728,6 @@ component {
             request.event = event;
             // reset lifecycle flags:
             structDelete( request, 'layout' );
-            structDelete( request._fw1, 'controllerExecutionComplete' );
             structDelete( request._fw1, 'controllerExecutionStarted' );
             structDelete( request._fw1, 'overrideViewAction' );
             if ( structKeyExists( request._fw1, 'renderData' ) ) {
@@ -770,10 +784,10 @@ component {
      * this can be overridden if you want to change the behavior when
      * FW/1 cannot find a matching view
      */
-    public string function onMissingView( struct rc ) {
+    public any function onMissingView( struct rc ) {
         // unable to find a matching view - fail with a nice exception
         viewNotFound();
-        // if we got here, we would return the string to be rendered
+        // if we got here, we would return the string or struct to be rendered
         // but viewNotFound() throws an exception...
         // for example, return view( 'main.missing' );
     }
@@ -803,32 +817,45 @@ component {
         var n = 0;
 
         request._fw1.controllerExecutionStarted = true;
-        try {
-            n = arrayLen( request._fw1.controllers );
-            for ( i = 1; i <= n; i = i + 1 ) {
-                tuple = request._fw1.controllers[ i ];
-                // run before once per controller:
-                if ( !structKeyExists( once, tuple.key ) ) {
-                    once[ tuple.key ] = i;
-                    doController( tuple, 'before', 'before' );
+        if ( variables.framework.preflightOptions &&
+             request._fw1.cgiRequestMethod == "OPTIONS" &&
+             structCount( request._fw1.routeMethodsMatched ) ) {
+            // OPTIONS support enabled and at least one possible match
+            // bypass all normal controllers and render headers and data:
+            var resp = getPageContext().getResponse();
+            resp.setHeader( "Access-Control-Allow-Origin", variables.framework.optionsAccessControl.origin );
+            resp.setHeader( "Access-Control-Allow-Methods", "OPTIONS," & uCase( structKeyList( request._fw1.routeMethodsMatched ) ) );
+            resp.setHeader( "Access-Control-Allow-Headers", variables.framework.optionsAccessControl.headers );
+            resp.setHeader( "Access-Control-Allow-Credentials", variables.framework.optionsAccessControl.credentials ? "true" : "false" );
+            resp.setHeader( "Access-Control-Max-Age", "#variables.framework.optionsAccessControl.maxAge#" );
+            renderData( "text", "" );
+        } else {
+            try {
+                n = arrayLen( request._fw1.controllers );
+                for ( i = 1; i <= n; i = i + 1 ) {
+                    tuple = request._fw1.controllers[ i ];
+                    // run before once per controller:
+                    if ( !structKeyExists( once, tuple.key ) ) {
+                        once[ tuple.key ] = i;
+                        doController( tuple, 'before', 'before' );
+                        if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                    }
+                    doController( tuple, tuple.item, 'item' );
                     if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
                 }
-                doController( tuple, tuple.item, 'item' );
-                if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
-            }
-            n = arrayLen( request._fw1.controllers );
-            for ( i = n; i >= 1; i = i - 1 ) {
-                tuple = request._fw1.controllers[ i ];
-                // run after once per controller (in reverse order):
-                if ( once[ tuple.key ] eq i ) {
-                    doController( tuple, 'after', 'after' );
-                    if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                n = arrayLen( request._fw1.controllers );
+                for ( i = n; i >= 1; i = i - 1 ) {
+                    tuple = request._fw1.controllers[ i ];
+                    // run after once per controller (in reverse order):
+                    if ( once[ tuple.key ] eq i ) {
+                        doController( tuple, 'after', 'after' );
+                        if ( structKeyExists( request._fw1, 'abortController' ) ) abortController();
+                    }
                 }
+            } catch ( FW1.AbortControllerException e ) {
+                // do "nothing" since this is a control flow exception
             }
-        } catch ( FW1.AbortControllerException e ) {
-            // do "nothing" since this is a control flow exception
         }
-        request._fw1.controllerExecutionComplete = true;
 
         if ( structKeyExists( request._fw1, 'renderData' ) ) {
             out = renderDataWithContentType();
@@ -858,7 +885,19 @@ component {
                 out = internalLayout( request._fw1.layouts[i], out );
             }
         }
-        writeOutput( out );
+        if ( isSimpleValue( out ) ) {
+            writeOutput( out );
+        } else {
+            if ( structKeyExists( out, 'contentType' ) ) {
+                var resp = getPageContext().getResponse();
+                resp.setContentType( out.contentType );
+            }
+            if ( structKeyExists( out, 'writer' ) ) {
+                out.writer( out.output );
+            } else {
+                writeOutput( out.output );
+            }
+        }
         setupResponseWrapper();
     }
 
@@ -882,7 +921,7 @@ component {
         if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
             setupApplicationWrapper();
         } else {
-            variables.fw1App = getFw1App();
+            request._fw1.theApp = getFw1App();
         }
 
         restoreFlashContext();
@@ -1109,8 +1148,60 @@ component {
     }
 
     // call this to render data rather than a view and layouts
-    public void function renderData( string type, any data, numeric statusCode = 200, string jsonpCallback = "" ) {
-        request._fw1.renderData = { type = type, data = data, statusCode = statusCode, jsonpCallback = jsonpCallback };
+    // arguments are deprecated in favor of build syntax as of 4.0
+    public any function renderData( string type = '', any data = '', numeric statusCode = 200, string jsonpCallback = "" ) {
+        if ( statusCode != 200 ) deprecated( false, "Use the .statusCode() builder syntax instead of the inline argument." );
+        if ( len( jsonpCallback ) ) deprecated( false, "Use the .jsonpCallback() builder syntax instead of the inline argument." );
+        request._fw1.renderData = {
+            type = type,
+            data = data,
+            statusCode = statusCode,
+            statusText = '',
+            jsonpCallback = jsonpCallback
+        };
+        // return a builder to support nicer rendering syntax
+        return renderer();
+    }
+
+    public any function renderer() {
+        var builder = { };
+        structAppend( builder, {
+            // allow type and data to be overridden just for completeness
+            type : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                request._fw1.renderData.type = v;
+                return builder;
+            },
+            data : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                request._fw1.renderData.data = v;
+                return builder;
+            },
+            header : function( h, v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                if ( !structKeyExists( request._fw1.renderData, 'headers' ) ) {
+                    request._fw1.renderData.headers = [ ];
+                }
+                arrayAppend( request._fw1.renderData.headers, { name = h, value = v } );
+                return builder;
+            },
+            statusCode : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                request._fw1.renderData.statusCode = v;
+                return builder;
+            },
+            statusText : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                request._fw1.renderData.statusText = v;
+                return builder;
+            },
+            jsonpCallback : function( v ) {
+                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+                request._fw1.renderData.jsonpCallback = v;
+                return builder;
+            }
+        } );
+        return builder;
     }
 
     /*
@@ -1237,8 +1328,8 @@ component {
      * view() may be invoked inside views and layouts
      * returns the UI generated by the named view
      */
-    public string function view( string path, struct args = { },
-                                 any missingView = { } ) {
+    public any function view( string path, struct args = { },
+                              any missingView = { } ) {
         var viewPath = parseViewOrLayoutPath( path, 'view' );
         if ( cachedFileExists( viewPath ) ) {
             internalFrameworkTrace( 'view( #path# ) called - rendering #viewPath#' );
@@ -1298,7 +1389,7 @@ component {
         internalFrameworkTrace( 'building layout queue', subsystem, section, item );
         // look for item-specific layout:
         testLayout = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
-                                                    section & '/' & item, 'layout' );
+                                            section & '/' & item, 'layout' );
         if ( cachedFileExists( testLayout ) ) {
             internalFrameworkTrace( 'found item-specific layout #testLayout#', subsystem, section, item );
             arrayAppend( request._fw1.layouts, testLayout );
@@ -1359,7 +1450,7 @@ component {
         internalFrameworkTrace( 'building view queue', subsystem, section, item );
         // view and layout setup - used to be in setupRequestWrapper():
         request._fw1.view = parseViewOrLayoutPath( subsystem & variables.framework.subsystemDelimiter &
-                                                    section & '/' & item, 'view' );
+                                                   section & '/' & item, 'view' );
         if ( cachedFileExists( request._fw1.view ) ) {
             internalFrameworkTrace( 'found view #request._fw1.view#', subsystem, section, item );
         } else {
@@ -1409,7 +1500,7 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context )' );
+                evaluate( 'cfc.#method#( rc = request.context, headers = request._fw1.headers )' );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1417,7 +1508,7 @@ component {
         } else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle )' );
+                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle, headers = request._fw1.headers )' );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1491,7 +1582,7 @@ component {
                     for ( var i = 1; i <= n; ++i ) {
                         var property = md.properties[ i ];
                         if ( implicitSetters ||
-                                structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
+                             structKeyExists( property, 'setter' ) && isBoolean( property.setter ) && property.setter ) {
                             setters[ property.name ] = 'implicit';
                         }
                     }
@@ -1532,8 +1623,8 @@ component {
             writeOutput( '<hr /><div id="fw1_trace" style="background: ##ccdddd; color: black; border: 1px solid; border-color: black; padding: 5px; #font#">' );
             writeOutput( '<div style="#font# font-weight: bold; font-size: large; float: left;">Framework Lifecycle Trace</div><div style="clear: both;"></div>' );
             var table = '<table style="border: 1px solid; border-color: black; color: black; #font#" width="100%">' &
-                      '<tr><th style="text-align:right;" width="5%">time</th><th style="text-align:right;" width="5%">delta</th>' &
-                      '<th style="text-align:center;">type</th><th width="10%">action</th><th>message</th></tr>';
+                '<tr><th style="text-align:right;" width="5%">time</th><th style="text-align:right;" width="5%">delta</th>' &
+                '<th style="text-align:center;">type</th><th width="10%">action</th><th>message</th></tr>';
             writeOutput( table );
             var colors = [ '##ccd4dd', '##ccddcc' ];
             var row = 0;
@@ -1676,8 +1767,8 @@ component {
     }
 
     private struct function getFw1App() {
-        if ( structKeyExists( variables, "fw1App" ) ) {
-            return variables.fw1App;
+        if ( structKeyExists( request._fw1, 'theApp' ) ) {
+            return request._fw1.theApp;
         } else {
             return application[variables.framework.applicationKey];
         }
@@ -1764,10 +1855,6 @@ component {
         if ( structKeyExists( rc, '$' ) ) {
             $ = rc.$;
         }
-        if ( !structKeyExists( request._fw1, 'controllerExecutionComplete' ) ) {
-            throw( type='FW1.layoutExecutionFromController', message='Invalid to call the layout method at this point.',
-                detail='The layout method should not be called prior to the completion of the controller execution phase.' );
-        }
         var response = '';
         savecontent variable="response" {
             include '#layoutPath#';
@@ -1792,7 +1879,8 @@ component {
 
     private boolean function isFrameworkInitialized() {
         return structKeyExists( variables, 'framework' ) &&
-            structKeyExists( application, variables.framework.applicationKey );
+            ( structKeyExists( request._fw1, 'theApp' ) ||
+              structKeyExists( application, variables.framework.applicationKey ) );
     }
 
     private boolean function isSubsystemInitialized( string subsystem ) {
@@ -1854,7 +1942,7 @@ component {
         case 'view':
             folder = variables.viewFolder;
             break;
-        // else leave it alone?
+            // else leave it alone?
         }
         var pathInfo = { };
         var subsystem = getSubsystem( getSubsystemSectionAndItem( path ) );
@@ -1867,11 +1955,11 @@ component {
             pathInfo.base = pathInfo.base & getSubsystemDirPrefix( subsystem );
         }
         var defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lucee';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.lc';
-        if ( !cachedFileExists( expandPath( defaultPath ) ) )
+        if ( !cachedFileExists( defaultPath ) )
             // can't find it so assume .cfm default value
             defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
         return customizeViewOrLayoutPath( pathInfo, type, defaultPath );
@@ -1895,8 +1983,14 @@ component {
             if ( routeLen ) {
                 if ( left( routeRegEx.pattern, 1 ) == '$' ) {
                     // check HTTP method
-                    routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
-                    var methodLen = len( routeRegEx.method );
+                    var methodLen = 0;
+                    if ( routeLen >= 2 && left( routeRegEx.pattern, 2 ) == '$*' ) {
+                        // accept all methods so don't set method but...
+                        methodLen = 2; // ...consume 2 characters
+                    } else {
+                        routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
+                        methodLen = len( routeRegEx.method );
+                    }
                     if ( routeLen == methodLen ) {
                         routeRegEx.pattern = '*';
                     } else {
@@ -1944,11 +2038,25 @@ component {
         var routeMatch = { matched = false };
         structAppend( routeMatch, regExCache[ cacheKey ] );
         if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
-        var matched = len( routeMatch.method ) ? ( '$' & httpMethod == routeMatch.method ) : true;
-        if ( matched && routeRegexFind( routeMatch.pattern, path ) ) {
-            routeMatch.matched = true;
-            routeMatch.route = route;
-            routeMatch.path = path;
+        if ( routeRegexFind( routeMatch.pattern, path ) ) {
+            if ( len( routeMatch.method ) > 1 ) {
+                if ( '$' & httpMethod == routeMatch.method ) {
+                    routeMatch.matched = true;
+                } else if ( variables.framework.preflightOptions ) {
+                    // it matched apart from the method so record this
+                    request._fw1.routeMethodsMatched[ right( routeMatch.method, len( routeMatch.method ) - 1 ) ] = true;
+                }
+            } else if ( variables.framework.preflightOptions && httpMethod == "OPTIONS" ) {
+                // it would have matched but we should special case OPTIONS
+                request._fw1.routeMethodsMatched.get = true;
+                request._fw1.routeMethodsMatched.post = true;
+            } else {
+                routeMatch.matched = true;
+            }
+            if ( routeMatch.matched ) {
+                routeMatch.route = route;
+                routeMatch.path = path;
+            }
         }
         return routeMatch;
     }
@@ -1963,7 +2071,7 @@ component {
 
     private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
         var resourceCache = isFrameworkInitialized() ? getFw1App().cache.routes.resources : { };
-        var cacheKey = hash( serializeJSON( resourcesToRoute ) );
+        var cacheKey = hash( serializeJSON( { rtr = resourcesToRoute, ss = subsystem, pr = pathRoot, ta = targetAppend } ) );
         if ( !structKeyExists( resourceCache, cacheKey ) ) {
             // get passed in resourcesToRoute (string,array,struct) to match following struct
             var resources = { resources = [ ], subsystem = subsystem, pathRoot = pathRoot, methods = [ ], nested = [ ] };
@@ -2018,63 +2126,106 @@ component {
         return resourceCache[ cacheKey ];
     }
 
-    private string function renderDataWithContentType() {
-        var out = '';
-        var contentType = '';
-        var type = request._fw1.renderData.type;
-        var data = request._fw1.renderData.data;
-        var statusCode = request._fw1.renderData.statusCode;
-        switch ( type ) {
-        case 'json':
-            contentType = 'application/json; charset=utf-8';
-            out = serializeJSON( data );
-            break;
-        case 'jsonp':
-            contentType = 'application/javascript; charset=utf-8';
-            if ( !len(request._fw1.renderData.jsonpCallback) ){
-                throw( type = 'FW1.jsonpCallbackRequired',
-                       message = 'Callback was not defined',
-                       detail = 'renderData() called with jsonp type requires a jsonpCallback' );
-            }
-            out = request._fw1.renderData.jsonpCallback & "(" & serializeJSON( data ) & ");";
-            break;
-        case 'rawjson':
-            contentType = 'application/json; charset=utf-8';
-            out = data;
-            break;
-        case 'html':
-            contentType = 'text/html; charset=utf-8';
-            out = data;
-            structDelete( request._fw1, 'renderData' );
-            break;
-        case 'xml':
-            contentType = 'text/xml; charset=utf-8';
-            if ( isXML( data ) ) {
-                if ( isSimpleValue( data ) ) {
-                    // XML as string already
-                    out = data;
-                } else {
-                    // XML object
-                    out = toString( data );
-                }
-            } else {
-                throw( type = 'FW1.UnsupportXMLRender',
-                       message = 'Data is not XML',
-                       detail = 'renderData() called with XML type but unrecognized data format' );
-            }
-            break;
-        case 'text':
-            contentType = 'text/plain; charset=utf-8';
-            out = data;
-            break;
-        default:
-            throw( type = 'FW1.UnsupportedRenderType',
-                   message = 'Only HTML, JSON, JSONP, RAWJSON, XML, and TEXT are supported',
-                   detail = 'renderData() called with unknown type: ' & type );
-            break;
+    private any function read_json( string json ) {
+        return deserializeJSON( json );
+    }
+
+    private struct function render_json( struct renderData ) {
+        return {
+            contentType = 'application/json; charset=utf-8',
+            output = serializeJSON( renderData.data )
+        };
+    }
+
+    private struct function render_jsonp( struct renderData ) {
+        if ( !structKeyExists( renderData, 'jsonpCallback' ) || !len( renderData.jsonpCallback ) ){
+            throw( type = 'FW1.jsonpCallbackRequired',
+                   message = 'Callback was not defined',
+                   detail = 'renderData() called with jsonp type requires a jsonpCallback' );
         }
-        getPageContext().getResponse().setStatus( statusCode );
-        getPageContext().getResponse().setContentType( contentType );
+        return {
+            contentType = 'application/javascript; charset=utf-8',
+            output = renderData.jsonpCallback & "(" & serializeJSON( renderData.data ) & ");"
+        };
+    }
+
+    private struct function render_rawjson( struct renderData ) {
+        return {
+            contentType = 'application/json; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function render_html( struct renderData ) {
+        structDelete( request._fw1, 'renderData' );
+        return {
+            contentType = 'text/html; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function render_xml( struct renderData ) {
+        var output = '';
+        if ( isXML( renderData.data ) ) {
+            if ( isSimpleValue( renderData.data ) ) {
+                // XML as string already
+                output = renderData.data;
+            } else {
+                // XML object
+                output = toString( renderData.data );
+            }
+        } else {
+            throw( type = 'FW1.UnsupportXMLRender',
+                   message = 'Data is not XML',
+                   detail = 'renderData() called with XML type but unrecognized data format' );
+        }
+        return {
+            contentType = 'text/xml; charset=utf-8',
+            output = output
+        };
+    }
+
+    private struct function render_text( struct renderData ) {
+        return {
+            contentType = 'text/plain; charset=utf-8',
+            output = renderData.data
+        };
+    }
+
+    private struct function renderDataWithContentType() {
+        var out = { };
+        var renderType = request._fw1.renderData.type;
+        var statusCode = request._fw1.renderData.statusCode;
+        var statusText = request._fw1.renderData.statusText;
+        var headers = structKeyExists( request._fw1.renderData, 'headers' ) ?
+            request._fw1.renderData.headers : [ ];
+        if ( isSimpleValue( renderType ) ) {
+            var fn_type = 'render_' & renderType;
+            if ( structKeyExists( variables, fn_type ) ) {
+                renderType = variables[ fn_type ];
+                // evaluate with no FW/1 context!
+                out = renderType( request._fw1.renderData );
+            } else {
+                throw( type = 'FW1.UnsupportedRenderType',
+                       message = 'Only HTML, JSON, JSONP, RAWJSON, XML, and TEXT are supported',
+                       detail = 'renderData() called with unknown type: ' & renderType );
+            }
+        } else {
+            // assume it is a function
+            out = renderType( request._fw1.renderData );
+        }
+        var resp = getPageContext().getResponse();
+        for ( var h in headers ) {
+            resp.setHeader( h.name, h.value );
+        }
+        // in theory, we should use sendError() instead of setStatus() but some
+        // Servlet containers interpret that to mean "Send my error page" instead
+        // of just sending the response you actually want!
+        if ( len( statusText ) ) {
+            resp.setStatus( statusCode, statusText );
+        } else {
+            resp.setStatus( statusCode );
+        }
         return out;
     }
 
@@ -2121,10 +2272,10 @@ component {
                 structAppend( request.context, session[ preserveKeySessionKey ], false );
                 if ( variables.framework.maxNumContextsPreserved == 1 ) {
                     /*
-                        When multiple contexts are preserved, the oldest context is purged
-                        within getNextPreserveKeyAndPurgeOld once the maximum is reached.
-                        This allows for a browser refresh after the redirect to still receive
-                        the same context.
+                      When multiple contexts are preserved, the oldest context is purged
+                      within getNextPreserveKeyAndPurgeOld once the maximum is reached.
+                      This allows for a browser refresh after the redirect to still receive
+                      the same context.
                     */
                     structDelete( session, preserveKeySessionKey );
                 }
@@ -2190,7 +2341,7 @@ component {
     private void function setupApplicationWrapper() {
         if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
         request._fw1.appWrapped = true;
-        variables.fw1App = {
+        request._fw1.theApp = {
             cache = {
                 lastReload = now(),
                 fileExists = { },
@@ -2242,9 +2393,9 @@ component {
         // this will recreate the main bean factory on a reload:
         internalFrameworkTrace( 'setupApplication() called' );
         setupApplication();
-		application[variables.framework.applicationKey] = variables.fw1App;
+        application[variables.framework.applicationKey] = request._fw1.theApp;
 
-	}
+    }
 
     private void function setupFrameworkDefaults() {
         if ( structKeyExists( variables, "_fw1_defaults_initialized" ) ) return;
@@ -2366,6 +2517,9 @@ component {
         if ( !structKeyExists( variables.framework, 'routes' ) ) {
             variables.framework.routes = [ ];
         }
+        if ( !structKeyExists( variables.framework, 'perResourceError' ) ) {
+            variables.framework.perResourceError = true;
+        }
         if ( !structKeyExists( variables.framework, 'resourceRouteTemplates' ) ) {
             variables.framework.resourceRouteTemplates = [
                 { method = 'default', httpMethods = [ '$GET' ] },
@@ -2375,6 +2529,9 @@ component {
                 { method = 'update', httpMethods = [ '$PUT','$PATCH' ], includeId = true },
                 { method = 'destroy', httpMethods = [ '$DELETE' ], includeId = true }
             ];
+            if ( variables.framework.perResourceError ) {
+                arrayAppend( variables.framework.resourceRouteTemplates, { method = 'error', httpMethods = [ '$*' ] } );
+            }
         }
         if ( !structKeyExists( variables.framework, 'routesCaseSensitive' ) ) {
             variables.framework.routesCaseSensitive = true;
@@ -2416,6 +2573,7 @@ component {
             throw( type = "FW1.IllegalConfiguration",
                    message = "ViewsFolder must be a plural word (ends in 's')." );
         }
+        variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
             variables.framework.diOverrideAllowed = false;
         }
@@ -2431,24 +2589,45 @@ component {
         if ( !structKeyExists( variables.framework, 'diComponent' ) ) {
             var diComponent = 'framework.ioc';
             switch ( variables.framework.diEngine ) {
-                case 'aop1':
-                    diComponent = 'framework.aop';
-                    break;
-                case 'wirebox':
-                    diComponent = 'framework.WireBoxAdapter';
-                    break;
-                case 'custom':
-                    throw( type="FW1.IllegalConfiguration",
-                           message="If you specify diEngine='custom' you must specify a component path for diComponent." );
-                    break;
-                default:
-                    // assume DI/1
-                    break;
+            case 'aop1':
+                diComponent = 'framework.aop';
+                break;
+            case 'wirebox':
+                diComponent = 'framework.WireBoxAdapter';
+                break;
+            case 'custom':
+                throw( type="FW1.IllegalConfiguration",
+                       message="If you specify diEngine='custom' you must specify a component path for diComponent." );
+                break;
+            default:
+                // assume DI/1
+                break;
             }
             variables.framework.diComponent = diComponent;
         }
-        variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
+        if ( structKeyExists( variables.framework, 'enableJSONPOST' ) ) {
+            throw( type="FW1.IllegalConfiguration",
+                   message="The enableJSONPOST setting has been renamed to decodeRequestBody." );
+        }
+        if ( !structKeyExists( variables.framework, 'decodeRequestBody' ) ) {
+            variables.framework.decodeRequestBody = false;
+        }
+        if ( !structKeyExists( variables.framework, 'preflightOptions' ) ) {
+            variables.framework.preflightOptions = false;
+        }
+        if ( !structKeyExists( variables.framework, 'optionsAccessControl' ) ) {
+            variables.framework.optionsAccessControl = { };
+        }
         setupEnvironment( env );
+        if ( variables.framework.preflightOptions ) {
+            var defaultAccessControl = {
+                origin = "*",
+                headers = "Accept,Authorization,Content-Type",
+                credentials = true,
+                maxAge = 1728000
+            };
+            structAppend( variables.framework.optionsAccessControl, defaultAccessControl, false );
+        }
         request._fw1.doTrace = variables.framework.trace;
         // add this as a fingerprint so autowire can detect FW/1 CFC:
         this.__fw1_version = variables.framework.version;
@@ -2531,19 +2710,32 @@ component {
                 // pathInfo is bogus so ignore it:
                 pathInfo = '';
             }
+            request._fw1.currentRoute = '';
             var routes = getRoutes();
             if ( arrayLen( routes ) ) {
                 internalFrameworkTrace( 'processRoutes() called' );
                 var routeMatch = processRoutes( pathInfo, routes );
                 if ( routeMatch.matched ) {
                     internalFrameworkTrace( 'route matched - #routeMatch.route# - #pathInfo#' );
-                    pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                    var routeTail = '';
+                    if ( variables.framework.routesCaseSensitive ) {
+                        pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                        routeTail = rereplace( routeMatch.path, routeMatch.pattern, '' );
+                    } else {
+                        pathInfo = rereplacenocase( routeMatch.path, routeMatch.pattern, routeMatch.target );
+                        routeTail = rereplacenocase( routeMatch.path, routeMatch.pattern, '' );
+                    }
+                    request._fw1.currentRoute = left( routeMatch.path, len( routeMatch.path ) - len( routeTail ) );
                     if ( routeMatch.redirect ) {
                         location( pathInfo, false, routeMatch.statusCode );
                     } else {
                         request._fw1.route = routeMatch.route;
                     }
                 }
+            } else if ( variables.framework.preflightOptions && request._fw1.cgiRequestMethod == "OPTIONS" ) {
+                // non-route matching but we have OPTIONS support enabled
+                request._fw1.routeMethodsMatched.get = true;
+                request._fw1.routeMethodsMatched.post = true;
             }
             try {
                 // we use .split() to handle empty items in pathInfo - we fallback to listToArray() on
@@ -2561,6 +2753,13 @@ component {
                 pathInfo = listToArray( pathInfo, '/' );
             }
             var sesN = arrayLen( pathInfo );
+            if ( !len( request._fw1.currentRoute ) ) {
+                switch ( sesN ) {
+                case 0 : request._fw1.currentRoute = '/'; break;
+                case 1 : request._fw1.currentRoute = '/' & pathInfo[1] & '/'; break;
+                default: request._fw1.currentRoute = '/' & pathInfo[1] & '/' & pathInfo[2] & '/'; break;
+                }
+            }
             if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
                 request._fw1.generateSES = true;
             }
@@ -2576,18 +2775,57 @@ component {
                 }
             }
             // certain remote calls do not have URL or form scope:
-            if ( isDefined('URL') ) structAppend(request.context,URL);
-            if ( isDefined('form') ) structAppend(request.context,form);
+            if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
+            if ( isDefined( 'form' ) ) structAppend( request.context, form );
+            var httpData = getHttpRequestData();
+            if ( variables.framework.decodeRequestBody ) {
+                // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
+                // seed of this code, inspired by Taffy's basic deserialization
+                // also thanks to John Whish for the URL-encoded form support
+                // which adds support for PUT etc
+                var body = httpData.content;
+                if ( isBinary( body ) ) body = charSetEncode( body, "utf-8" );
+                if ( len( body ) ) {
+                    switch ( listFirst( CGI.CONTENT_TYPE, ';' ) ) {
+                    case "application/json":
+                    case "text/json":
+                        try {
+                            var bodyStruct = read_json( body );
+                            structAppend( request.context, bodyStruct );
+                        } catch ( any e ) {
+                            throw( type = "FW1.JSONPOST",
+                                   message = "Content-Type implies JSON but could not deserialize body: " & e.message );
+                        }
+                        break;
+                    case "application/x-www-form-urlencoded":
+                        try {
+                            var paramPairs = listToArray( body, "&" );
+                            for ( var pair in paramPairs ) {
+                                var parts = listToArray( pair, "=", true ); // handle blank values
+                                request.context[ parts[ 1 ] ] = urlDecode( parts[ 2 ] );
+                            }
+                        } catch ( any e ) {
+                            throw( type = "FW1.JSONPOST",
+                                   message = "Content-Type implies form encoded but could not deserialize body: " & e.message );
+                        }
+                        break;
+                    default:
+                        // ignore -- either built-in (form handling) or unsupported
+                        break;
+                    }
+                }
+            }
+            request._fw1.headers = httpData.headers;
             // figure out the request action before restoring flash context:
-            if ( !structKeyExists(request.context, variables.framework.action) ) {
-                request.context[variables.framework.action] = getFullyQualifiedAction( variables.framework.home );
+            if ( !structKeyExists( request.context, variables.framework.action ) ) {
+                request.context[ variables.framework.action ] = getFullyQualifiedAction( variables.framework.home );
             } else {
-                request.context[variables.framework.action] = getFullyQualifiedAction( request.context[variables.framework.action] );
+                request.context[ variables.framework.action ] = getFullyQualifiedAction( request.context[ variables.framework.action ] );
             }
             if ( variables.framework.noLowerCase ) {
-                request.action = validateAction( request.context[variables.framework.action] );
+                request.action = validateAction( request.context[ variables.framework.action ] );
             } else {
-                request.action = validateAction( lCase(request.context[variables.framework.action]) );
+                request.action = validateAction( lCase(request.context[ variables.framework.action ]) );
             }
             request._fw1.requestDefaultsInitialized = true;
         }
@@ -2599,6 +2837,7 @@ component {
         request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
         request.section = getSection( request.action );
         request.item = getItem( request.action );
+        request._fw1.theFramework = this; // for use in the facade (only!)
 
         if ( runSetup ) {
             controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
@@ -2651,8 +2890,13 @@ component {
                         }
                         if ( len( sublocations ) ) {
                             var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
-                            var cfg = structKeyExists( subsystemConfig, 'diConfig' ) ?
-                                subsystemConfig.diConfig : structCopy( variables.framework.diConfig );
+                            var cfg = { };
+                            if ( structKeyExists( subsystemConfig, 'diConfig' ) ) {
+                                cfg = subsystemConfig.diConfig;
+                            } else {
+                                cfg = structCopy( variables.framework.diConfig );
+                                structDelete( cfg, 'loadListener' );
+                            }
                             cfg.noClojure = true;
                             var ioc = new "#diComponent#"( subLocations, cfg );
                             ioc.setParent( getDefaultBeanFactory() );
@@ -2671,7 +2915,7 @@ component {
         // check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
         if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
             throw( type='FW1.actionContainsSlash', message="Found a slash in the action: '#action#'.",
-                    detail='Actions are not allowed to embed sub-directory paths.');
+                   detail='Actions are not allowed to embed sub-directory paths.');
         }
         return action;
     }
@@ -2682,7 +2926,7 @@ component {
         // the exception we actually want to throw!
         param name="request.missingView" default="<unknown.view>";
         throw( type='FW1.viewNotFound', message="Unable to find a view for '#request.action#' action.",
-                detail="'#request.missingView#' does not exist." );
+               detail="'#request.missingView#' does not exist." );
     }
 
 }
