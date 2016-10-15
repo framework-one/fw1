@@ -111,6 +111,11 @@ component {
             action = replace( action, '.', getSubsystemSectionAndItem() );
         }
         var pathData = resolveBaseURL( action, path );
+        // remove trailing "/" (& leading "/" if passed into action)
+        if ( len( pathData.path ) && right( pathData.path, 1 ) == '/' ) {
+            if ( len( action ) >= 1 && left( action, 1 ) == '/' ) action = replace( action, '/', '', 'one' );
+            pathData.path = left( pathData.path, len( pathData.path ) - 1 );
+        }
         path = pathData.path;
         var omitIndex = pathData.omitIndex;
         queryString = normalizeQueryString( queryString );
