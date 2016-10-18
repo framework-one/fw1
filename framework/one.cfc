@@ -111,11 +111,6 @@ component {
             action = replace( action, '.', getSubsystemSectionAndItem() );
         }
         var pathData = resolveBaseURL( action, path );
-        // remove trailing "/"
-        if ( len( pathData.path ) && right( pathData.path, 1 ) == '/' ) {
-            if ( len( action ) == 1 && left( action, 1 ) == '/' ) action = '';
-            else pathData.path = left( pathData.path, len( pathData.path ) - 1 );
-        }
         path = pathData.path;
         var omitIndex = pathData.omitIndex;
         queryString = normalizeQueryString( queryString );
@@ -2471,6 +2466,10 @@ component {
         }
         if ( !structKeyExists(variables.framework, 'baseURL') ) {
             variables.framework.baseURL = 'useCgiScriptName';
+        }
+        // remove trailing "/" from baseURL
+        if ( len( variables.framework.baseURL ) > 1 && right( variables.framework.baseURL, 1 ) == '/' ) {
+            variables.framework.baseURL = left( variables.framework.baseURL, len( variables.framework.baseURL ) - 1 );
         }
         if ( !structKeyExists(variables.framework, 'generateSES') ) {
             variables.framework.generateSES = false;
