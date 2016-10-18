@@ -38,8 +38,8 @@ component extends="tests.InjectableTest" {
     public void function testURLandURIempty() {
         variables.fwvars.framework.baseURL = "/tests/ci/";
         variables.fw.onRequestStart("/index.cfm");
-        assertEquals( "/tests/ci/", variables.fw.getBaseURL() );
-        assertEquals( "/tests/ci/", variables.fw.buildURL( action = 'main.default' ) );
+        assertEquals( "/tests/ci", variables.fw.getBaseURL() );
+        assertEquals( "/tests/ci", variables.fw.buildURL( action = 'main.default' ) );
         assertEquals( "/tests/ci/main/default", variables.fw.buildCustomURL( uri = '/main/default' ) );
     }
 

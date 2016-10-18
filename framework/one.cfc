@@ -2480,6 +2480,10 @@ component {
         if ( !structKeyExists(variables.framework, 'baseURL') ) {
             variables.framework.baseURL = 'useCgiScriptName';
         }
+        // remove trailing "/" from baseURL
+        if ( len( variables.framework.baseURL ) > 1 && right( variables.framework.baseURL, 1 ) == '/' ) {
+            variables.framework.baseURL = left( variables.framework.baseURL, len( variables.framework.baseURL ) - 1 );
+        }
         if ( !structKeyExists(variables.framework, 'generateSES') ) {
             variables.framework.generateSES = false;
         }
