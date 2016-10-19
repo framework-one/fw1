@@ -88,20 +88,44 @@ component extends=framework.ioc {
                     ns = ns[ x ];
                 }
                 var bean = ns;
-                if ( info.type == "controller" ) {
-                    // need a wrapper - try to find FW/1 instance via bean factory:
-                    var fw = containsBean( "fw" ) ? getBean( "fw" ) :
-                        ( containsBean( "fw1" ) ? getBean( "fw1" ) :
-                          ( containsBean( "framework" ) ? getBean( "framework" ) :
-                            "" ) );
-                    var controller = new "#cljcontroller#"(
-                        fw, variables.cfmljure, ns
-                    );
-                    bean = controller;
+                var removeBean = false;
+                if ( structKeyExists( variables.beanInfo, cljBean ) ) {
+                    if ( variables.debug ) {
+                        variables.stdout.println( "ioclj: suppressing #cljBean# in Clojure because it conflicts with #cljBean# CFC" );
+                    }
+                    removeBean = true;
+                } else if ( info.type == "controller" ) {
+                    // special case this so don't collide with CFCs
+                    // elsewhere in the discovery process...
+                    var shortBeanName = REReplace( cljBean, "controller$", "" );
+                    if ( structKeyExists( variables.beanInfo, shortBeanName ) ) {
+                        if ( variables.debug ) {
+                            variables.stdout.println( "ioclj: suppressing #cljBean# in Clojure because it may conflict with #shortBeanName# CFC" );
+                        }
+                        removeBean = true;
+                    } else {
+                        // need a wrapper - try to find FW/1 instance via bean factory:
+                        var fw = containsBean( "fw" ) ? getBean( "fw" ) :
+                            ( containsBean( "fw1" ) ? getBean( "fw1" ) :
+                              ( containsBean( "framework" ) ? getBean( "framework" ) :
+                                "" ) );
+                        if ( variables.debug ) {
+                            variables.stdout.println( "-- controller #cljBean# is #info.ns#" );
+                        }
+                        var controller = new "#cljcontroller#"(
+                            fw, variables.cfmljure, ns
+                        );
+                        bean = controller;
+                    }
                 }
-                variables.beanInfo[ cljBean ] = {
-                    name : cljBean, value : bean, isSingleton : true
-                };
+                if ( removeBean ) {
+                    structDelete( variables.cljBeans, cljBean );
+                    structDelete( variables.beanInfo, cljBean );
+                } else {
+                    variables.beanInfo[ cljBean ] = {
+                        name : cljBean, value : bean, isSingleton : true
+                    };
+                }
             }
             // add cfmljure to expose Clojure-related functions:
             bf.addBean( "cfmljure", cfmljure );
