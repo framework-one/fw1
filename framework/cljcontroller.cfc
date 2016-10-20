@@ -50,16 +50,24 @@ component {
                     }
                 }
                 if ( structKeyExists( rc, "render" ) && isStruct( rc.render ) &&
-                     structKeyExists( rc.render, "type" ) && structKeyExists( rc.render, "data" ) ) {
+                     ( structKeyExists( rc.render, "type" ) || structKeyExists( rc.render, "as" ) ) &&
+                     structKeyExists( rc.render, "data" ) ) {
                     if ( isObject( variables.fw ) ) {
+                        var type = structKeyExists( rc.render, "type" ) ?
+                            rc.render["type"] : rc.render["as"];
+                        var renderData = core.get(
+                            rawResult, core.keyword( "render" ),
+                            core.get( rawResult, core.keyword( "framework.one", "render" ) )
+                        )
                         var walk = variables.cfmljure.clojure.walk;
                         var renderer = variables.fw.renderData(
-                            core.name( rc.render["type"] ),
+                            core.name( type ),
                             // since Clojure generated the render data we must be careful to
                             // preserve case but still convert keys to strings...
-                            walk.stringify_keys( core.get( core.get( rawResult, core.keyword( "render" ) ), core.keyword( "data" ) ) )
+                            walk.stringify_keys( core.get( renderData, core.keyword( "data" ) ) )
                         );
                         if ( structKeyExists( rc.render, "statusCode" ) ) renderer.statusCode( rc.render["statusCode"] );
+                        if ( structKeyExists( rc.render, "status" ) )     renderer.statusCode( rc.render["status"] );
                         if ( structKeyExists( rc.render, "statusText" ) ) renderer.statusText( rc.render["statusText"] );
                     } else {
                         throw "Unable to renderData() due to lack of injected FW/1";
