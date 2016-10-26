@@ -133,7 +133,11 @@ component {
             var addURL = urlCLProxy.getClass().getDeclaredMethod( "addURL", __classes( "URL", 1, "java.net" ) );
             addUrl.setAccessible( true ); // hack to make it callable
             for ( var newURL in urls.toArray() ) {
-                addURL.invoke( appCL, [ newURL ] );
+                if ( find( "servlet-api", newURL ) ) {
+                    variables.out.println( "Refusing to load #newURL# because it may conflict with CFML's context!" );
+                } else {
+                    addURL.invoke( appCL, [ newURL ] );
+                }
             }
             try {
                 var clj6 = appCL.loadClass( "clojure.java.api.Clojure" );
