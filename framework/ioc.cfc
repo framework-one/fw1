@@ -519,10 +519,14 @@ component {
         lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
             if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
             variables.pathMapCache = { };
-            for ( var f in variables.folderArray ) {
-                discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+            try {
+                for ( var f in variables.folderArray ) {
+                    discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+                }
+            } catch ( any e ) {
+                variables.discoveryComplete = true;
+                throw e;
             }
-            variables.discoveryComplete = true;
         }
         onLoadEvent();
     }
