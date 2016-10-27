@@ -523,9 +523,8 @@ component {
                 for ( var f in variables.folderArray ) {
                     discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
                 }
-            } catch ( any e ) {
+            } finally {
                 variables.discoveryComplete = true;
-                throw e;
             }
         }
         onLoadEvent();
