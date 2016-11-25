@@ -27,6 +27,7 @@ component {
     function onMissingMethod( string missingMethodName, struct missingMethodArguments ) {
         if ( structKeyExists( missingMethodArguments, "rc" ) ) {
             var rc = missingMethodArguments.rc;
+            var core = variables.cfmljure.clojure.core;
             try {
                 var rcClj = variables.cfmljure.toClojure( rc );
                 var rawResult = callClojure( missingMethodName, rcClj );
@@ -34,7 +35,6 @@ component {
                 structClear( rc );
                 structAppend( rc, result );
                 // post-process special keys in rc for abort / redirect etc
-                var core = variables.cfmljure.clojure.core;
                 if ( structKeyExists( rc, "redirect" ) && isStruct( rc.redirect ) &&
                      structKeyExists( rc.redirect, "action" ) ) {
                     if ( isObject( variables.fw ) ) {
@@ -94,6 +94,7 @@ component {
                     // no such controller method - ignore it
                     this[ missingMethodName ] = __dummy;
                 } else {
+                    core.println( "cljcontroller: exception:", e );
                     throw e;
                 }
             }
