@@ -729,6 +729,7 @@ component {
             // reset lifecycle flags:
             structDelete( request, 'layout' );
             structDelete( request._fw1, 'controllerExecutionStarted' );
+            structDelete( request._fw1, 'overrideLayoutAction' );
             structDelete( request._fw1, 'overrideViewAction' );
             if ( structKeyExists( request._fw1, 'renderData' ) ) {
                 // need to reset the content type as well!
