@@ -742,14 +742,24 @@ component {
             }
             // setup the new controller action, based on the error action:
             request._fw1.controllers = [ ];
-
-            if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'error' ) ) {
-                request.action = variables.framework.error;
+            var key = 'error';
+            var defaultAction = 'main.error';
+            try {
+                if ( exception.type == 'fw1.viewnotfound' && structKeyExists( variables.framework, 'missingview' ) ) {
+                    key = 'missingview';
+                    // shouldn't be needed -- key will be present in framework config
+                    defaultAction = 'main.missingview';
+                }
+            } catch ( any e ) {
+                // leave it as exception
+            }
+            if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, key ) ) {
+                request.action = variables.framework[ key ];
             } else {
                 // this is an edge case so we don't bother with subsystems etc
                 // (because if part of the framework defaults are not present,
                 // we'd have to do a lot of conditional logic here!)
-                request.action = 'main.error';
+                request.action = defaultAction;
             }
             // ensure request.context is available
             if ( !structKeyExists( request, 'context' ) ) {
