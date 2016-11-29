@@ -874,29 +874,29 @@ component {
                         }
                     }
                 }
-              }
 /* ***************************************************** */
-              if ( !structKeyExists( accumulator.injection, beanName ) ) {
-                  if ( !structKeyExists( variables.settersInfo, beanName ) ) {
-                      variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
-                  }
-                  var setterMeta = {
-                      setters = variables.settersInfo[ beanName ].setters,
-                      bean = bean,
-                      overrides = overrides
-                  };
-                  accumulator.injection[ beanName ] = setterMeta;
-                  for ( var property in setterMeta.setters ) {
-                      accumulator.dependencies[ beanName ][ property ] = true;
-                      if ( structKeyExists( overrides, property ) ) {
-                          // skip resolution because we'll inject override
-                      } else {
-                          resolveBeanCreate( property, accumulator );
-                      }
-                  }
-              }
-              if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
-                  accumulator.injection[ beanName ].bean = bean;
+                if ( !structKeyExists( accumulator.injection, beanName ) ) {
+                    if ( !structKeyExists( variables.settersInfo, beanName ) ) {
+                        variables.settersInfo[ beanName ] = findSetters( bean, info.metadata );
+                    }
+                    var setterMeta = {
+                        setters = variables.settersInfo[ beanName ].setters,
+                        bean = bean,
+                        overrides = overrides
+                    };
+                    accumulator.injection[ beanName ] = setterMeta;
+                    for ( var property in setterMeta.setters ) {
+                        accumulator.dependencies[ beanName ][ property ] = true;
+                        if ( structKeyExists( overrides, property ) ) {
+                            // skip resolution because we'll inject override
+                        } else {
+                            resolveBeanCreate( property, accumulator );
+                        }
+                    }
+                }
+                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
+                    accumulator.injection[ beanName ].bean = bean;
+                }
               }
             } else if ( isConstant( beanName ) ) {
                 bean = info.value;
