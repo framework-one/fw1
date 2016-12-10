@@ -213,7 +213,12 @@ component {
         try {
             __acquireLock( variables.__lockFilePath );
             for ( var ns in nsList ) {
-                __1_install( trim( ns ), target );
+                try {
+                    __1_install( trim( ns ), target );
+                } catch ( any e ) {
+                    variables.out.println( "Unable to install #trim( ns )# due to #e.message#... rethrowing..." );
+                    rethrow;
+                }
             }
         } finally {
             __releaseLock( variables.__lockFilePath );
