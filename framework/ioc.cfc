@@ -727,10 +727,16 @@ component {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        if ( !structKeyExists( variables.accumulatorCache, beanName ) ) {
+        var accumulator = { injection = { } };
+        // ensure only injection singletons end up cached in variables scope
+        if ( structKeyExists( variables.accumulatorCache, beanName ) ) {
+            structAppend( accumulator.injection, variables.accumulatorCache[ beanName ].injection );
+        } else {
             variables.accumulatorCache[ beanName ] = { injection = { }, dependencies = { } };
         }
-        var partialBean = resolveBeanCreate( beanName, variables.accumulatorCache[ beanName ], constructorArgs );
+        // all dependencies can be cached in variables scope
+        accumulator.dependencies = variables.accumulatorCache[ beanName ].dependencies;
+        var partialBean = resolveBeanCreate( beanName, accumulator, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -741,6 +747,10 @@ component {
             // injection phase:
             // now perform all of the injection:
             for ( var name in partialBean.injection ) {
+                if ( structKeyExists( variables.accumulatorCache[ beanName ].injection, name ) ) {
+                    // this singleton is in the accumulatorCache, thus it has already been fully resolved
+                    continue;
+                }
                 var injection = partialBean.injection[ name ];
                 if ( checkForPostInjection && !isConstant( name ) && structKeyExists( injection.bean, initMethod ) ) {
                     postInjectables[ name ] = true;
@@ -774,6 +784,11 @@ component {
             // see if anything needs post-injection, init-method calls:
             for ( var postName in postInjectables ) {
                 callInitMethod( postName, postInjectables, partialBean, initMethod );
+            }
+            for ( name in partialBean.injection ) {
+                if ( isSingleton( name ) ) {
+                    variables.accumulatorCache[ beanName ].injection[ name ] = partialBean.injection[ name ];
+                }
             }
             variables.resolutionCache[ beanName ] = isSingleton( beanName );
         }
@@ -892,9 +907,6 @@ component {
                             resolveBeanCreate( property, accumulator );
                         }
                     }
-                }
-                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
-                    accumulator.injection[ beanName ].bean = bean;
                 }
             } else if ( isConstant( beanName ) ) {
                 bean = info.value;
