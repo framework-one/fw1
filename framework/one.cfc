@@ -816,6 +816,17 @@ component {
     }
 
     /*
+     * This can be overridden if you want to take some actions when the
+     * framework is about to be reloaded, prior to starting the next
+     * application cycle. This will be called when an explicit reload is
+     * performed, or on each request if reloadApplicationOnEveryRequest is
+     * set true. You could use it to perform housekeeping of services, prior
+     * to them all being recreated in a new bean factory, for example.
+     */
+    public void function onReload() {
+    }
+
+    /*
      * not intended to be overridden, automatically deleted for CFC requests
      */
     public any function onRequest( string targetPath ) {
@@ -929,7 +940,10 @@ component {
     public any function onRequestStart( string targetPath ) {
         setupRequestDefaults();
 
-        if ( !isFrameworkInitialized() || isFrameworkReloadRequest() ) {
+        if ( !isFrameworkInitialized() ) {
+            setupApplicationWrapper();
+        } else if ( isFrameworkReloadRequest() ) {
+            onReload();
             setupApplicationWrapper();
         } else {
             request._fw1.theApp = getFw1App();
