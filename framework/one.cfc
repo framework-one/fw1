@@ -307,10 +307,9 @@ component {
     public void function frameworkTrace( string message ) {
         if ( request._fw1.doTrace ) {
             try {
-                if ( isDefined( 'session._fw1_trace' ) &&
-                     structKeyExists( session, '_fw1_trace' ) ) {
-                    request._fw1.trace = session._fw1_trace;
-                    structDelete( session, '_fw1_trace' );
+                if ( sessionHas( '_fw1_trace' ) ) {
+                    request._fw1.trace = sessionRead( '_fw1_trace' );
+                    sessionDelete( '_fw1_trace' );
                 }
             } catch ( any _ ) {
                 // ignore if session is not enabled
@@ -1118,7 +1117,7 @@ component {
         if ( request._fw1.doTrace ) {
             internalFrameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
             try {
-                session._fw1_trace = request._fw1.trace;
+                sessionWrite( '_fw1_trace', request._fw1.trace );
             } catch ( any _ ) {
                 // ignore exception if session is not enabled
             }
@@ -1157,7 +1156,7 @@ component {
         if ( request._fw1.doTrace ) {
             internalFrameworkTrace( 'redirecting to #targetURL# (#statusCode#)' );
             try {
-                session._fw1_trace = request._fw1.trace;
+                sessionWrite( '_fw1_trace', request._fw1.trace );
             } catch ( any _ ) {
                 // ignore exception if session is not enabled
             }
@@ -1227,6 +1226,32 @@ component {
             }
         } );
         return builder;
+    }
+
+    public void function sessionDefault( string keyname, string defaultValue ) {
+        param name="session['#arguments.keyname#']" default="#arguments.defaultValue#";
+    }
+
+    public void function sessionDelete( string keyname ) {
+        structDelete( session, arguments.keyname );
+    }
+
+    public boolean function sessionHas( string keyname ) {
+        return isDefined( 'session.#arguments.keyname#' ) && structKeyExists( session, arguments.keyname );
+    }
+
+    public void function sessionLock( required function callback ) {
+        lock scope="session" type="exclusive" timeout="30" {
+            callback();
+        }
+    }
+
+    public any function sessionRead( string keyname ) {
+        return session[ arguments.keyname ];
+    }
+
+    public void function sessionWrite( string keyname, any keyvalue ) {
+        session[ arguments.keyname ] = arguments.keyvalue;
     }
 
     /*
@@ -1803,26 +1828,24 @@ component {
         var nextPreserveKey = '';
         var oldKeyToPurge = '';
         try {
-            if ( variables.framework.maxNumContextsPreserved > 1 ) {
-                lock scope="session" type="exclusive" timeout="30" {
-                    param name="session.__fw1NextPreserveKey" default="1";
-                    nextPreserveKey = session.__fw1NextPreserveKey;
-                    session.__fw1NextPreserveKey = session.__fw1NextPreserveKey + 1;
+            sessionLock(function(){
+                if ( variables.framework.maxNumContextsPreserved > 1 ) {
+                    sessionDefault( '__fw1NextPreserveKey', 1 );
+                    nextPreserveKey = sessionRead( '__fw1NextPreserveKey' );
+                    sessionWrite( '__fw1NextPreserveKey', nextPreserveKey + 1 );
+                    oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
+                } else {
+                    nextPreserveKey = '';
+                    sessionWrite( '__fw1PreserveKey', nextPreserveKey );
+                    oldKeyToPurge = '';
                 }
-                oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
-            } else {
-                lock scope="session" type="exclusive" timeout="30" {
-                    session.__fw1PreserveKey = '';
-                    nextPreserveKey = session.__fw1PreserveKey;
-                }
-                oldKeyToPurge = '';
-            }
+            });
         } catch ( any e ) {
             // ignore - assume session scope is disabled
         }
         var key = getPreserveKeySessionKey( oldKeyToPurge );
-        if ( structKeyExists( session, key ) ) {
-            structDelete( session, key );
+        if ( sessionHas( key ) ) {
+            sessionDelete( key );
         }
         return nextPreserveKey;
     }
@@ -1861,10 +1884,9 @@ component {
     private void function internalFrameworkTrace( string message, string subsystem = '', string section = '', string item = '', string traceType = 'INFO' ) {
         if ( request._fw1.doTrace ) {
             try {
-                if ( isDefined( 'session._fw1_trace' ) &&
-                     structKeyExists( session, '_fw1_trace' ) ) {
-                    request._fw1.trace = session._fw1_trace;
-                    structDelete( session, '_fw1_trace' );
+                if ( sessionHas( '_fw1_trace' ) ) {
+                    request._fw1.trace = sessionRead( '_fw1_trace' );
+                    sessionDelete( '_fw1_trace' );
                 }
             } catch ( any _ ) {
                 // ignore if session is not enabled
@@ -2293,8 +2315,8 @@ component {
             var preserveKeySessionKey = getPreserveKeySessionKey( '' );
         }
         try {
-            if ( structKeyExists( session, preserveKeySessionKey ) ) {
-                structAppend( request.context, session[ preserveKeySessionKey ], false );
+            if ( sessionHas( preserveKeySessionKey ) ) {
+                structAppend( request.context, sessionRead( preserveKeySessionKey ), false );
                 if ( variables.framework.maxNumContextsPreserved == 1 ) {
                     /*
                       When multiple contexts are preserved, the oldest context is purged
@@ -2302,7 +2324,7 @@ component {
                       This allows for a browser refresh after the redirect to still receive
                       the same context.
                     */
-                    structDelete( session, preserveKeySessionKey );
+                    sessionDelete( preserveKeySessionKey );
                 }
             }
         } catch ( any e ) {
@@ -2313,17 +2335,22 @@ component {
     private string function saveFlashContext( string keys ) {
         var curPreserveKey = getNextPreserveKeyAndPurgeOld();
         var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
+        var tmpSession = '';
         try {
-            param name="session.#preserveKeySessionKey#" default="#{ }#";
+            sessionDefault( preserveKeySessionKey, {} );
             if ( keys == 'all' ) {
-                structAppend( session[ preserveKeySessionKey ], request.context );
+                tmpSession = sessionRead( preserveKeySessionKey );
+                structAppend( tmpSession, request.context );
+                sessionWrite( preserveKeySessionKey, tmpSession );
             } else {
                 var key = 0;
                 var keyNames = listToArray( keys );
                 for ( key in keyNames ) {
                     key = trim( key );
                     if ( structKeyExists( request.context, key ) ) {
-                        session[ preserveKeySessionKey ][ key ] = request.context[ key ];
+                        tmpSession = sessionRead( preserveKeySessionKey );
+                        tmpSession[ key ] = request.context[ key ];
+                        sessionWrite( preserveKeySessionKey, tmpSession);
                     } else {
                         internalFrameworkTrace( message = 'key "#key#" does not exist in RC, cannot preserve.', traceType = 'WARNING' );
                     }
