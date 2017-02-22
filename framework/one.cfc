@@ -1229,15 +1229,15 @@ component {
     }
 
     public void function sessionDefault( string keyname, string defaultValue ) {
-        param name="session['#arguments.keyname#']" default="#arguments.defaultValue#";
+        param name="session['#keyname#']" default="#defaultValue#";
     }
 
     public void function sessionDelete( string keyname ) {
-        structDelete( session, arguments.keyname );
+        structDelete( session, keyname );
     }
 
     public boolean function sessionHas( string keyname ) {
-        return isDefined( 'session.#arguments.keyname#' ) && structKeyExists( session, arguments.keyname );
+        return isDefined( 'session.#keyname#' ) && structKeyExists( session, keyname );
     }
 
     public void function sessionLock( required function callback ) {
@@ -1247,11 +1247,11 @@ component {
     }
 
     public any function sessionRead( string keyname ) {
-        return session[ arguments.keyname ];
+        return session[ keyname ];
     }
 
     public void function sessionWrite( string keyname, any keyvalue ) {
-        session[ arguments.keyname ] = arguments.keyvalue;
+        session[ keyname ] = keyvalue;
     }
 
     /*
