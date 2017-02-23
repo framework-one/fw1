@@ -57,10 +57,7 @@ component {
             // recent FW/1 + DI/1 + AOP/1 exclusions:
             '/framework/aop.cfc', '/framework/beanProxy.cfc',
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc',
-            // and Clojure-related exclusions:
-            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
-            '/framework/ioclj.cfc'
+            '/framework/one.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
