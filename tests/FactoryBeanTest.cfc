@@ -1,12 +1,12 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldSupportBasicFactoryMethod() {
+    function testSupportBasicFactoryMethod() {
         var bf = new framework.ioc( "/tests/model" );
         bf.declare( "a" ).fromFactory( "factory", "makeMeAnA" );
         assertEquals( "I am an A", bf.getBean( "a" ) );
     }
 
-    function shouldSupportFactoryFunction() {
+    function testSupportFactoryFunction() {
         var bf = new framework.ioc( "/tests/model" );
         bf.declare( "a" ).fromFactory( function() {
             return "I am an A";
@@ -14,14 +14,14 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "I am an A", bf.getBean( "a" ) );
     }
 
-    function shouldSupportFactoryMethodViaBean() {
+    function testSupportFactoryMethodViaBean() {
         var bf = new framework.ioc( "" );
         var factory = new tests.model.services.factory();
         bf.factoryBean( "a", factory, "makeMeAnA" );
         assertEquals( "I am an A", bf.getBean( "a" ) );
     }
 
-    function shouldSupportFactoryMethodWithBeanArg() {
+    function testSupportFactoryMethodWithBeanArg() {
         var bf = new framework.ioc( "/tests/model" );
         bf.declare( "a" )
             .fromFactory( "factory", "makeAWithFava" )
@@ -29,7 +29,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "I am a fava bean", bf.getBean( "a" ) );
     }
 
-    function shouldSupportFactoryMethodWithLocalArg() {
+    function testSupportFactoryMethodWithLocalArg() {
         var bf = new framework.ioc( "/tests/model" );
         bf.declare( "a" )
             .fromFactory( "factory", "makeAWithFava" )

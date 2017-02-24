@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldResolveCircular() {
+    function testResolveCircular() {
         var bf = new framework.ioc( "/tests/circular" );
         var a = bf.getBean( "a" );
         var b = bf.getBean( "b" );
@@ -14,7 +14,7 @@ component extends="mxunit.framework.TestCase" {
         assertFalse( structKeyExists( b, "name" ) );
     }
 
-    function shouldResolveAndConfigureCircular() {
+    function testResolveAndConfigureCircular() {
         var bf = new framework.ioc( "/tests/circular", { initMethod = "configure" } );
         var a = bf.getBean( "a" );
         var b = bf.getBean( "b" );

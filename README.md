@@ -23,28 +23,24 @@ Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW
 
 # Running the Tests
 
-The Ant `build.xml` file is primarily designed to be used by Travis to run the tests automatically, but it is possible to run the tests locally, with some setup:
+FW/1 is setup to run tests on [Travis CI](https://travis-ci.org/framework-one/fw1) using the `.travis.yml` file.
 
-* This FW/1 directory needs to be a web root for some test domain on your local machine. I have `fw1.local` setup to resolve to this folder.
-* You'll need MXUnit installed and accessible via `/mxunit` for the test domain you use for this project. You can install MXUnit into this FW/1 directory if you want - `mxunit/*` is on the `.gitignore` list.
+To run tests manually, you'll need [CommandBox](https://www.ortussolutions.com/products/commandbox) installed.
 
-You can run the build locally using a variant of this command (all on one line):
+Then run `box install` once to install the dependencies (TestBox is the only one currently).
 
-    ant -Dplatform=railo41 -Dtest.path.root=/Developer/workspace/fw1 \
-        -Dcontext.root= -Dserver.name=fw1.local -Dserver.port=8080 \
-        run-tests-mxunit
+Then start a server on port 8500 with your choice of CFML engine, e.g.,
 
-See the `run-tests-example.sh` file for a template (for Mac/Linux).
+    box server start cfengine=lucee@5 port=8500
 
-* `platform` needs to be set just to satisfy the build script it doesn't affect anything (so use `railo41` even if you're on ACF or a different version of Railo)
-* `test.path.root` should be the filesystem path to this directory, i.e., the web root for the FW/1 project.
-* `context.root` should probably be empty (unless you are using a named web application context)
-* `server.name` should be the test domain you have configured
-* `server.port` should be the port on which you access that test domain
-* `run-tests-mxunit` is the actual Ant task that does the testing
+This will open a browser, running the FW/1 "Introduction" app.
+
+You can then run the tests:
+
+    box testbox run reporter=mintext
 
 # Copyright and License
 
-Copyright (c) 2009-2016 Sean Corfield (and others -- see individual files for additional copyright holders). All rights reserved.
+Copyright (c) 2009-2017 Sean Corfield (and others -- see individual files for additional copyright holders). All rights reserved.
 The use and distribution terms for this software are covered by the Apache Software License 2.0 (http://www.apache.org/licenses/LICENSE-2.0) which can also be found in the file LICENSE at the root of this distribution and in individual licensed files.
 By using this software in any fashion, you are agreeing to be bound by the terms of this license. You must not remove this notice, or any other, from this software.

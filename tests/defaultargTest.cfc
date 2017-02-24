@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
-	
-    function checkDefaultInitArgWorks() {
+
+    function testDefaultInitArgWorks() {
 		var factory = new framework.ioc( "/tests/model", { constants = { dsn = "sample" } } );
         var user37 = factory.getBean( "user37" );
         assertEquals( "sample", user37.getDSN() );
@@ -11,7 +11,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 0, user37b.getID() );
     }
 
-    function checkDefaultInitArgThreeArgs() {
+    function testDefaultInitArgThreeArgs() {
         var factory = new framework.ioc( "/tests/model",
                                { constants = { dsn = "sample" } } );
         var user37c = factory.getBean( "user37c" );
@@ -27,8 +27,8 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "John", user37c.getName() );
 
     }
-	
-    function checkDefaultInitArgWorksStrict() {
+
+    function testDefaultInitArgWorksStrict() {
 		var factory = new framework.ioc( "/tests/model",
                                { strict = true,
                                  constants = { dsn = "sample" } } );
@@ -41,7 +41,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 0, user37b.getID() );
     }
 
-    function checkDefaultInitArgThreeArgsStrict() {
+    function testDefaultInitArgThreeArgsStrict() {
         var factory = new framework.ioc( "/tests/model",
                                { strict = true,
                                  constants = { dsn = "sample" } } );

@@ -5,7 +5,7 @@ component extends="mxunit.framework.TestCase" {
         variables.ioc2 = new framework.ioc( "/tests/model" );
     }
 
-    function shouldInjectWithType() {
+    function testInjectWithType() {
         var bean = ioc.injectProperties( "tests.declared.things.myconfig", { name = "ByType" } );
         assertEquals( "ByType", bean.getName() );
         try {
@@ -16,7 +16,7 @@ component extends="mxunit.framework.TestCase" {
         }
     }
 
-    function shouldInjectWithObject() {
+    function testInjectWithObject() {
         var bean = ioc.injectProperties(
             new declared.things.myconfig( "object" ),
             { name = "ByObject" } );
@@ -24,7 +24,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "object", bean.getConfig() );
     }
 
-    function shouldInjectWithName() {
+    function testInjectWithName() {
         variables.ioc
             .addBean( "data", "data" )
             .declareBean( "configObject", "tests.declared.things.myconfig" );
@@ -33,7 +33,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "data", bean.getConfig() );
     }
 
-    function shouldInjectWithNullValues( numeric userid, string username ) {
+    function testInjectWithNullValues( numeric userid, string username ) {
         // use arguments to pass into bean, argument values are null
         var bean = variables.ioc2.injectProperties( "user2Bean", arguments );
         assertEquals( "0", bean.getUserid() );
