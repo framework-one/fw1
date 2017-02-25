@@ -1595,14 +1595,14 @@ component {
         if ( early ) {
             writeOutput( '<h1>Exception occured before FW/1 was initialized</h1>');
         } else {
-            writeOutput( '<h#h#>' & ( indirect ? 'Original exception ' : 'Exception' ) & ' in #event#</h#h#>' );
+            writeOutput( '<h#h#>' & ( indirect ? 'Original exception ' : 'Exception' ) & ' in #encodeForHTML(event)#</h#h#>' );
             if ( structKeyExists( request, 'failedAction' ) ) {
-                writeOutput( '<p>The action #request.failedAction# failed.</p>' );
+                writeOutput( '<p>The action #encodeForHtml(request.failedAction)# failed.</p>' );
             }
-            writeOutput( '<h#1+h#>#exception.message#</h#1+h#>' );
+            writeOutput( '<h#1+h#>#encodeForHtml(exception.message)#</h#1+h#>' );
         }
 
-        writeOutput( '<p>#exception.detail# (#exception.type#)</p>' );
+        writeOutput( '<p>#encodeForHtml(exception.detail)# (#encodeForHtml(exception.type)#)</p>' );
         dumpException(exception);
 
     }

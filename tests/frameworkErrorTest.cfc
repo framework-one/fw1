@@ -24,7 +24,8 @@ component extends="mxunit.framework.TestCase" {
             variables.fw.onError(exception, event);
         };
         assertEquals(request.action, ":main.error");
-        assertTrue(output contains "Unable to find a view for ':main.error' action.");
+        assertFalse(output contains "Unable to find a view for ':main.error' action.");
+        assertTrue(output contains "Unable to find a view for &##x27;&##x3a;main.error&##x27;");
     }
 
     /**
