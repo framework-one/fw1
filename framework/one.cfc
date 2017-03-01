@@ -1237,7 +1237,7 @@ component {
     }
 
     public boolean function sessionHas( string keyname ) {
-        return isDefined( 'session.#keyname#' ) && structKeyExists( session, keyname );
+        return structKeyExists( session, keyname );
     }
 
     public void function sessionLock( required function callback ) {
@@ -1840,12 +1840,12 @@ component {
                     oldKeyToPurge = '';
                 }
             });
+            var key = getPreserveKeySessionKey( oldKeyToPurge );
+            if ( sessionHas( key ) ) {
+                sessionDelete( key );
+            }
         } catch ( any e ) {
             // ignore - assume session scope is disabled
-        }
-        var key = getPreserveKeySessionKey( oldKeyToPurge );
-        if ( sessionHas( key ) ) {
-            sessionDelete( key );
         }
         return nextPreserveKey;
     }
