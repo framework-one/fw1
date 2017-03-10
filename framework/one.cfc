@@ -1228,7 +1228,7 @@ component {
         return builder;
     }
 
-    public void function sessionDefault( string keyname, string defaultValue ) {
+    public void function sessionDefault( string keyname, any defaultValue ) {
         param name="session['#keyname#']" default="#defaultValue#";
     }
 
