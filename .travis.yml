@@ -10,7 +10,7 @@ env:
     - ENGINE=adobe@11
     - ENGINE=adobe@10
 
-caches:
+cache:
   directories:
   - $HOME/.CommandBox
 
