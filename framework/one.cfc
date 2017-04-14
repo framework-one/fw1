@@ -1406,8 +1406,7 @@ component {
             if ( beanFactory.containsBean( property ) ) {
                 var args = { };
                 args[ property ] = beanFactory.getBean( property );
-                // cfc['set'&property](argumentCollection = args) does not work on ACF9
-                evaluate( 'cfc.set#property#( argumentCollection = args )' );
+                invoke( cfc, "set#property#", args );
             }
         }
     }
@@ -1550,7 +1549,7 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, headers = request._fw1.headers )' );
+                invoke( cfc, method, { rc : request.context, headers : request._fw.headers } );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1558,7 +1557,7 @@ component {
         } else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle, headers = request._fw1.headers )' );
+                invoke( cfc, method, { rc : request.context, method : lifecycle, headers : request._fw1.headers } );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1855,7 +1854,7 @@ component {
     }
 
     private any function getProperty( struct cfc, string property ) {
-        if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+        if ( structKeyExists( cfc, 'get#property#' ) ) return invoke( cfc, "get#property#" );
     }
 
     private string function getSubsystemDirPrefix( string subsystem ) {
@@ -1877,7 +1876,7 @@ component {
             // allow alternative spellings
             args.fw = this;
             args.fw1 = this;
-            evaluate( 'cfc.setFramework( argumentCollection = args )' );
+            cfc.setFramework( argumentCollection = args );
         }
     }
 
@@ -2386,7 +2385,7 @@ component {
                 if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
             }
         } else {
-            evaluate( 'cfc.set#property#( argumentCollection = args )' );
+            invoke( cfc, "set#property#", args );
         }
     }
 

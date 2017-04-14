@@ -306,7 +306,7 @@ component {
             if ( !isNull( properties[ property ] ) ) {
                 var args = { };
                 args[ property ] = properties[ property ];
-                evaluate( 'bean.set#property#( argumentCollection = args )' );
+                invoke( bean, "set#property#", args );
             }
         }
         return bean;
@@ -770,7 +770,7 @@ component {
                         // isNull() does not always work on ACF10...
                         try { if ( isNull( args[ property ] ) ) continue; } catch ( any e ) { continue; }
                     }
-                    evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
+                    invoke( injection.bean, "set#property#", args );
                 }
             }
             // post-injection, pre-init-method phase:
@@ -811,7 +811,7 @@ component {
             } else {
                 variables.initMethodCache[ name ] = isSingleton( name );
                 var bean = info.injection[ name ].bean;
-                evaluate( 'bean.#method#()' );
+                invoke( bean, method );
             }
         }
     }
@@ -874,7 +874,7 @@ component {
                                 }
                             }
                         }
-                        var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
+                        var __ioc_newBean = bean.init( argumentCollection = args );
                         // if the constructor returns anything, it becomes the bean
                         // this allows for smart constructors that return things other
                         // than the CFC being created, such as implicit factory beans
@@ -923,7 +923,7 @@ component {
                 if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
                     bean = fmBean( argumentCollection = argStruct );
                 } else {
-                    bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                    bean = invoke( fmBean, "#info.method#", argStruct );
                 }
                 accumulator.injection[ beanName ] = { bean = bean, setters = { } };
             } else {
