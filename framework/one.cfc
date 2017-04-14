@@ -988,7 +988,6 @@ component {
                         var args = { };
                         args[ property ] = props[ property ];
                         if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-                        // cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, property, args );
                     } catch ( any e ) {
                         onPopulateError( cfc, property, props );
@@ -1001,7 +1000,6 @@ component {
                         var args = { };
                         args[ property ] = props[ property ];
                         if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-                        // cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, property, args );
                     } else if ( deep && structKeyExists( cfc, 'get' & property ) ) {
                         // look for a property that starts with the property
@@ -1027,7 +1025,6 @@ component {
                         var args = { };
                         args[ trimProperty ] = props[ trimProperty ];
                         if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
-                        // cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, trimProperty, args );
                     }
                 } else if ( deep ) {
