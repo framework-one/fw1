@@ -1546,7 +1546,7 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                invoke( cfc, method, { rc : request.context, headers : request._fw.headers } );
+                invoke( cfc, method, { rc : request.context, headers : request._fw1.headers } );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
