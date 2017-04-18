@@ -799,7 +799,7 @@ component {
         viewNotFound();
         // if we got here, we would return the string or struct to be rendered
         // but viewNotFound() throws an exception...
-        // for example, return view( 'main.missing' );
+        // for example, return view( 'main/missing' );
     }
 
     /*
