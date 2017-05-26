@@ -2832,7 +2832,6 @@ component {
             }
             // certain remote calls do not have URL or form scope:
             if ( isDefined( 'URL'  ) ) structAppend( request.context, URL );
-            if ( isDefined( 'form' ) ) structAppend( request.context, form );
             var httpData = getHttpRequestData();
             if ( variables.framework.decodeRequestBody ) {
                 // thanks to Adam Tuttle and by proxy Jason Dean and Ray Camden for the
@@ -2871,6 +2870,7 @@ component {
                     }
                 }
             }
+            if ( isDefined( 'form' ) ) structAppend( request.context, form );
             request._fw1.headers = httpData.headers;
             // figure out the request action before restoring flash context:
             if ( !structKeyExists( request.context, variables.framework.action ) ) {
