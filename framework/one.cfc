@@ -799,7 +799,7 @@ component {
         viewNotFound();
         // if we got here, we would return the string or struct to be rendered
         // but viewNotFound() throws an exception...
-        // for example, return view( 'main.missing' );
+        // for example, return view( 'main/missing' );
     }
 
     /*
@@ -988,7 +988,6 @@ component {
                         var args = { };
                         args[ property ] = props[ property ];
                         if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-                        // cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, property, args );
                     } catch ( any e ) {
                         onPopulateError( cfc, property, props );
@@ -1001,7 +1000,6 @@ component {
                         var args = { };
                         args[ property ] = props[ property ];
                         if ( trim && isSimpleValue( args[ property ] ) ) args[ property ] = trim( args[ property ] );
-                        // cfc[ 'set'&property ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, property, args );
                     } else if ( deep && structKeyExists( cfc, 'get' & property ) ) {
                         // look for a property that starts with the property
@@ -1027,7 +1025,6 @@ component {
                         var args = { };
                         args[ trimProperty ] = props[ trimProperty ];
                         if ( trim && isSimpleValue( args[ trimProperty ] ) ) args[ trimProperty ] = trim( args[ trimProperty ] );
-                        // cfc[ 'set'&trimproperty ]( argumentCollection = args ); // ugh! no portable script version of this?!?!
                         setProperty( cfc, trimProperty, args );
                     }
                 } else if ( deep ) {
@@ -1406,8 +1403,7 @@ component {
             if ( beanFactory.containsBean( property ) ) {
                 var args = { };
                 args[ property ] = beanFactory.getBean( property );
-                // cfc['set'&property](argumentCollection = args) does not work on ACF9
-                evaluate( 'cfc.set#property#( argumentCollection = args )' );
+                invoke( cfc, "set#property#", args );
             }
         }
     }
@@ -1550,7 +1546,7 @@ component {
         if ( structKeyExists( cfc, method ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, headers = request._fw1.headers )' );
+                invoke( cfc, method, { rc : request.context, headers : request._fw1.headers } );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1558,7 +1554,7 @@ component {
         } else if ( structKeyExists( cfc, 'onMissingMethod' ) ) {
             try {
                 internalFrameworkTrace( 'calling #lifecycle# controller (via onMissingMethod)', tuple.subsystem, tuple.section, method );
-                evaluate( 'cfc.#method#( rc = request.context, method = lifecycle, headers = request._fw1.headers )' );
+                invoke( cfc, method, { rc : request.context, method : lifecycle, headers : request._fw1.headers } );
             } catch ( any e ) {
                 setCfcMethodFailureInfo( cfc, method );
                 rethrow;
@@ -1855,7 +1851,7 @@ component {
     }
 
     private any function getProperty( struct cfc, string property ) {
-        if ( structKeyExists( cfc, 'get#property#' ) ) return evaluate( 'cfc.get#property#()' );
+        if ( structKeyExists( cfc, 'get#property#' ) ) return invoke( cfc, "get#property#" );
     }
 
     private string function getSubsystemDirPrefix( string subsystem ) {
@@ -1877,7 +1873,7 @@ component {
             // allow alternative spellings
             args.fw = this;
             args.fw1 = this;
-            evaluate( 'cfc.setFramework( argumentCollection = args )' );
+            cfc.setFramework( argumentCollection = args );
         }
     }
 
@@ -2386,7 +2382,7 @@ component {
                 if ( !isNull( obj ) ) setProperty( obj, newProperty, args );
             }
         } else {
-            evaluate( 'cfc.set#property#( argumentCollection = args )' );
+            invoke( cfc, "set#property#", args );
         }
     }
 
