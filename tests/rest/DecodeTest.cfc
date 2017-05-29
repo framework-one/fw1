@@ -7,7 +7,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "1,2,3,40,50", actual.multi );
     }
 
-    function testPatchFormEncodedRequestDecodesMultiField() {
+    function testPatchFormEncodedRequestDecodesMultiField() skip="engineNotSupported" {
         var actual = doFormEncodedHTTPRequest( "PATCH" );
         assertEquals( "PATCH", actual.method );
         assertEquals( "a,b,c", actual.single );
@@ -28,7 +28,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "1,2,3,40,50", actual.multi );
     }
 
-    function testPatchJSONRequestDecodesMultiField() {
+    function testPatchJSONRequestDecodesMultiField() skip="engineNotSupported" {
         var actual = doJSONEncodedHTTPRequest( "PATCH" );
         assertEquals( "PATCH", actual.method );
         assertEquals( "a,b,c", actual.single );
@@ -51,7 +51,7 @@ component extends="mxunit.framework.TestCase" {
     private function doJSONEncodedHTTPRequest( verb ) {
         return doHTTPRequest( verb, "application/json", '{"multi": "1,2,3,40,50","single": "a,b,c"}' );
     }
-    
+
     private function doHTTPRequest( verb, contentType, body ) {
         var httpService = new http();
         httpService.setmethod( verb );
@@ -64,6 +64,10 @@ component extends="mxunit.framework.TestCase" {
             return deserializeJSON( response );
         }
         fail( "expected a JSON response for #verb# #contentType#" );
+    }
+
+    function engineNotSupported() {
+        return server.coldfusion.productname != "Lucee" && ListFirst( server.coldfusion.productversion ) == 10;
     }
 
 }
