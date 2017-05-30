@@ -2849,15 +2849,17 @@ component {
                         }
                         break;
                     case "application/x-www-form-urlencoded":
-                        try {
-                            var paramPairs = listToArray( body, "&" );
-                            for ( var pair in paramPairs ) {
-                                var parts = listToArray( pair, "=", true ); // handle blank values
-                                request.context[ parts[ 1 ] ] = urlDecode( parts[ 2 ] );
+                        if ( CGI.REQUEST_METHOD != "POST" ) {
+                            try {
+                                var paramPairs = listToArray( body, "&" );
+                                for ( var pair in paramPairs ) {
+                                    var parts = listToArray( pair, "=", true ); // handle blank values
+                                    request.context[ parts[ 1 ] ] = urlDecode( parts[ 2 ] );
+                                }
+                            } catch ( any e ) {
+                                throw( type = "FW1.JSONPOST",
+                                    message = "Content-Type implies form encoded but could not deserialize body: " & e.message );
                             }
-                        } catch ( any e ) {
-                            throw( type = "FW1.JSONPOST",
-                                   message = "Content-Type implies form encoded but could not deserialize body: " & e.message );
                         }
                         break;
                     default:
