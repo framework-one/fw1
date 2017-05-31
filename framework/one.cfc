@@ -1753,39 +1753,41 @@ component {
                     } else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
                         cfc = getDefaultBeanFactory().getBean( beanName );
                     } else {
-                        if ( section == variables.magicApplicationController ) {
+                        if ( subsystem == variables.magicApplicationSubsystem && section == variables.magicApplicationController ) {
                             // treat this (Application.cfc) as a controller:
                             cfc = this;
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.cfc' ) ) {
-                            // we call createObject() rather than new so we can control initialization:
-                            if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
-                            } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
-                            }
-                            if ( structKeyExists( cfc, 'init' ) ) {
-                                cfc.init( this );
-                            }
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.lc' ) ) {
-                            // we call createObject() rather than new so we can control initialization:
-                            if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
-                            } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
-                            }
-                            if ( structKeyExists( cfc, 'init' ) ) {
-                                cfc.init( this );
-                            }
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.lucee' ) ) {
-                            // we call createObject() rather than new so we can control initialization:
-                            if ( request.cfcbase == '' ) {
-                                cfc = createObject( 'component', subsystemDot & controllersDot & section );
-                            } else {
-                                cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
-                            }
-                            if ( structKeyExists( cfc, 'init' ) ) {
-                                cfc.init( this );
-                            }
+                        } else if ( section == variables.magicApplicationController ) {
+                        	var extensions = [".cfc",".lc",".lucee"];
+                        	for( var ext in extensions ){
+                        		if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & 'subsystem' & ext ) ) {
+                        			// we call createObject() rather than new so we can control initialization:
+	                            	if ( request.cfcbase == '' ) {
+	                                	cfc = createObject( 'component', subsystemDot & 'subsystem' );
+	                                } else {
+	                                	cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & 'subsystem' );
+	                                }
+	                                if ( structKeyExists( cfc, 'init' ) ) {
+	                                	cfc.init( this );
+	                                }
+	                                break;
+                        		}
+                        	}
+                        } else {
+                        	var extensions = [".cfc",".lc",".lucee"];
+                        	for( var ext in extensions ){
+                        		if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & ext ) ) {
+                        			// we call createObject() rather than new so we can control initialization:
+	                            	if ( request.cfcbase == '' ) {
+	                                	cfc = createObject( 'component', subsystemDot & controllersDot & section );
+	                                } else {
+	                                	cfc = createObject( 'component', request.cfcbase & '.' & subsystemDot & controllersDot & section );
+	                                }
+	                                if ( structKeyExists( cfc, 'init' ) ) {
+	                                	cfc.init( this );
+	                                }
+	                                break;
+                        		}
+                        	}
                         }
                         if ( isObject( cfc ) && ( hasDefaultBeanFactory() || hasSubsystemBeanFactory( subsystem ) ) ) {
                             autowire( cfc, getBeanFactory( subsystem ) );
@@ -2901,6 +2903,8 @@ component {
             controller( variables.magicApplicationSubsystem & variables.framework.subsystemDelimiter &
                         variables.magicApplicationController & '.' & variables.magicApplicationAction );
             setupSubsystemWrapper( request.subsystem );
+            controller( request.subsystem & variables.framework.subsystemDelimiter &
+                        variables.magicApplicationController & '.' & variables.magicApplicationAction );
             internalFrameworkTrace( 'setupRequest() called' );
             setupRequest();
         }
