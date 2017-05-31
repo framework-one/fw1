@@ -6,6 +6,7 @@ component extends="framework.one" {
         unhandledExtensions = "cfc,map,css,js,html",
         unhandledPaths = "/fonts",
 		generateSES = 'true',
+		preflightsOptions  = 'true',
 		routes = [ //Just for fun.....
 		  { "$GET/todo/:id" = "/main/get/id/:id" },
 		  { "$GET/todo" = "/main/list/" },
