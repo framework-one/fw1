@@ -2673,7 +2673,7 @@ component {
         setupEnvironment( env );
         if ( variables.framework.preflightOptions ) {
             var defaultAccessControl = {
-                origin = "*",
+                origin = iif( CGI.HTTPS eq "on", de("https"), de("http") ) & "://" & CGI.HTTP_HOST,
                 headers = "Accept,Authorization,Content-Type",
                 credentials = true,
                 maxAge = 1728000
