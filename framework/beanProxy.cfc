@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version  = "4.1.0-SNAPSHOT";
-    variables._aop1_version = "2.0.3-SNAPSHOT";
+    variables._fw1_version  = "4.1.0-rc1";
+    variables._aop1_version = "2.0.3-rc1";
 /*
 	Copyright (c) 2013-2016, Mark Drew, Sean Corfield, Daniel Budde
 
