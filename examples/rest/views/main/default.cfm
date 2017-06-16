@@ -1,0 +1,1 @@
+This rest example is used by the tests to assert that data is decoded as expected

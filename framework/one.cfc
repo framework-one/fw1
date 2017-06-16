@@ -2853,7 +2853,13 @@ component {
                             var paramPairs = listToArray( body, "&" );
                             for ( var pair in paramPairs ) {
                                 var parts = listToArray( pair, "=", true ); // handle blank values
-                                request.context[ parts[ 1 ] ] = urlDecode( parts[ 2 ] );
+                                var keyName = parts[ 1 ];
+                                var keyValue = urlDecode( parts[ 2 ] );
+                                if ( !structKeyExists( request.context, keyName ) ) {
+                                    request.context[ keyName ] = keyValue;
+                                } else {
+                                    request.context[ keyName ] = listAppend( request.context[ keyName ], keyValue );
+                                }
                             }
                         } catch ( any e ) {
                             throw( type = "FW1.JSONPOST",
