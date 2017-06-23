@@ -8,8 +8,7 @@ component {
     }
 
     function apply( arg ) {
-        // Lucee-only syntax!
-        return variables.fw[ method ]( arg );
+        return invoke( variables.fw, method, [ arg ] );
     }
 
 }

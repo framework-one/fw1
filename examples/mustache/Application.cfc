@@ -1,12 +1,26 @@
 component extends=framework.one {
 
+    variables.mustacheJAR = expandPath( "compiler-0.9.1.jar" );
+    // adobe coldfusion way:
+    this.javaSettings.loadPaths = [ variables.mustacheJAR ];
+
     function setupApplication() {
         var mustacheFactory = "com.github.mustachejava.DefaultMustacheFactory";
-        var mustacheJAR = expandPath( "compiler-0.9.1.jar" );
         var viewRoot = expandPath( "/" );
-        application.mustache = createObject( "java", mustacheFactory, mustacheJAR ).init(
-            createObject( "java", "java.io.File" ).init( viewRoot )
-        );
+        if ( structKeyExists( server, "lucee" ) ) {
+            // lucee way:
+            application.mustache = createObject(
+                "java", mustacheFactory, variables.mustacheJAR
+            ).init(
+                createObject( "java", "java.io.File" ).init( viewRoot )
+            );
+        } else {
+            application.mustache = createObject(
+                "java", mustacheFactory
+            ).init(
+                createObject( "java", "java.io.File" ).init( viewRoot )
+            );
+        }
     }
 
     public string function customizeViewOrLayoutPath( struct pathInfo, string type, string fullPath ) {
@@ -36,7 +50,7 @@ component extends=framework.one {
         // compile & execute the template:
         var template = application.mustache.compile( viewPath );
         var writer = createObject( "java", "java.io.StringWriter" ).init();
-        template.execute( writer, local );
+        template.execute( writer, [ local ] );
         writer.flush();
         return writer.toString();
     }
