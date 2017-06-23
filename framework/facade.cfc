@@ -1,7 +1,7 @@
-component extends="wirebox.system.ioc.Injector" {
+component {
     variables._fw1_version = "4.1.0-rc1";
 /*
-    Copyright (c) 2010-2016, Sean Corfield
+    Copyright (c) 2016, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -16,14 +16,15 @@ component extends="wirebox.system.ioc.Injector" {
     limitations under the License.
 */
 
-    // the FW/1 requirements for a bean factory are very simple:
-
-    public boolean function containsBean( string beanName ) {
-        return super.containsInstance( beanName );
-    }
-
-    public any function getBean( string beanName ) {
-        return super.getInstance( beanName );
+    function init() {
+        try {
+            return request._fw1.theFramework;
+        } catch ( any e ) {
+            throw(
+                type = "FW1.FacadeException", message = "Unable to locate FW/1 for this request",
+                detail = "It appears that you asked for the facade in a request that did not originate in FW/1?"
+            );
+        }
     }
 
 }

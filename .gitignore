@@ -1,9 +1,7 @@
 WEB-INF/*
-litepost/*
-mxunit/*
 wirebox/*
-tests/ci/results
-tests/ci/results/*
+testbox/*
+tests/results/
 .project
 settings.xml
 .settings/org.eclipse.core.resources.prefs
@@ -11,7 +9,4 @@ settings.xml
 *.iml
 *.ipr
 *.idea
-.ant-targets-build.xml
 run-tests.sh
-/examples/6helloclojure/target/stale/extract-native.dependencies
-/taskmanager/

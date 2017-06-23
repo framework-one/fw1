@@ -4,11 +4,11 @@ component extends="mxunit.framework.TestCase" {
         variables.emptyFactory = new framework.ioc( "" );
     }
 
-    function shouldContainBeanFactory() {
+    function testContainBeanFactory() {
         assertTrue( variables.emptyFactory.containsBean( "beanFactory" ) );
     }
 
-    function shouldContainJustOneBean() {
+    function testContainJustOneBean() {
         var info = variables.emptyFactory.getBeanInfo();
         assertEquals( 1, structCount( info.beaninfo ) );
         assertEquals( "beanfactory", structKeyList( info.beaninfo ) );

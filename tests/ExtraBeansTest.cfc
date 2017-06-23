@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldResolveMapping() {
+    function testResolveMapping() {
         var factory = new framework.ioc( "/tests/extrabeans" );
         application.itemCount = 0;
         assertTrue( factory.containsBean( "item" ) );
@@ -13,7 +13,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 1, application.itemCount );
     }
 
-    function shouldResolveMappingWithSingular() {
+    function testResolveMappingWithSingular() {
         var factory = new framework.ioc( "/tests/extrabeans",
                                { singulars = { sheep = "bean" } } );
         application.itemCount = 0;
@@ -27,7 +27,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 2, application.itemCount );
     }
 
-    function shouldNotInjectTypedProperty() {
+    function testNotInjectTypedProperty() {
         structDelete( application, "itemCount" );
         variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
                                      { singulars = { sheep = "lamb" },

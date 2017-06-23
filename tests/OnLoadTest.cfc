@@ -4,14 +4,14 @@ component extends="mxunit.framework.TestCase" {
         application.loadCount = 0;
     }
 
-    function shouldCallOnLoadListener() {
+    function testCallOnLoadListener() {
         var bf = new framework.ioc( "" ).onLoad( variables.loader );
         assertEquals( 0, application.loadCount );
         var q = bf.containsBean( "foo" );
         assertEquals( 1, application.loadCount );
     }
 
-    function shouldNotCallListenerWhenReloaded() {
+    function testNotCallListenerWhenReloaded() {
         var bf = new framework.ioc( "" ).onLoad( variables.loader );
         assertEquals( 0, application.loadCount );
         var q = bf.containsBean( "foo" );
@@ -20,14 +20,14 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 1, application.loadCount );
     }
 
-    function shouldCallMultipleOnLoadListeners() {
+    function testCallMultipleOnLoadListeners() {
         var bf = new framework.ioc( "" ).onLoad( variables.loader ).onLoad( variables.loader );
         assertEquals( 0, application.loadCount );
         var q = bf.containsBean( "foo" );
         assertEquals( 2, application.loadCount );
     }
 
-    function shouldBeAbleToUseObjectListener() {
+    function testBeAbleToUseObjectListener() {
         var listener = new tests.model.services.listener();
         var bf = new framework.ioc( "" ).onLoad( listener );
         assertFalse( listener.isLoaded() );
@@ -35,26 +35,26 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( listener.isLoaded() );
     }
 
-    function shouldBeAbleToUseBeanListener() {
+    function testBeAbleToUseBeanListener() {
         var bf = new framework.ioc( "/tests/model" ).onLoad( "listenerService" );
         var q = bf.containsBean( "foo" );
         assertTrue( bf.getBean( "listener" ).isLoaded() );
     }
 
-     function shouldBeAbleToUseFunctionExpressionListener() {
-        
-        if (listFirst(server.coldfusion.productVersion) >= 10) {
-            //splitting this out so that it doesnt break the tests when running on cf9
-            include "OnLoadTest-cf10.cfm";   
-        }
-        
+    function testBeAbleToUseFunctionExpressionListener() {
+      var onLoadHasFired = false;
+      var bf = new framework.ioc("/tests/model").onLoad(function(beanFactory){
+              onLoadHasFired = true;
+          });
+      var q = bf.containsBean( "foo" );
+      assertTrue( onLoadHasFired );
     }
 
     private void function loader( any factory ) {
         ++application.loadCount;
     }
 
-    function shouldBeAbleToListenViaConfig() {
+    function testBeAbleToListenViaConfig() {
         var listener = new tests.model.services.listener();
         var bf = new framework.ioc( "", { loadListener = listener } );
         assertFalse( listener.isLoaded() );

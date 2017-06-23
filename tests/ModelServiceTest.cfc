@@ -5,7 +5,7 @@ component extends="mxunit.framework.TestCase" {
         variables.factory = new framework.ioc( "/tests/model, /tests/services", { transients = [ "fish" ] } );
     }
 
-    function shouldHaveUserFishAndUserService() {
+    function testHaveUserFishAndUserService() {
         assertTrue( variables.factory.containsBean( "userFish" ) );
         assertTrue( variables.factory.containsBean( "userService" ) );
         assertFalse( variables.factory.containsBean( "user" ) );
@@ -14,7 +14,7 @@ component extends="mxunit.framework.TestCase" {
         assertNotSame( user1, user2 );
     }
 
-    function shouldInjectUserServiceIntoProduct() {
+    function testInjectUserServiceIntoProduct() {
         assertEquals( 0, application.userServiceCount );
         var svc1 = variables.factory.getBean( "userService" );
         assertEquals( 1, application.userServiceCount );

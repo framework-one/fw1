@@ -110,6 +110,12 @@ component extends="tests.InjectableTest" {
 
         match = variables.fw.processRouteMatch("$*", "default.error", "/foo/test/5", "POST");
         assertTrue(match.matched);
+
+        // issue 476 : trailing EOL regex marker should prevent match (only with ^):
+        match = variables.fw.processRouteMatch("$GET/$", "default.error", "/foo/test/5", "GET");
+        assertTrue(match.matched);
+        match = variables.fw.processRouteMatch("$GET^/$", "default.error", "/foo/test/5", "GET");
+        assertFalse(match.matched);
     }
 
     public void function testRouteMatchRedirect()

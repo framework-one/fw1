@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version = "4.0.0-snapshot";
-    variables._di1_version = "1.2.0-snapshot";
+    variables._fw1_version = "4.1.0-rc1";
+    variables._di1_version = "1.3.0-rc1";
 /*
     Copyright (c) 2010-2016, Sean Corfield
 
@@ -57,10 +57,7 @@ component {
             // recent FW/1 + DI/1 + AOP/1 exclusions:
             '/framework/aop.cfc', '/framework/beanProxy.cfc',
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc',
-            // and Clojure-related exclusions:
-            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
-            '/framework/ioclj.cfc'
+            '/framework/one.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
@@ -309,7 +306,7 @@ component {
             if ( !isNull( properties[ property ] ) ) {
                 var args = { };
                 args[ property ] = properties[ property ];
-                evaluate( 'bean.set#property#( argumentCollection = args )' );
+                invoke( bean, "set#property#", args );
             }
         }
         return bean;
@@ -519,10 +516,13 @@ component {
         lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
             if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
             variables.pathMapCache = { };
-            for ( var f in variables.folderArray ) {
-                discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+            try {
+                for ( var f in variables.folderArray ) {
+                    discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+                }
+            } finally {
+                variables.discoveryComplete = true;
             }
-            variables.discoveryComplete = true;
         }
         onLoadEvent();
     }
@@ -724,10 +724,16 @@ component {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        if ( !structKeyExists( variables.accumulatorCache, beanName ) ) {
+        var accumulator = { injection = { } };
+        // ensure only injection singletons end up cached in variables scope
+        if ( structKeyExists( variables.accumulatorCache, beanName ) ) {
+            structAppend( accumulator.injection, variables.accumulatorCache[ beanName ].injection );
+        } else {
             variables.accumulatorCache[ beanName ] = { injection = { }, dependencies = { } };
         }
-        var partialBean = resolveBeanCreate( beanName, variables.accumulatorCache[ beanName ], constructorArgs );
+        // all dependencies can be cached in variables scope
+        accumulator.dependencies = variables.accumulatorCache[ beanName ].dependencies;
+        var partialBean = resolveBeanCreate( beanName, accumulator, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -738,6 +744,10 @@ component {
             // injection phase:
             // now perform all of the injection:
             for ( var name in partialBean.injection ) {
+                if ( structKeyExists( variables.accumulatorCache[ beanName ].injection, name ) ) {
+                    // this singleton is in the accumulatorCache, thus it has already been fully resolved
+                    continue;
+                }
                 var injection = partialBean.injection[ name ];
                 if ( checkForPostInjection && !isConstant( name ) && structKeyExists( injection.bean, initMethod ) ) {
                     postInjectables[ name ] = true;
@@ -760,7 +770,7 @@ component {
                         // isNull() does not always work on ACF10...
                         try { if ( isNull( args[ property ] ) ) continue; } catch ( any e ) { continue; }
                     }
-                    evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
+                    invoke( injection.bean, "set#property#", args );
                 }
             }
             // post-injection, pre-init-method phase:
@@ -771,6 +781,11 @@ component {
             // see if anything needs post-injection, init-method calls:
             for ( var postName in postInjectables ) {
                 callInitMethod( postName, postInjectables, partialBean, initMethod );
+            }
+            for ( name in partialBean.injection ) {
+                if ( isSingleton( name ) ) {
+                    variables.accumulatorCache[ beanName ].injection[ name ] = partialBean.injection[ name ];
+                }
             }
             variables.resolutionCache[ beanName ] = isSingleton( beanName );
         }
@@ -796,7 +811,7 @@ component {
             } else {
                 variables.initMethodCache[ name ] = isSingleton( name );
                 var bean = info.injection[ name ].bean;
-                evaluate( 'bean.#method#()' );
+                invoke( bean, method );
             }
         }
     }
@@ -859,7 +874,7 @@ component {
                                 }
                             }
                         }
-                        var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
+                        var __ioc_newBean = bean.init( argumentCollection = args );
                         // if the constructor returns anything, it becomes the bean
                         // this allows for smart constructors that return things other
                         // than the CFC being created, such as implicit factory beans
@@ -890,12 +905,8 @@ component {
                         }
                     }
                 }
-                accumulator.bean = bean;
-                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
-                    accumulator.injection[ beanName ].bean = accumulator.bean;
-                }
             } else if ( isConstant( beanName ) ) {
-                accumulator.bean = info.value;
+                bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
             } else if ( structKeyExists( info, 'factory' ) ) {
                 var fmBean = isSimpleValue( info.factory ) ? this.getBean( info.factory ) : info.factory;
@@ -910,11 +921,11 @@ component {
                     }
                 }
                 if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
-                    accumulator.bean = fmBean( argumentCollection = argStruct );
+                    bean = fmBean( argumentCollection = argStruct );
                 } else {
-                    accumulator.bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                    bean = invoke( fmBean, "#info.method#", argStruct );
                 }
-                accumulator.injection[ beanName ] = { bean = accumulator.bean, setters = { } };
+                accumulator.injection[ beanName ] = { bean = bean, setters = { } };
             } else {
                 throw 'internal error: invalid metadata for #beanName#';
             }
@@ -926,10 +937,13 @@ component {
             }
             if ( !isNull( bean ) ) {
                 accumulator.injection[ beanName ] = { bean = bean, setters = { } };
-                accumulator.bean = bean;
             }
         }
-        return accumulator;
+        return {
+            bean = bean,
+            injection = accumulator.injection,
+            dependencies = accumulator.dependencies
+        };
     }
 
 

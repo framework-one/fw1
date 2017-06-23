@@ -4,14 +4,14 @@ component extends="mxunit.framework.TestCase" {
         variables.factory = new framework.ioc( "" );
     }
 
-    function shouldBeAStruct() {
+    function testBeAStruct() {
         var info = variables.factory.getBeanInfo();
         assertTrue( isStruct( info ) );
         assertEquals( 1, structCount( info ) );
         assertEquals( "beaninfo", structKeyList( info ) );
     }
 
-    function shouldContainMetadata() {
+    function testContainMetadata() {
         var info = variables.factory.getBeanInfo( "beanfactory" );
         assertTrue( isStruct( info ) );
         assertEquals( 2, structCount( info ) );
@@ -19,7 +19,7 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( info.isSingleTon );
     }
 
-    function shouldContainParent() {
+    function testContainParent() {
         var parent = new framework.ioc( "" );
         variables.factory.setParent( parent );
         var info = variables.factory.getBeanInfo();
@@ -27,7 +27,7 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( structKeyExists( info.parent, "beaninfo" ) );
     }
 
-    function shouldBeFlat() {
+    function testBeFlat() {
         var parent = new framework.ioc( "" );
         parent.declare( "father" ).asValue( "figure" );
         variables.factory.setParent( parent );
@@ -37,7 +37,7 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( structKeyExists( info.beaninfo, "father" ) );
     }
 
-    function shouldMatchRegex() {
+    function testMatchRegex() {
         variables.factory
             .declare( "father" ).asValue( "figure" ).done()
             .addBean( "mother", "figure" );
@@ -56,7 +56,7 @@ component extends="mxunit.framework.TestCase" {
     }
 
 
-    function shouldMatchRegexWithParent() {
+    function testMatchRegexWithParent() {
         variables.factory.addBean( "father", "figure" );
         var parent = new framework.ioc( "" );
         variables.factory.setParent( parent );

@@ -1,6 +1,6 @@
 component {
-    variables._fw1_version  = "4.0.0-snapshot";
-    variables._aop1_version = "2.0.2-snapshot";
+    variables._fw1_version  = "4.1.0-rc1";
+    variables._aop1_version = "2.0.3-rc1";
 /*
 	Copyright (c) 2013-2016, Mark Drew, Sean Corfield, Daniel Budde
 
@@ -291,11 +291,11 @@ component {
 	{
 		if (arguments.original)
 		{
-			local.result = evaluate(variables.preName & arguments.methodName & "(argumentCollection = arguments.args)");
+			local.result = invoke( variables, variables.preName & arguments.methodName, arguments.args );
 		}
 		else
 		{
-			local.result = evaluate(arguments.methodName & "(argumentCollection = arguments.args)");
+			local.result = invoke( variables, arguments.methodName, arguments.args );
 		}
 
 		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
@@ -382,7 +382,7 @@ component {
 	private any function $passThrough()
 	{
 		local.methodName = getFunctionCalledName();
-		local.result = evaluate("variables.targetBean." & local.methodName & "(argumentCollection = arguments)");
+		local.result = invoke( variables.targetBean, local.methodName, arguments );
 
 		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
 	}

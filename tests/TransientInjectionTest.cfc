@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldReturnWiredTransient() {
+    function testReturnWiredTransient() {
         // issue #420
         var bf = new framework.ioc( "" );
         bf.declareBean("transient", "tests.issue420.transient", false);

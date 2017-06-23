@@ -4,13 +4,13 @@ component extends="mxunit.framework.TestCase" {
         variables.factory = new framework.ioc( "/tests/model", { transients = [ "fish" ] } );
     }
 
-    function shouldHaveBeanServiceButNoShortForm() {
+    function testHaveBeanServiceButNoShortForm() {
         assertTrue( variables.factory.containsBean( "favaBean" ) );
         assertTrue( variables.factory.containsBean( "favaService" ) );
         assertFalse( variables.factory.containsBean( "fava" ) );
     }
 
-    function shouldHaveProductAndProductService() {
+    function testHaveProductAndProductService() {
         assertTrue( variables.factory.containsBean( "productService" ) );
         assertTrue( variables.factory.containsBean( "product" ) );
         var svc1 = variables.factory.getBean( "productService" );
@@ -18,7 +18,7 @@ component extends="mxunit.framework.TestCase" {
         assertSame( svc1, svc2 );
     }
 
-    function shouldHavePintoAndPintoBean() {
+    function testHavePintoAndPintoBean() {
         assertTrue( variables.factory.containsBean( "pintoBean" ) );
         assertTrue( variables.factory.containsBean( "pinto" ) );
         var bean1 = variables.factory.getBean( "pintoBean" );
@@ -26,7 +26,7 @@ component extends="mxunit.framework.TestCase" {
         assertNotSame( bean1, bean2 );
     }
 
-    function shouldHaveUserAndUserFish() {
+    function testHaveUserAndUserFish() {
         assertTrue( variables.factory.containsBean( "userFish" ) );
         assertTrue( variables.factory.containsBean( "user" ) );
         var user1 = variables.factory.getBean( "userFish" );

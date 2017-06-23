@@ -6,36 +6,36 @@ component extends="mxunit.framework.TestCase" {
         variables.factory.setParent( variables.parent );
     }
 
-    function shouldFindInParent() {
+    function testFindInParent() {
         assertEquals( 2, variables.factory.getBean( "two" ) );
     }
 
-    function shouldFindInChild() {
+    function testFindInChild() {
         assertEquals( "I", variables.factory.getBean( "one" ) );
         assertEquals( "III", variables.factory.getBean( "three" ) );
     }
 
-    function shouldContainViaParent() {
+    function testContainViaParent() {
         assertTrue( variables.factory.containsBean( "two" ) );
     }
 
-    function shouldGetMetadataViaParent() {
+    function testGetMetadataViaParent() {
         var info = variables.factory.getBeanInfo( "two" );
         assertEquals( 2, info.value );
         assertTrue( info.isSingleton );
     }
 
-    function shouldBeSingletonViaParent() {
+    function testBeSingletonViaParent() {
         assertTrue( variables.factory.isSingleton( "two" ) );
     }
 
-    function shouldHaveParentInMetadata() {
+    function testHaveParentInMetadata() {
         var info = variables.factory.getBeanInfo();
         assertTrue( structKeyExists( info, "parent" ) );
         assertEquals( variables.parent.getBeanInfo(), info.parent );
     }
 
-    function shouldNotHaveParentWithRegex() {
+    function testNotHaveParentWithRegex() {
         var info = variables.factory.getBeanInfo( regex = "X" );
         assertFalse( structKeyExists( info, "parent" ) );
     }
