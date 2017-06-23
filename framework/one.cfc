@@ -1,7 +1,7 @@
 component {
-    variables._fw1_version = "4.1.0-rc1";
+    variables._fw1_version = "4.1.0-rc2";
     /*
-      Copyright (c) 2009-2016, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
+      Copyright (c) 2009-2017, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
       Licensed under the Apache License, Version 2.0 (the "License");
       you may not use this file except in compliance with the License.
