@@ -56,7 +56,7 @@ component {
 		// Prevent infinite loop and make sure the method is publically accessible.
 		if (!structKeyExists(variables.targetBean, arguments.missingMethodName) && !structKeyExists(variables.targetBean, variables.preName & arguments.missingMethodName))
 		{
-			objectName = listLast(getMetadata(this).name, ".");
+			var objectName = listLast(getMetadata(this).name, ".");
 			throw(	message="Unable to locate method in (" & objectName & ").",
 					detail="The method (" & arguments.missingMethodName & ") could not be found. Please verify the method exists and is publically accessible.");
 		}
