@@ -13,20 +13,18 @@ component extends=framework.one {
         );
     }
 
+    function setupView( rc ) {
+        variables.mustacheProxies = makeMethodProxies( [ "buildURL", "view" ] );
+    }
+
     // we must override this to change the file extension that FW/1 looks for:
     public string function customizeViewOrLayoutPath( struct pathInfo, string type, string fullPath ) {
         return '#pathInfo.base##type#s/#pathInfo.path#.html';
     }
 
     public any function customizeRendering( string type, string path, struct scope ) {
-        scope.fw1 = { };
-        var methods = [ "buildURL", "view" ];
-        for ( var method in methods ) {
-            scope.fw1[ method ] = createDynamicProxy(
-                new framework.methodProxy( this, method ),
-                [ "java.util.function.Function" ]
-            );
-        }
+        // so mustache can see these functions:
+        scope.fw1 = variables.mustacheProxies;
         // compile & execute the template:
         var template = application.mustache.compile( path );
         var writer = createObject( "java", "java.io.StringWriter" ).init();

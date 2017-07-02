@@ -700,6 +700,22 @@ component {
     }
 
     /*
+     * Exotic utility function to create proxies for FW/1 methods that can be
+     * called from Java: can be used with external rendering engines, for example
+     * NOTE: requires Java 8 for Function<> interface!
+     */
+    public struct function makeMethodProxies( array methodNames ) {
+        var proxies = { };
+        for ( var method in methodNames ) {
+            proxies[ method ] = createDynamicProxy(
+                new framework.methodProxy( this, method ),
+                [ "java.util.function.Function" ]
+            );
+        }
+        return proxies;
+    }
+
+    /*
      * it is better to set up your application configuration in
      * your setupApplication() method since that is called on a
      * framework reload
