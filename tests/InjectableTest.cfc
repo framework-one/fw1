@@ -2,6 +2,7 @@ component extends="mxunit.framework.TestCase" {
 
 	private any function clearFrameworkFromRequest () {
         structDelete(request, "_fw1");
+				structDelete(request, "layout");
 	}
 
     private any function getVariablesScope( any cfc ) {

@@ -1,8 +1,8 @@
 component {
-    variables._fw1_version  = "4.0.0";
-    variables._aop1_version = "2.0.2";
+    variables._fw1_version  = "4.1.0";
+    variables._aop1_version = "2.0.3";
 /*
-	Copyright (c) 2013-2016, Mark Drew, Sean Corfield, Daniel Budde
+	Copyright (c) 2013-2017, Mark Drew, Sean Corfield, Daniel Budde
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ component {
 		// Prevent infinite loop and make sure the method is publically accessible.
 		if (!structKeyExists(variables.targetBean, arguments.missingMethodName) && !structKeyExists(variables.targetBean, variables.preName & arguments.missingMethodName))
 		{
-			objectName = listLast(getMetadata(this).name, ".");
+			var objectName = listLast(getMetadata(this).name, ".");
 			throw(	message="Unable to locate method in (" & objectName & ").",
 					detail="The method (" & arguments.missingMethodName & ") could not be found. Please verify the method exists and is publically accessible.");
 		}
@@ -291,11 +291,11 @@ component {
 	{
 		if (arguments.original)
 		{
-			local.result = evaluate(variables.preName & arguments.methodName & "(argumentCollection = arguments.args)");
+			local.result = invoke( variables, variables.preName & arguments.methodName, arguments.args );
 		}
 		else
 		{
-			local.result = evaluate(arguments.methodName & "(argumentCollection = arguments.args)");
+			local.result = invoke( variables, arguments.methodName, arguments.args );
 		}
 
 		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
@@ -382,7 +382,7 @@ component {
 	private any function $passThrough()
 	{
 		local.methodName = getFunctionCalledName();
-		local.result = evaluate("variables.targetBean." & local.methodName & "(argumentCollection = arguments)");
+		local.result = invoke( variables.targetBean, local.methodName, arguments );
 
 		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
 	}

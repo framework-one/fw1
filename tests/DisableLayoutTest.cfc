@@ -10,7 +10,6 @@ component extends="tests.InjectableTest" {
     }
 
 	function testEnabledLayout() {
-		variables.fw.enableLayout();
         var output = "";
 		variables.fw.onRequestStart( "" );
 		savecontent variable="output" {
@@ -21,6 +20,7 @@ component extends="tests.InjectableTest" {
 	}
 
 	function testExplicitlyEnabledLayout() {
+		variables.fw.enableLayout();
 		var output = "";
 		variables.fw.onRequestStart( "" );
 		savecontent variable="output" {

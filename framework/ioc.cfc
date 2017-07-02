@@ -1,8 +1,8 @@
 component {
-    variables._fw1_version = "4.0.0";
-    variables._di1_version = "1.2.0";
+    variables._fw1_version = "4.1.0";
+    variables._di1_version = "1.3.0";
 /*
-    Copyright (c) 2010-2016, Sean Corfield
+    Copyright (c) 2010-2017, Sean Corfield
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -49,18 +49,13 @@ component {
         variables.settersInfo = { };
         variables.autoExclude = [
             '/WEB-INF', '/Application.cfc', // never manage these!
-            '/Application.lc', '/Application.lucee',
             // assume default name for intermediary:
             '/MyApplication.cfc',
-            '/MyApplication.lc', '/MyApplication.lucee',
             'framework.cfc', 'ioc.cfc',     // legacy FW/1 / DI/1
             // recent FW/1 + DI/1 + AOP/1 exclusions:
             '/framework/aop.cfc', '/framework/beanProxy.cfc',
             '/framework/ioc.cfc', '/framework/WireBoxAdapter.cfc',
-            '/framework/one.cfc',
-            // and Clojure-related exclusions:
-            '/framework/cfmljure.cfc', '/framework/cljcontroller.cfc',
-            '/framework/ioclj.cfc'
+            '/framework/one.cfc'
         ];
         variables.listeners = 0;
         setupFrameworkDefaults();
@@ -178,8 +173,6 @@ component {
         var basePath = replace( dottedPath, '.', '/', 'all' );
         var cfcPath = expandPath( '/' & basePath & '.cfc' );
         var expPath = cfcPath;
-        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lc' );
-        if ( !fileExists( expPath ) ) expPath = expandPath( '/' & basePath & '.lucee' );
         if ( !fileExists( expPath ) ) throw "Unable to find source file for #dottedPath#: expands to #cfcPath#";
         var cfcPath = replace( expPath, chr(92), '/', 'all' );
         var metadata = {
@@ -309,7 +302,7 @@ component {
             if ( !isNull( properties[ property ] ) ) {
                 var args = { };
                 args[ property ] = properties[ property ];
-                evaluate( 'bean.set#property#( argumentCollection = args )' );
+                invoke( bean, "set#property#", args );
             }
         }
         return bean;
@@ -519,10 +512,13 @@ component {
         lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
             if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
             variables.pathMapCache = { };
-            for ( var f in variables.folderArray ) {
-                discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+            try {
+                for ( var f in variables.folderArray ) {
+                    discoverBeansInFolder( replace( f, chr(92), '/', 'all' ) );
+                }
+            } finally {
+                variables.discoveryComplete = true;
             }
-            variables.discoveryComplete = true;
         }
         onLoadEvent();
     }
@@ -534,10 +530,6 @@ component {
         var cfcs = [ ];
         try {
             cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
-            var lcs = directoryList( folder, variables.config.recurse, 'path', '*.lc' );
-            for ( var l in lcs ) arrayAppend( cfcs, l );
-            lcs = directoryList( folder, variables.config.recurse, 'path', '*.lucee' );
-            for ( l in lcs ) arrayAppend( cfcs, l );
         } catch ( any e ) {
             // assume bad path - ignore it, cfcs is empty list
         }
@@ -724,10 +716,16 @@ component {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
-        if ( !structKeyExists( variables.accumulatorCache, beanName ) ) {
+        var accumulator = { injection = { } };
+        // ensure only injection singletons end up cached in variables scope
+        if ( structKeyExists( variables.accumulatorCache, beanName ) ) {
+            structAppend( accumulator.injection, variables.accumulatorCache[ beanName ].injection );
+        } else {
             variables.accumulatorCache[ beanName ] = { injection = { }, dependencies = { } };
         }
-        var partialBean = resolveBeanCreate( beanName, variables.accumulatorCache[ beanName ], constructorArgs );
+        // all dependencies can be cached in variables scope
+        accumulator.dependencies = variables.accumulatorCache[ beanName ].dependencies;
+        var partialBean = resolveBeanCreate( beanName, accumulator, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
              variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
@@ -738,6 +736,10 @@ component {
             // injection phase:
             // now perform all of the injection:
             for ( var name in partialBean.injection ) {
+                if ( structKeyExists( variables.accumulatorCache[ beanName ].injection, name ) ) {
+                    // this singleton is in the accumulatorCache, thus it has already been fully resolved
+                    continue;
+                }
                 var injection = partialBean.injection[ name ];
                 if ( checkForPostInjection && !isConstant( name ) && structKeyExists( injection.bean, initMethod ) ) {
                     postInjectables[ name ] = true;
@@ -760,7 +762,7 @@ component {
                         // isNull() does not always work on ACF10...
                         try { if ( isNull( args[ property ] ) ) continue; } catch ( any e ) { continue; }
                     }
-                    evaluate( 'injection.bean.set#property#( argumentCollection = args )' );
+                    invoke( injection.bean, "set#property#", args );
                 }
             }
             // post-injection, pre-init-method phase:
@@ -771,6 +773,11 @@ component {
             // see if anything needs post-injection, init-method calls:
             for ( var postName in postInjectables ) {
                 callInitMethod( postName, postInjectables, partialBean, initMethod );
+            }
+            for ( name in partialBean.injection ) {
+                if ( isSingleton( name ) ) {
+                    variables.accumulatorCache[ beanName ].injection[ name ] = partialBean.injection[ name ];
+                }
             }
             variables.resolutionCache[ beanName ] = isSingleton( beanName );
         }
@@ -796,7 +803,7 @@ component {
             } else {
                 variables.initMethodCache[ name ] = isSingleton( name );
                 var bean = info.injection[ name ].bean;
-                evaluate( 'bean.#method#()' );
+                invoke( bean, method );
             }
         }
     }
@@ -859,7 +866,7 @@ component {
                                 }
                             }
                         }
-                        var __ioc_newBean = evaluate( 'bean.init( argumentCollection = args )' );
+                        var __ioc_newBean = bean.init( argumentCollection = args );
                         // if the constructor returns anything, it becomes the bean
                         // this allows for smart constructors that return things other
                         // than the CFC being created, such as implicit factory beans
@@ -890,9 +897,6 @@ component {
                         }
                     }
                 }
-                if ( !isSingleton( beanName ) && structKeyExists( accumulator.injection, beanName ) ) {
-                    accumulator.injection[ beanName ].bean = bean;
-                }
             } else if ( isConstant( beanName ) ) {
                 bean = info.value;
                 accumulator.injection[ beanName ] = { bean = info.value, setters = { } };
@@ -911,7 +915,7 @@ component {
                 if ( isCustomFunction( fmBean ) || isClosure( fmBean ) ) {
                     bean = fmBean( argumentCollection = argStruct );
                 } else {
-                    bean = evaluate( 'fmBean.#info.method#( argumentCollection = argStruct )' );
+                    bean = invoke( fmBean, "#info.method#", argStruct );
                 }
                 accumulator.injection[ beanName ] = { bean = bean, setters = { } };
             } else {

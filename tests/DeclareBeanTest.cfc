@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldDeclareSingleton() {
+    function testDeclareSingleton() {
         var bf = new framework.ioc( "" )
             .declare( "foo" ).instanceOf( "tests.extrabeans.sheep.item" ).done();
         structDelete( application, "itemCount" );
@@ -11,7 +11,7 @@ component extends="mxunit.framework.TestCase" {
         assertSame( item1, item2 );
     }
 
-    function shouldDeclareTransient() {
+    function testDeclareTransient() {
         var bf = new framework.ioc( "" )
             .declare( "foo" )
             .instanceOf( "tests.extrabeans.sheep.item" )
@@ -25,7 +25,7 @@ component extends="mxunit.framework.TestCase" {
         assertNotSame( item1, item2 );
     }
 
-    function shouldDeclareSingletonWithOverride() {
+    function testDeclareSingletonWithOverride() {
         var bf = new framework.ioc( "" )
             .declare( "foo" )
             .instanceOf( "tests.extrabeans.sheep.item" )
@@ -39,7 +39,7 @@ component extends="mxunit.framework.TestCase" {
         assertSame( item1, item2 );
     }
 
-    function shouldDeclareTransientWithOverride() {
+    function testDeclareTransientWithOverride() {
         var bf = new framework.ioc( "" )
             .declare( "foo" )
             .instanceOf( "tests.extrabeans.sheep.item" )
@@ -54,7 +54,7 @@ component extends="mxunit.framework.TestCase" {
         assertNotSame( item1, item2 );
     }
 
-    function shouldDeclareAndAdd() {
+    function testDeclareAndAdd() {
         var bf = new framework.ioc( "", { omitTypedProperties = false } )
             .declare( "foo" ).instanceOf( "tests.declared.things.myconfig" ).done()
             .declare( "name" ).asValue( "test" ).done()
@@ -64,7 +64,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "some", item.getConfig() );
     }
 
-    function shouldDeclareWithOverride() {
+    function testDeclareWithOverride() {
         var bf = new framework.ioc( "", { omitTypedProperties = false } )
             .declare( "foo" )
             .instanceOf( "tests.declared.things.myconfig" )
@@ -75,7 +75,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "some", item.getConfig() );
     }
 
-    function shouldDeclareInteractWithDefault() {
+    function testDeclareInteractWithDefault() {
         var bf = new framework.ioc( "", { omitDefaultedProperties = false } ).declareBean( "foo", "tests.declared.things.myconfig" )
             .addBean( "dftname", "injected" );
         var item = bf.getBean( "foo" );

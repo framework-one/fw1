@@ -1,8 +1,8 @@
 component extends="framework.ioc" {
-    variables._fw1_version  = "4.0.0";
-    variables._aop1_version = "2.0.2";
+    variables._fw1_version  = "4.1.0";
+    variables._aop1_version = "2.0.3";
 /*
-	Copyright (c) 2013-2016, Mark Drew, Sean Corfield, Daniel Budde
+	Copyright (c) 2013-2017, Mark Drew, Sean Corfield, Daniel Budde
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.

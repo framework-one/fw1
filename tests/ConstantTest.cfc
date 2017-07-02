@@ -4,15 +4,15 @@ component extends="mxunit.framework.TestCase" {
         variables.constants = new framework.ioc( "", { constants = { known = 42 } } );
     }
 
-    function shouldHaveKnownValue() {
+    function testHaveKnownValue() {
         assertEquals( 42, variables.constants.getBean( "known" ) );
     }
 
-    function shouldBeSingleton() {
+    function testBeSingleton() {
         assertTrue( variables.constants.isSingleton( "known" ) );
     }
 
-    function shouldHaveKnownMetadata() {
+    function testHaveKnownMetadata() {
         var info = variables.constants.getBeanInfo( "known" );
         assertEquals( 42, info.value );
         assertTrue( info.isSingleton );

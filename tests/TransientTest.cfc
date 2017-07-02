@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldNotInjectTransient() {
+    function testNotInjectTransient() {
         variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
                                      { transients = [ "fish" ], singulars = { sheep = "bean" } } );
         assertTrue( variables.factory.containsBean( "item" ) );
@@ -11,7 +11,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( "missing", item );
     }
 
-    function shouldConstructWithTransient() {
+    function testConstructWithTransient() {
         variables.factory = new framework.ioc( "/tests/model",
                                      { transients = [ "fish", "services" ] } );
         assertTrue( variables.factory.containsBean( "product" ) );
@@ -21,7 +21,7 @@ component extends="mxunit.framework.TestCase" {
         assertTrue( isObject( product ) );
     }
 
-    function shouldInitializeWithBeans() {
+    function testInitializeWithBeans() {
         variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
                                                { transients = [ "fish" ], singulars = { sheep = "bean" } } )
             .addBean( "one", 1 ).addBean( "two", "two" );
@@ -33,7 +33,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( n1 + 1, application.itemCount );
     }
 
-    function shouldInitializeWithConstructorArgs() {
+    function testInitializeWithConstructorArgs() {
         variables.factory = new framework.ioc( "/tests/model, /tests/extrabeans",
                                                { transients = [ "fish" ], singulars = { sheep = "bean" } } )
             .addBean( "one", 1 ).addBean( "two", "two" );
@@ -45,7 +45,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( n1, application.itemCount );
     }
 
-    function shouldInitializeWithOnlyConstructorArgs() {
+    function testInitializeWithOnlyConstructorArgs() {
         variables.factory = new framework.ioc( "/tests/extrabeans",
                                                { singulars = { sheep = "bean" } } );
         var i = variables.factory.getBean( "item" );

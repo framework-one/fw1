@@ -1,0 +1,11 @@
+<h1>Hello from Mustache!</h1>
+<p>Your name is {{rc.name}}!</p>
+<ul>
+  {{#rc.numbers}}
+  <li>{{.}}</li>
+  {{/rc.numbers}}
+</ul>
+<p>Call a FW/1 function to generate a link: <a href="{{#fw1.buildURL}}main.default?name=Linked{{/fw1.buildURL}}">Linked Page</a>!</p>
+<p>Load a fragment via Mustache partial (page-relative): {{> page/fragment}}</p>
+<p>Load a fragment via FW/1's view (views-root-relative): {{#fw1.view}}main/page/fragment{{/fw1.view}}</p>
+<p>Powered by {{rc.productversion}}.</p>

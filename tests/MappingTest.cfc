@@ -1,6 +1,6 @@
 component extends="mxunit.framework.TestCase" {
 
-    function shouldResolveMapping() {
+    function testResolveMapping() {
         var factory = new framework.ioc( "/goldfish/trumpets" );
         application.itemCount = 0;
         assertTrue( factory.containsBean( "item" ) );
@@ -13,7 +13,7 @@ component extends="mxunit.framework.TestCase" {
         assertEquals( 1, application.itemCount );
     }
 
-    function shouldResolveMappingWithSingular() {
+    function testResolveMappingWithSingular() {
         var factory = new framework.ioc( "/goldfish/trumpets",
                                { singulars = { sheep = "bean" } } );
         application.itemCount = 0;
@@ -28,7 +28,7 @@ component extends="mxunit.framework.TestCase" {
     }
 
 /*
-    function shouldAcceptExpandedPath() {
+    function testAcceptExpandedPath() {
         // on CI, webroot does not match current directory so this becomes
         // an undeducible path...
         var servicePath = expandPath( "/tests/services" );
@@ -41,7 +41,7 @@ component extends="mxunit.framework.TestCase" {
     }
 */
 
-    function shouldAcceptRelativePath() {
+    function testAcceptRelativePath() {
         var servicePath = "/tests/services";
         var factory = new framework.ioc( servicePath );
         assertTrue( factory.containsBean( "user" ) );

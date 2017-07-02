@@ -9,12 +9,12 @@ component extends="mxunit.framework.TestCase" {
 
     }
 
-    function shouldHaveCalledConfigure () {
+    function testHaveCalledConfigure () {
         var myService = beanFactory.getBean("myService");
         assertEquals( 42, myService.getResult());
     }
 
-    function shouldNotConfigureConstants () {
+    function testNotConfigureConstants () {
         var constObj = beanFactory.getBean("constObj");
 
         assertFalse( constObj.getBooleanValue() );

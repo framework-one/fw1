@@ -7,7 +7,7 @@ component extends=mxunit.framework.TestCase {
             .done();
     }
 
-    function shouldHaveDefaultValue() {
+    function testHaveDefaultValue() {
         var data = {
             viaNew : new tests.extrabeans.sheep.default(),
             viaDI1 : variables.bf.getBean( "default" )

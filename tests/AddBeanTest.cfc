@@ -6,15 +6,15 @@ component extends="mxunit.framework.TestCase" {
             .declare( "known" ).asValue( 42 ).done();
     }
 
-    function shouldHaveKnownValue() {
+    function testHaveKnownValue() {
         assertEquals( 42, variables.added.getBean( "known" ) );
     }
 
-    function shouldBeSingleton() {
+    function testBeSingleton() {
         assertTrue( variables.added.isSingleton( "known" ) );
     }
 
-    function shouldHaveKnownMetadata() {
+    function testHaveKnownMetadata() {
         var info = variables.added.getBeanInfo( "known" );
         assertEquals( 42, info.value );
         assertTrue( info.isSingleton );
