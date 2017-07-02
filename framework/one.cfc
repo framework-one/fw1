@@ -271,7 +271,7 @@ component {
      * can be overridden to customize how views and layouts are actually
      * rendered; should return null if the default rendering should apply
      */
-    public any function customizeRendering( string type, string path, struct scope ) {
+    public any function customTemplateEngine( string type, string path, struct scope ) {
         return;
     }
 
@@ -1923,7 +1923,7 @@ component {
             $ = rc.$;
         }
         local.body = body;
-        var response = customizeRendering( 'layout', layoutPath, local );
+        var response = customTemplateEngine( 'layout', layoutPath, local );
         if ( isNull( response ) ) {
             response = '';
             savecontent variable="response" {
@@ -1941,7 +1941,7 @@ component {
             $ = rc.$;
         }
         structAppend( local, args );
-        var response = customizeRendering( 'view', viewPath, local );
+        var response = customTemplateEngine( 'view', viewPath, local );
         if ( isNull( response ) ) {
             response = '';
             savecontent variable="response" {

@@ -22,7 +22,7 @@ component extends=framework.one {
         return '#pathInfo.base##type#s/#pathInfo.path#.html';
     }
 
-    public any function customizeRendering( string type, string path, struct scope ) {
+    public any function customTemplateEngine( string type, string path, struct scope ) {
         // so mustache can see these functions:
         scope.fw1 = variables.mustacheProxies;
         // compile & execute the template:
