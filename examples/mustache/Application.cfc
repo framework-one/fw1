@@ -13,34 +13,24 @@ component extends=framework.one {
         );
     }
 
+    // we must override this to change the file extension that FW/1 looks for:
     public string function customizeViewOrLayoutPath( struct pathInfo, string type, string fullPath ) {
-        if ( type == "view" ) return '#pathInfo.base##type#s/#pathInfo.path#.html';
-        else return fullPath;
+        return '#pathInfo.base##type#s/#pathInfo.path#.html';
     }
 
-    private string function internalView( string viewPath, struct args = { } ) {
-        // normal view setup:
-        var rc = request.context;
-        var $ = { };
-        // integration point with Mura:
-        if ( structKeyExists( rc, '$' ) ) {
-            $ = rc.$;
-        }
-        structAppend( local, args );
-        // *** start of specific rendering logic ***
-        // add proxies for useful FW/1 methods:
-        var fw1 = { };
+    public any function customizeRendering( string type, string path, struct scope ) {
+        scope.fw1 = { };
         var methods = [ "buildURL", "view" ];
         for ( var method in methods ) {
-            fw1[ method ] = createDynamicProxy(
+            scope.fw1[ method ] = createDynamicProxy(
                 new framework.methodProxy( this, method ),
                 [ "java.util.function.Function" ]
             );
         }
         // compile & execute the template:
-        var template = application.mustache.compile( viewPath );
+        var template = application.mustache.compile( path );
         var writer = createObject( "java", "java.io.StringWriter" ).init();
-        template.execute( writer, [ local ] );
+        template.execute( writer, [ scope ] );
         writer.flush();
         return writer.toString();
     }

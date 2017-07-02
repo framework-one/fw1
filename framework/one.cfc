@@ -268,6 +268,14 @@ component {
     }
 
     /*
+     * can be overridden to customize how views and layouts are actually
+     * rendered; should return null if the default rendering should apply
+     */
+    public any function customizeRendering( string type, string path, struct scope ) {
+        return;
+    }
+
+    /*
      * can be overridden to customize how views and layouts are found - can be
      * used to provide skinning / common views / layouts etc
      */
@@ -1898,9 +1906,13 @@ component {
         if ( structKeyExists( rc, '$' ) ) {
             $ = rc.$;
         }
-        var response = '';
-        savecontent variable="response" {
-            include '#layoutPath#';
+        local.body = body;
+        var response = customizeRendering( 'layout', layoutPath, local );
+        if ( isNull( response ) ) {
+            response = '';
+            savecontent variable="response" {
+                include '#layoutPath#';
+            }
         }
         return response;
     }
@@ -1913,9 +1925,12 @@ component {
             $ = rc.$;
         }
         structAppend( local, args );
-        var response = '';
-        savecontent variable="response" {
-            include '#viewPath#';
+        var response = customizeRendering( 'view', viewPath, local );
+        if ( isNull( response ) ) {
+            response = '';
+            savecontent variable="response" {
+                include '#viewPath#';
+            }
         }
         return response;
     }
