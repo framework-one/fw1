@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "4.1.0";
+    variables._fw1_version = "4.5.0-SNAPSHOT";
     /*
       Copyright (c) 2009-2017, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
