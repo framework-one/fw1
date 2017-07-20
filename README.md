@@ -37,6 +37,10 @@ This will open a browser, running the FW/1 "Introduction" app.
 
 You can then run the tests:
 
+    box testbox run verbose=false
+
+If you get any failures, you can run this with more verbose, but still compact output:
+
     box testbox run reporter=mintext
 
 # Copyright and License
