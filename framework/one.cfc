@@ -1459,6 +1459,9 @@ component {
       			var cfg = new "#variables._fw1_coldbox_modulePath#.#module#.ModuleConfig"();
       			cfg.vars = __vars;
       			cfg.vars().binder = bf.getBinder();
+            cfg.vars().controller = {
+                getWireBox : function() { return bf; }
+            };
       			cfg.configure();
       			if ( structKeyExists( variables.framework, "modules" ) &&
       	  			 structKeyExists( variables.framework.modules, module ) ) {
