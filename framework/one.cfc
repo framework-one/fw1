@@ -2018,7 +2018,7 @@ component {
             var q = '';
             for( var key in queryString ) {
                 if ( isSimpleValue( queryString[key] ) ) {
-                    q &= urlEncodedFormat( key ) & '=' & urlEncodedFormat( queryString[ key ] ) & '&';
+                    q = listAppend(q, urlEncodedFormat( key ) & '=' & urlEncodedFormat( queryString[ key ] ), '&');
                 }
             }
             queryString = q;
