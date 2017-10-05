@@ -39,6 +39,19 @@ component extends="mxunit.framework.TestCase" {
         assertSame( item1, item2 );
     }
 
+    function testDeclareBeanNoConstructorSingletonWithOverride() {
+        var bf = new framework.ioc( "" );
+        bf.addBean("known", "i will be auto-wired");
+        bf.declareBean(
+            "foo",
+            "tests.initMethod.myService",
+            true,
+            {result: "i am an override"}
+        );
+        assertEquals( bf.getBean("foo").getKnown(), "i will be auto-wired" );
+        assertEquals( bf.getBean("foo").getResult(), "i am an override" );
+    }
+
     function testDeclareTransientWithOverride() {
         var bf = new framework.ioc( "" )
             .declare( "foo" )
