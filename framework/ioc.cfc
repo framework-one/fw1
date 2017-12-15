@@ -741,7 +741,7 @@ component {
                     continue;
                 }
                 var injection = partialBean.injection[ name ];
-                if ( checkForPostInjection && !isConstant( name ) && structKeyExists( injection.bean, initMethod ) ) {
+                if ( checkForPostInjection && !isConstant( name ) && isObject(injection.bean) && structKeyExists( injection.bean, initMethod ) ) {
                     postInjectables[ name ] = true;
                 }
                 for ( var property in injection.setters ) {
