@@ -54,17 +54,22 @@ component {
 	public any function onMissingMethod(string missingMethodName, struct missingMethodArguments = {})
 	{
 		// Prevent infinite loop and make sure the method is publically accessible.
-		if (!structKeyExists(variables.targetBean, arguments.missingMethodName) && !structKeyExists(variables.targetBean, variables.preName & arguments.missingMethodName))
+		if ( !structKeyExists(variables.targetBean, arguments.missingMethodName) &&
+         !structKeyExists(variables.targetBean, variables.preName & arguments.missingMethodName) &&
+         !structKeyExists(variables.targetBean, "onMissingMethod") &&
+         !structKeyExists(variables.targetBean, variables.preName & "onMissingMethod") )
 		{
-			var objectName = listLast(getMetadata(this).name, ".");
-			throw(	message="Unable to locate method in (" & objectName & ").",
-					detail="The method (" & arguments.missingMethodName & ") could not be found. Please verify the method exists and is publically accessible.");
+			var objectName = listLast(getMetadata(variables.targetBean).name, ".");
+      var stdout = createObject("java","java.lang.System").out;
+			stdout.println("Unable to locate method in (" & objectName & "). " &
+					"The method (" & arguments.missingMethodName & ") could not be found. Please verify the method exists and is publically accessible.");
 		}
+    else
+    {
+    		local.result = runStacks(arguments.missingMethodName, arguments.missingMethodArguments);
 
-
-		local.result = runStacks(arguments.missingMethodName, arguments.missingMethodArguments);
-
-		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
+    		if (structKeyExists(local, "result") && !isNull(local.result)) return local.result;
+    }
 	}
 
 
