@@ -1095,14 +1095,14 @@ component {
             if ( append == 'all' ) {
                 for ( var key in request.context ) {
                     if ( isSimpleValue( request.context[ key ] ) ) {
-                        baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+                        baseQueryString = listAppend( baseQueryString, key & '=' & encodeForURL( request.context[ key ] ), '&' );
                     }
                 }
             } else {
                 var keys = listToArray( append );
                 for ( var key in keys ) {
                     if ( structKeyExists( request.context, key ) && isSimpleValue( request.context[ key ] ) ) {
-                        baseQueryString = listAppend( baseQueryString, key & '=' & urlEncodedFormat( request.context[ key ] ), '&' );
+                        baseQueryString = listAppend( baseQueryString, key & '=' & encodeForURL( request.context[ key ] ), '&' );
                     }
                 }
 
@@ -2018,7 +2018,7 @@ component {
             var q = '';
             for( var key in queryString ) {
                 if ( isSimpleValue( queryString[key] ) ) {
-                    q &= urlEncodedFormat( key ) & '=' & urlEncodedFormat( queryString[ key ] ) & '&';
+                    q = listAppend(q, encodeForURL( key ) & '=' & encodeForURL( queryString[ key ] ), '&');
                 }
             }
             queryString = q;

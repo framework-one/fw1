@@ -7,7 +7,7 @@ for `/framework` to the `framework` folder inside this FW/1 directory. Note that
 your `Application.cfc` needs to extend `framework.one`, you have to add the mapping
 in your admin - you can't just use a per-application mapping.
 
-Please read the [Framework One Code of Conduct](CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
+Please read the [Framework One Code of Conduct](https://github.com/framework-one/fw1/blob/develop/CODE_OF_CONDUCT.md) - we want FW/1 to be a welcoming and supportive environment for everyone to feel comfortable contributing!
 
 # Resources
 

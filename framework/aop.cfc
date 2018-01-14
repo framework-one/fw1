@@ -27,7 +27,7 @@ component extends="framework.ioc" {
 	// -------------- //
 
 	/** Constructor. */
-	public any function init(string folders, struct config = {})
+	public any function init(any folders, struct config = {})
 	{
 		super.init(argumentCollection = arguments);
 
