@@ -1,5 +1,5 @@
-component extends="framework.one" {
-
+component {
+    this.mappings[ '/framework' ] = expandPath( '../../framework' );    
     this.name = "qball";
     this.sessionManagement = true;
     this.sessionTimeout = createTimeSpan(0,2,0,0);
@@ -13,28 +13,34 @@ component extends="framework.one" {
         eventhandler="root.model.beans.eventhandler",
         logsql="true"
     };
-
     this.mappings["/root"] = getDirectoryFromPath(getCurrentTemplatePath());
+    
+    function _get_framework_one() {
+        if ( !structKeyExists( request, '_framework_one' ) ) {
 
-    variables.framework = {
-        diLocations = "./model/services", // ColdFusion ORM handles Beans
-        reloadApplicationOnEveryRequest = "true",
-        trace = "false"
-    };
-
-    public function setupSession() {
-        controller('security.session');
-    }
-
-    public function setupRequest() {
-        if(structKeyExists(url, "init")) { // use index.cfm?init to reload ORM
-            setupApplication();
-            ormReload();
-            location(url="index.cfm",addToken=false);
+            // create your FW/1 application:
+            request._framework_one = new MyApplication();
         }
-
-        controller("security.authorize");
-
+        return request._framework_one;
     }
 
+    // delegation of lifecycle methods to FW/1:
+    function onApplicationStart() {
+        return _get_framework_one().onApplicationStart();
+    }
+    function onError( exception, event ) {
+        return _get_framework_one().onError( exception, event );
+    }
+    function onRequest( targetPath ) {
+        return _get_framework_one().onRequest( targetPath );
+    }
+    function onRequestEnd() {
+        return _get_framework_one().onRequestEnd();
+    }
+    function onRequestStart( targetPath ) {
+        return _get_framework_one().onRequestStart( targetPath );
+    }
+    function onSessionStart() {
+        return _get_framework_one().onSessionStart();
+    }
 }
