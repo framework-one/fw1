@@ -1,4 +1,8 @@
 <cfparam name="rc.message" default="#arrayNew(1)#">
+<cfscript>
+function aaa() { }
+function bbb() { }
+</cfscript>
 
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
@@ -43,6 +47,17 @@
 	</div>
 
 </div>
-
+<cfdump var="#rc#">
+<cftry>
+	<cfif aaa == bbb>
+		<p>aaa and bbb are equal -- WTF?</p>
+	<cfelse>
+		<p>aaa and bbb are different -- as expected!</p>
+	</cfif>
+	<cfcatch type="any">
+		<p>I haz a sad -- functions cannot be compared!</p>
+		<cfdump var="#cfcatch#" />
+	</cfcatch>
+</cftry>
 </body>
 </html>
