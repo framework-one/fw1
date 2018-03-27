@@ -114,10 +114,12 @@ component {
         path = pathData.path;
         var omitIndex = pathData.omitIndex;
         queryString = normalizeQueryString( queryString );
+        var q = 0;
+        var a = 0;
         if ( queryString == '' ) {
             // extract query string from action section:
-            var q = find( '?', action );
-            var a = find( '##', action );
+            q = find( '?', action );
+            a = find( '##', action );
             if ( q > 0 ) {
                 if ( q < len( action ) ) {
                     queryString = right( action, len( action ) - q );
