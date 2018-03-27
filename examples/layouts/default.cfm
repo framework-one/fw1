@@ -12,7 +12,7 @@
 				<p><a href="<cfoutput>#buildURL( ':main.default' )#</cfoutput>">Examples Home</a></p>
 			</div>
 			<div class="footer">
-				<a href="https://github.com/framework-one/fw1">FW/1</a> is copyright (c) 2009-2017 Sean Corfield, Marcin Szczepanski, Ryan Cogswell -
+				<a href="https://github.com/framework-one/fw1">FW/1</a> is copyright (c) 2009-2018, Sean Corfield, Marcin Szczepanski, Ryan Cogswell -
 				<a href="http://www.apache.org/licenses/LICENSE-2.0">Licensed under the Apache License, Version 2.0</a><br />
 				Logo by Kevan Stannard - You are running FW/1 version <cfoutput>#variables.framework.version#</cfoutput>.
 			</div>

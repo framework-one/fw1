@@ -1,7 +1,7 @@
 component {
-    variables._fw1_version = "4.2.0-SNAPSHOT";
+    variables._fw1_version = "4.2.0";
     /*
-      Copyright (c) 2009-2017, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
+      Copyright (c) 2009-2018, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
       Licensed under the Apache License, Version 2.0 (the "License");
       you may not use this file except in compliance with the License.
