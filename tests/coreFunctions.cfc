@@ -38,7 +38,7 @@ component extends=testbox.system.BaseSpec {
       it( "should throw an exception, if no default", function(){
         fw.__config().usingSubsystems = true;
         expect(function(){
-          return fw.getDefaultSubsystem()
+          return fw.getDefaultSubsystem();
         }).toThrow( type = "FW1.subsystemNotSpecified" );
       });
     });
