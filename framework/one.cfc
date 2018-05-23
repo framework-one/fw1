@@ -520,7 +520,6 @@ component {
         return listFirst( getSectionAndItem( action ), '.' );
     }
 
-
     /*
      * return the action without the subsystem
      */
@@ -590,6 +589,13 @@ component {
             return structCopy( variables.framework.subsystems[ subsystem ] );
         }
         return { };
+    }
+
+    /*
+     * return the subsytem and section part of the action
+     */
+    public string function getSubsystemSection( string action = request.action ) {
+        return listFirst( getSubsystemSectionAndItem( action ), '.' );
     }
 
     /*
