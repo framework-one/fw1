@@ -55,7 +55,7 @@
 
     ],
     "devDependencies":{
-        "testbox":"^2.5.0+107"
+        "testbox":"2.5.0+107"
     },
     "installPaths":{
         "testbox":"testbox"
