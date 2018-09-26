@@ -2907,7 +2907,11 @@ component {
                     case "text/json":
                         try {
                             var bodyStruct = read_json( body );
-                            structAppend( request.context, bodyStruct );
+                            if ( isStruct( bodyStruct ) ) {
+							    structAppend( request.context, bodyStruct );
+							} else {
+							    request.context[ 'body' ] = bodyStruct;
+							}
                         } catch ( any e ) {
                             throw( type = "FW1.JSONPOST",
                                    message = "Content-Type implies JSON but could not deserialize body: " & e.message );
