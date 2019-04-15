@@ -2989,52 +2989,54 @@ component {
 
     private void function setupSubsystemWrapper( string subsystem ) {
         if ( !len( subsystem ) ) return;
-        lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
-            if ( !isSubsystemInitialized( subsystem ) ) {
-                getFw1App().subsystems[ subsystem ] = now();
-                // Application.cfc does not get a subsystem bean factory!
-                if ( subsystem != variables.magicApplicationSubsystem ) {
-                    var subsystemConfig = getSubsystemConfig( subsystem );
-                    var diEngine = structKeyExists( subsystemConfig, 'diEngine' ) ? subsystemConfig.diEngine : variables.framework.diEngine;
-                    if ( diEngine == "di1" || diEngine == "aop1" ) {
-                        // we can only reliably automate D/I engine setup for DI/1 / AOP/1
-                        var diLocations = structKeyExists( subsystemConfig, 'diLocations' ) ? subsystemConfig.diLocations : variables.framework.diLocations;
-                        var locations = isSimpleValue( diLocations ) ? listToArray( diLocations ) : diLocations;
-                        var subLocations = "";
-                        for ( var loc in locations ) {
-                            var relLoc = trim( loc );
-                            // make a relative location:
-                            if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
-                                relLoc = right( relLoc, len( relLoc ) - 2 );
-                            } else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
-                                relLoc = right( relLoc, len( relLoc ) - 1 );
-                            }
-                            if ( usingSubsystems() ) {
-                                subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
-                            } else {
-                                subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
-                            }
-                        }
-                        if ( len( sublocations ) ) {
-                            var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
-                            var cfg = { };
-                            if ( structKeyExists( subsystemConfig, 'diConfig' ) ) {
-                                cfg = subsystemConfig.diConfig;
-                            } else {
-                                cfg = structCopy( variables.framework.diConfig );
-                                structDelete( cfg, 'loadListener' );
-                            }
-                            cfg.noClojure = true;
-                            var ioc = new "#diComponent#"( subLocations, cfg );
-                            ioc.setParent( getDefaultBeanFactory() );
-                            setSubsystemBeanFactory( subsystem, ioc );
-                        }
-                    }
-                }
+        if ( !isSubsystemInitialized( subsystem ) ) {       
+			lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
+				if ( !isSubsystemInitialized( subsystem ) ) {
+					getFw1App().subsystems[ subsystem ] = now();
+					// Application.cfc does not get a subsystem bean factory!
+					if ( subsystem != variables.magicApplicationSubsystem ) {
+						var subsystemConfig = getSubsystemConfig( subsystem );
+						var diEngine = structKeyExists( subsystemConfig, 'diEngine' ) ? subsystemConfig.diEngine : variables.framework.diEngine;
+						if ( diEngine == "di1" || diEngine == "aop1" ) {
+							// we can only reliably automate D/I engine setup for DI/1 / AOP/1
+							var diLocations = structKeyExists( subsystemConfig, 'diLocations' ) ? subsystemConfig.diLocations : variables.framework.diLocations;
+							var locations = isSimpleValue( diLocations ) ? listToArray( diLocations ) : diLocations;
+							var subLocations = "";
+							for ( var loc in locations ) {
+								var relLoc = trim( loc );
+								// make a relative location:
+								if ( len( relLoc ) > 2 && left( relLoc, 2 ) == "./" ) {
+									relLoc = right( relLoc, len( relLoc ) - 2 );
+								} else if ( len( relLoc ) > 1 && left( relLoc, 1 ) == "/" ) {
+									relLoc = right( relLoc, len( relLoc ) - 1 );
+								}
+								if ( usingSubsystems() ) {
+									subLocations = listAppend( subLocations, variables.framework.base & subsystem & "/" & relLoc );
+								} else {
+									subLocations = listAppend( subLocations, variables.framework.base & variables.framework.subsystemsFolder & "/" & subsystem & "/" & relLoc );
+								}
+							}
+							if ( len( sublocations ) ) {
+								var diComponent = structKeyExists( subsystemConfig, 'diComponent' ) ? subsystemConfig : variables.framework.diComponent;
+								var cfg = { };
+								if ( structKeyExists( subsystemConfig, 'diConfig' ) ) {
+									cfg = subsystemConfig.diConfig;
+								} else {
+									cfg = structCopy( variables.framework.diConfig );
+									structDelete( cfg, 'loadListener' );
+								}
+								cfg.noClojure = true;
+								var ioc = new "#diComponent#"( subLocations, cfg );
+								ioc.setParent( getDefaultBeanFactory() );
+								setSubsystemBeanFactory( subsystem, ioc );
+							}
+						}
+					}
 
-                internalFrameworkTrace( 'setupSubsystem() called', subsystem );
-                setupSubsystem( subsystem );
-            }
+					internalFrameworkTrace( 'setupSubsystem() called', subsystem );
+					setupSubsystem( subsystem );
+				}
+			}
         }
     }
 
