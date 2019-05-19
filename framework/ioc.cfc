@@ -291,18 +291,20 @@ component {
     }
 
 
-    // given a bean (by name, by type or by value), call the named
-    // setters with the specified property values
-    public any function injectProperties( any bean, struct properties ) {
+    /*
+    * @hint Given a bean (by name, by type or by value), call the named setters with the specified property values
+    * @ignoreMissing When set verify that the setter to be called exists and skip if missing, otherwise throws an error
+    */
+    public any function injectProperties( any bean, struct properties, boolean ignoreMissing=false ) {
         if ( isSimpleValue( bean ) ) {
             if ( containsBean( bean ) ) bean = getBean( bean );
             else bean = construct( bean );
         }
         for ( var property in properties ) {
-            if ( !isNull( properties[ property ] ) ) {
+            if ( !isNull( properties[ property ] ) && (!ignoreMissing || structKeyExists( bean, "set#property#" ) ) ){
                 var args = { };
                 args[ property ] = properties[ property ];
-                invoke( bean, "set#property#", args );
+                evaluate( 'bean.set#property#( argumentCollection = args )' );
             }
         }
         return bean;
