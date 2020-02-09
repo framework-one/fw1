@@ -304,7 +304,7 @@ component {
             if ( !isNull( properties[ property ] ) && (!ignoreMissing || structKeyExists( bean, "set#property#" ) ) ){
                 var args = { };
                 args[ property ] = properties[ property ];
-                evaluate( 'bean.set#property#( argumentCollection = args )' );
+                invoke( bean, "set#property#", args );
             }
         }
         return bean;
