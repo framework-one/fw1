@@ -1,11 +1,12 @@
 language: java
-
 sudo: required
+dist: trusty
 
 env:
   matrix:
-    - ENGINE=lucee@4.5
     - ENGINE=lucee@5
+    - ENGINE=lucee@4.5
+    - ENGINE=adobe@2018
     - ENGINE=adobe@2016
     - ENGINE=adobe@11
     - ENGINE=adobe@10
