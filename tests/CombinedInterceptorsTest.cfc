@@ -31,8 +31,8 @@ component extends="mxunit.framework.TestCase" {
 
 		// First test does not intercept the (init, set..., or initMethod) methods.
 		AssertEquals(9, arrayLen(request.callstack));
-		AssertEquals(	"init,setStackLogService,configure,before,dowrap,before,dofront,before,dorear", 
-						arrayToList(request.callstack), 
+		AssertEquals(	"init,setStackLogService,configure,before,dowrap,before,dofront,before,dorear",
+						arrayToList(request.callstack),
 						"This test shows that the (init, set..., and configure) methods are by default ignored.");
 
 
@@ -46,8 +46,8 @@ component extends="mxunit.framework.TestCase" {
 
 		// Explicitly intercept the (init, set..., or initMethod) methods.
 		AssertEquals(10, arrayLen(request.callstack));
-		AssertEquals(	"before,init,before,setStackLogService,before,configure,before,dowrap,dofront,dorear", 
-						arrayToList(request.callstack), 
+		AssertEquals(	"before,init,before,setStackLogService,before,configure,before,dowrap,dofront,dorear",
+						arrayToList(request.callstack),
 						"This test shows that the (init, set..., and configure) methods can be explicitly intercepted.");
 	}
 
@@ -119,7 +119,7 @@ component extends="mxunit.framework.TestCase" {
 		bf.intercept("ReverseService", "BeforeInterceptorA");
 		bf.intercept("ReverseService", "BeforeInterceptorB");
 		bf.intercept("ReverseService", "BeforeInterceptorC");
-		
+
 		rs = bf.getBean("ReverseService");
 		result = rs.doReverse("Hello!");
 
