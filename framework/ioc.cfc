@@ -582,20 +582,6 @@ component {
                     variables.beanInfo[ beanName & singleDir ] = metadata;
                 }
 
-                // if ( structKeyExists( variables.beanInfo, beanName ) ) {
-                //     if ( variables.config.omitDirectoryAliases ) {
-                //         throw '#beanName# is not unique (and omitDirectoryAliases is true)';
-                //     }
-                //     structDelete( variables.beanInfo, beanName );
-                //     variables.beanInfo[ beanName & singleDir ] = metadata;
-                // } else {
-                //     variables.beanInfo[ beanName ] = metadata;
-                //     if ( !variables.config.omitDirectoryAliases ) {
-                //         variables.beanInfo[ beanName & singleDir ] = metadata;
-                //     }
-                // }
-
-
             } catch ( any e ) {
                 // wrap the exception so we can add bean name for debugging
                 // this trades off any stack trace information for the bean name but

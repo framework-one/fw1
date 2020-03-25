@@ -128,6 +128,8 @@ component extends="framework.ioc" {
 
 		arrayPrepend(beanNames, beanName);
 
+		// Removing duplicate beanNames
+		beanNames = listToArray(listRemoveDuplicates(arrayToList(beanNames),",",true) );
 
 		// Grab all name based interceptors that match.
 		for (interceptedBeanName in beanNames)
