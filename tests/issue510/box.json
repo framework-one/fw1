@@ -1,0 +1,44 @@
+{
+    "name":"Framework One",
+    "slug":"fw1",
+    "version":"4.2.0",
+    "author":"Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
+    "location":"framework-one/fw1#master",
+    "createPackageDirectory":true,
+    "packageDirectory":"framework",
+    "Homepage":"http://framework-one.github.io/",
+    "Documentation":"http://framework-one.github.io/documentation/",
+    "Repository":{
+        "type":"git",
+        "URL":"https://github.com/framework-one/fw1.git"
+    },
+    "Bugs":"https://github.com/framework-one/fw1/issues",
+    "shortDescription":"FW/1 - Framework One - is a family of small, lightweight, convention-over-configuration frameworks, primarily for CFML.",
+    "description":"FW/1 - Framework One - is a family of small, lightweight, convention-over-configuration frameworks, primarily for CFML. FW/1 itself provides MVC, DI/1 provides dependency injection (a.k.a. inversion of control), and AOP/1 provides aspect-oriented programming features on top of DI/1.",
+    "instructions":"http://framework-one.github.io/documentation/",
+    "changelog":"https://github.com/framework-one/fw1/commits/master",
+    "private":"false",
+    "engines":[
+        {
+            "type":"adobe",
+            "version":">=11.0.10"
+        }
+    ],
+    "License":[
+        {
+            "type":"Apache 2.0",
+            "URL":"http://www.apache.org/licenses/LICENSE-2.0"
+        }
+    ],
+    "Contributors":[
+        {
+            "name":"Contributors List",
+            "url":"https://github.com/framework-one/fw1/graphs/contributors"
+        }
+    ],
+    "ignore":[],
+    "dependencies":{
+        "adobe":"11.0.10"
+    },
+    "defaultEngine":"adobe"
+}

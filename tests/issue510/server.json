@@ -1,0 +1,14 @@
+{
+    "name":"issue510",
+    "openBrowserURL":"http://localhost:18145/fw1/folder-with-dashes/includes/test.cfm",
+    "web":{
+        "http":{
+            "port":"18145"
+        }
+    },
+    "trayEnable":false,
+    "force":true,
+    "jvm":{
+        "args":"-javaagent:lucee-external-agent.jar"
+    }
+}
