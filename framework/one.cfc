@@ -1831,18 +1831,21 @@ component {
         var controllersSlash = variables.framework.controllersFolder & '/';
         var controllersDot = variables.framework.controllersFolder & '.';
         // per #310 we no longer cache the Application controller since it is new on each request
-        if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
+        if ( section == variables.magicApplicationController ) {
+            if ( hasDefaultBeanFactory() ) {
+                autowire( this, getDefaultBeanFactory() );
+            }
+            return this;
+        }
+        if ( !structKeyExists( cache.controllers, componentKey ) ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_#componentKey#" type="exclusive" timeout="30" {
-                if ( !structKeyExists( cache.controllers, componentKey ) || section == variables.magicApplicationController ) {
+                if ( !structKeyExists( cache.controllers, componentKey ) ) {
                     if ( hasSubsystemBeanFactory( subsystem ) && getSubsystemBeanFactory( subsystem ).containsBean( beanName ) ) {
                         cfc = getSubsystemBeanFactory( subsystem ).getBean( beanName );
                     } else if ( !usingSubsystems() && hasDefaultBeanFactory() && getDefaultBeanFactory().containsBean( beanName ) ) {
                         cfc = getDefaultBeanFactory().getBean( beanName );
                     } else {
-                        if ( section == variables.magicApplicationController ) {
-                            // treat this (Application.cfc) as a controller:
-                            cfc = this;
-                        } else if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.cfc' ) ) {
+                        if ( cachedFileExists( cfcFilePath( request.cfcbase ) & subsystemDir & controllersSlash & section & '.cfc' ) ) {
                             // we call createObject() rather than new so we can control initialization:
                             if ( request.cfcbase == '' ) {
                                 cfc = createObject( 'component', subsystemDot & controllersDot & section );
