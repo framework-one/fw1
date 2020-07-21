@@ -535,6 +535,7 @@ component {
         } catch ( any e ) {
             // assume bad path - ignore it, cfcs is empty list
         }
+        local.beansWithDuplicates = "";
         for ( var cfcOSPath in cfcs ) {
             var cfcPath = replace( cfcOSPath, chr(92), '/', 'all' );
             // watch out for excluded paths:
@@ -561,18 +562,26 @@ component {
                 if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
                     continue;
                 }
-                if ( structKeyExists( variables.beanInfo, beanName ) ) {
-                    if ( variables.config.omitDirectoryAliases ) {
-                        throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+
+                if ( variables.config.omitDirectoryAliases ) {
+                    if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                        throw '#beanName# is not unique';
                     }
-                    structDelete( variables.beanInfo, beanName );
-                    variables.beanInfo[ beanName & singleDir ] = metadata;
-                } else {
                     variables.beanInfo[ beanName ] = metadata;
-                    if ( !variables.config.omitDirectoryAliases ) {
-                        variables.beanInfo[ beanName & singleDir ] = metadata;
+                } else {
+                    if ( listFindNoCase(local.beansWithDuplicates, beanName) ) {}
+                    else if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                        structDelete( variables.beanInfo, beanName );
+                        local.beansWithDuplicates = listAppend(local.beansWithDuplicates, beanName);
+                    } else {
+                        variables.beanInfo[ beanName ] = metadata;
                     }
+                    if ( structKeyExists( variables.beanInfo, beanName & singleDir ) ) {
+                        throw '#beanName & singleDir# is not unique';
+                    }
+                    variables.beanInfo[ beanName & singleDir ] = metadata;
                 }
+
             } catch ( any e ) {
                 // wrap the exception so we can add bean name for debugging
                 // this trades off any stack trace information for the bean name but
