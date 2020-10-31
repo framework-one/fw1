@@ -1890,29 +1890,26 @@ component {
     }
 
     private string function getNextPreserveKeyAndPurgeOld() {
-        var nextPreserveKey = '';
-        var oldKeyToPurge = '';
         try {
             sessionLock(function(){
+                sessionDefault( '__fw1NextPreserveKey', 0 );
+                sessionDefault( '__fw1OldKeyToPurge', '' );
                 if ( variables.framework.maxNumContextsPreserved > 1 ) {
-                    sessionDefault( '__fw1NextPreserveKey', 1 );
-                    nextPreserveKey = sessionRead( '__fw1NextPreserveKey' );
-                    sessionWrite( '__fw1NextPreserveKey', nextPreserveKey + 1 );
-                    oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
+                    sessionWrite( '__fw1NextPreserveKey', sessionRead( '__fw1NextPreserveKey' ) + 1 );
+                    sessionWrite( '__fw1OldKeyToPurge', sessionRead( '__fw1NextPreserveKey' ) - variables.framework.maxNumContextsPreserved );
                 } else {
-                    nextPreserveKey = '';
-                    sessionWrite( '__fw1PreserveKey', nextPreserveKey );
-                    oldKeyToPurge = '';
+                    sessionWrite( '__fw1NextPreserveKey', '' );
+                    sessionWrite( '__fw1PreserveKey', '' );
                 }
             });
-            var key = getPreserveKeySessionKey( oldKeyToPurge );
+            var key = getPreserveKeySessionKey( sessionRead( '__fw1OldKeyToPurge' ) );
             if ( sessionHas( key ) ) {
                 sessionDelete( key );
             }
         } catch ( any e ) {
             // ignore - assume session scope is disabled
         }
-        return nextPreserveKey;
+        return sessionRead( '__fw1NextPreserveKey' );
     }
 
     private string function getPreserveKeySessionKey( string preserveKey ) {
@@ -2992,7 +2989,7 @@ component {
 
     private void function setupSubsystemWrapper( string subsystem ) {
         if ( !len( subsystem ) ) return;
-        if ( !isSubsystemInitialized( subsystem ) ) {       
+        if ( !isSubsystemInitialized( subsystem ) ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
                 if ( !isSubsystemInitialized( subsystem ) ) {
                     getFw1App().subsystems[ subsystem ] = now();
