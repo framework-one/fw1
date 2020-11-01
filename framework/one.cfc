@@ -1890,26 +1890,29 @@ component {
     }
 
     private string function getNextPreserveKeyAndPurgeOld() {
+        var nextPreserveKey = '';
+        var oldKeyToPurge = '';
         try {
-            sessionLock(function(){
-                sessionDefault( '__fw1NextPreserveKey', 0 );
-                sessionDefault( '__fw1OldKeyToPurge', '' );
+            sessionLock(function() localmode = "classic" {
                 if ( variables.framework.maxNumContextsPreserved > 1 ) {
-                    sessionWrite( '__fw1NextPreserveKey', sessionRead( '__fw1NextPreserveKey' ) + 1 );
-                    sessionWrite( '__fw1OldKeyToPurge', sessionRead( '__fw1NextPreserveKey' ) - variables.framework.maxNumContextsPreserved );
+                    sessionDefault( '__fw1NextPreserveKey', 1 );
+                    nextPreserveKey = sessionRead( '__fw1NextPreserveKey' );
+                    sessionWrite( '__fw1NextPreserveKey', nextPreserveKey + 1 );
+                    oldKeyToPurge = nextPreserveKey - variables.framework.maxNumContextsPreserved;
                 } else {
-                    sessionWrite( '__fw1NextPreserveKey', '' );
-                    sessionWrite( '__fw1PreserveKey', '' );
+                    nextPreserveKey = '';
+                    sessionWrite( '__fw1PreserveKey', nextPreserveKey );
+                    oldKeyToPurge = '';
                 }
             });
-            var key = getPreserveKeySessionKey( sessionRead( '__fw1OldKeyToPurge' ) );
+            var key = getPreserveKeySessionKey( oldKeyToPurge );
             if ( sessionHas( key ) ) {
                 sessionDelete( key );
             }
         } catch ( any e ) {
             // ignore - assume session scope is disabled
         }
-        return sessionRead( '__fw1NextPreserveKey' );
+        return nextPreserveKey;
     }
 
     private string function getPreserveKeySessionKey( string preserveKey ) {
