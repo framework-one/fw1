@@ -1893,7 +1893,7 @@ component {
         var nextPreserveKey = '';
         var oldKeyToPurge = '';
         try {
-            sessionLock(function(){
+            sessionLock(function() localmode = "classic" {
                 if ( variables.framework.maxNumContextsPreserved > 1 ) {
                     sessionDefault( '__fw1NextPreserveKey', 1 );
                     nextPreserveKey = sessionRead( '__fw1NextPreserveKey' );
@@ -2992,7 +2992,7 @@ component {
 
     private void function setupSubsystemWrapper( string subsystem ) {
         if ( !len( subsystem ) ) return;
-        if ( !isSubsystemInitialized( subsystem ) ) {       
+        if ( !isSubsystemInitialized( subsystem ) ) {
             lock name="fw1_#application.applicationName#_#variables.framework.applicationKey#_subsysteminit_#subsystem#" type="exclusive" timeout="30" {
                 if ( !isSubsystemInitialized( subsystem ) ) {
                     getFw1App().subsystems[ subsystem ] = now();
