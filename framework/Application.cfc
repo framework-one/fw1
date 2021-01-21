@@ -1,5 +1,5 @@
 component {
-    // Version: FW/1 4.3.0-SNAPSHOT
+    // Version: FW/1 4.3.0-Beta2
 
     // copy this to your application root to use as your Application.cfc
     // or incorporate the logic below into your existing Application.cfc
