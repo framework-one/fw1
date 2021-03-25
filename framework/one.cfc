@@ -1220,10 +1220,10 @@ component {
             jsonpCallback = jsonpCallback
         };
         // return a builder to support nicer rendering syntax
-        return renderer();
+        return renderBuilder();
     }
 
-    public any function renderer() {
+    public any function renderBuilder() {
         var builder = { };
         structAppend( builder, {
             // allow type and data to be overridden just for completeness
