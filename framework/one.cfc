@@ -1803,7 +1803,7 @@ component {
                     writeOutput( '<td style="text-align: center; color: #color#">#ucase(trace.t)#</td>' );
                 }
                 writeOutput( '<td style="border: 0; color: black; #font# font-size: small;padding-left: 5px;" width="10%">#action#</td>' );
-                writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#trace.msg#' );
+                writeOutput( '<td style="border: 0; color: #color#; #font# font-size: small;">#encodeForHTML(trace.msg)#' );
                 if ( structKeyExists( trace, 'v' ) ) {
                     writeOutput( '<br />' );
                     writeDump( var = trace.v, expand = false );
