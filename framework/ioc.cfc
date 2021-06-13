@@ -1,5 +1,5 @@
 component {
-    variables._fw1_version = "4.2.0";
+    variables._fw1_version = "4.3.0";
     variables._di1_version = variables._fw1_version;
 /*
     Copyright (c) 2010-2018, Sean Corfield
@@ -291,15 +291,17 @@ component {
     }
 
 
-    // given a bean (by name, by type or by value), call the named
-    // setters with the specified property values
-    public any function injectProperties( any bean, struct properties ) {
+    /*
+    * @hint Given a bean (by name, by type or by value), call the named setters with the specified property values
+    * @ignoreMissing When set verify that the setter to be called exists and skip if missing, otherwise throws an error
+    */
+    public any function injectProperties( any bean, struct properties, boolean ignoreMissing=false ) {
         if ( isSimpleValue( bean ) ) {
             if ( containsBean( bean ) ) bean = getBean( bean );
             else bean = construct( bean );
         }
         for ( var property in properties ) {
-            if ( !isNull( properties[ property ] ) ) {
+            if ( !isNull( properties[ property ] ) && (!ignoreMissing || structKeyExists( bean, "set#property#" ) ) ){
                 var args = { };
                 args[ property ] = properties[ property ];
                 invoke( bean, "set#property#", args );
@@ -533,6 +535,7 @@ component {
         } catch ( any e ) {
             // assume bad path - ignore it, cfcs is empty list
         }
+        local.beansWithDuplicates = "";
         for ( var cfcOSPath in cfcs ) {
             var cfcPath = replace( cfcOSPath, chr(92), '/', 'all' );
             // watch out for excluded paths:
@@ -559,18 +562,26 @@ component {
                 if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
                     continue;
                 }
-                if ( structKeyExists( variables.beanInfo, beanName ) ) {
-                    if ( variables.config.omitDirectoryAliases ) {
-                        throw '#beanName# is not unique (and omitDirectoryAliases is true)';
+
+                if ( variables.config.omitDirectoryAliases ) {
+                    if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                        throw '#beanName# is not unique';
                     }
-                    structDelete( variables.beanInfo, beanName );
-                    variables.beanInfo[ beanName & singleDir ] = metadata;
-                } else {
                     variables.beanInfo[ beanName ] = metadata;
-                    if ( !variables.config.omitDirectoryAliases ) {
-                        variables.beanInfo[ beanName & singleDir ] = metadata;
+                } else {
+                    if ( listFindNoCase(local.beansWithDuplicates, beanName) ) {}
+                    else if ( structKeyExists( variables.beanInfo, beanName ) ) {
+                        structDelete( variables.beanInfo, beanName );
+                        local.beansWithDuplicates = listAppend(local.beansWithDuplicates, beanName);
+                    } else {
+                        variables.beanInfo[ beanName ] = metadata;
                     }
+                    if ( structKeyExists( variables.beanInfo, beanName & singleDir ) ) {
+                        throw '#beanName & singleDir# is not unique';
+                    }
+                    variables.beanInfo[ beanName & singleDir ] = metadata;
                 }
+
             } catch ( any e ) {
                 // wrap the exception so we can add bean name for debugging
                 // this trades off any stack trace information for the bean name but

@@ -1,9 +1,9 @@
 {
     "name":"Framework One",
     "slug":"fw1",
-    "version":"4.2.0",
+    "version":"4.3.0",
     "author":"Sean Corfield, Marcin Szczepanski, Ryan Cogswell",
-    "location":"framework-one/fw1#master",
+    "location":"framework-one/fw1#develop",
     "createPackageDirectory":true,
     "packageDirectory":"framework",
     "Homepage":"http://framework-one.github.io/",
@@ -16,7 +16,7 @@
     "shortDescription":"FW/1 - Framework One - is a family of small, lightweight, convention-over-configuration frameworks, primarily for CFML.",
     "description":"FW/1 - Framework One - is a family of small, lightweight, convention-over-configuration frameworks, primarily for CFML. FW/1 itself provides MVC, DI/1 provides dependency injection (a.k.a. inversion of control), and AOP/1 provides aspect-oriented programming features on top of DI/1.",
     "instructions":"http://framework-one.github.io/documentation/",
-    "changelog":"https://github.com/framework-one/fw1/commits/master",
+    "changelog":"https://github.com/framework-one/fw1/commits/develop",
     "type":"mvc",
     "keywords":[
         "fw1",
@@ -55,7 +55,7 @@
 
     ],
     "devDependencies":{
-        "testbox":"^2.5.0+107"
+        "testbox":"2.5.0+107"
     },
     "installPaths":{
         "testbox":"testbox"

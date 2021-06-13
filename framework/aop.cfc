@@ -1,5 +1,5 @@
 component extends="framework.ioc" {
-    variables._fw1_version  = "4.2.0";
+    variables._fw1_version  = "4.3.0";
     variables._aop1_version = variables._fw1_version;
 /*
 	Copyright (c) 2013-2018, Mark Drew, Sean Corfield, Daniel Budde
@@ -119,7 +119,7 @@ component extends="framework.ioc" {
 	{
 		// build the interceptor array:
 		var beanName = listLast(arguments.dottedPath, ".");
-		var beanNames = getAliases(beanName);
+		var beanNames = getAliases(arguments.dottedPath);
 		var beanTypes = "";
 		var interceptDefinition = "";
 		var interceptedBeanName = "";
@@ -128,6 +128,8 @@ component extends="framework.ioc" {
 
 		arrayPrepend(beanNames, beanName);
 
+		// Removing duplicate beanNames
+		beanNames = listToArray(listRemoveDuplicates(arrayToList(beanNames),",",true) );
 
 		// Grab all name based interceptors that match.
 		for (interceptedBeanName in beanNames)
@@ -185,7 +187,7 @@ component extends="framework.ioc" {
 		var interceptedBeanName = "";
 		var interceptorDefinition = {};
 		var beanName = listLast(arguments.dottedPath, ".");
-		var beanNames = getAliases(beanName);
+		var beanNames = getAliases(arguments.dottedPath);
 		var beanTypes = "";
 
 
@@ -234,29 +236,21 @@ component extends="framework.ioc" {
 	}
 
 
-	/** Finds all aliases for the given beanName. */
-	private array function getAliases(string beanName)
+	/** Finds all aliases for the given dottedPath. */
+	private array function getAliases(string dottedPath)
 	{
 		var aliases = [];
 		var beanData = "";
 		var key = "";
 
-
-		if (structKeyExists(variables.beanInfo, arguments.beanName))
+		for (key in variables.beanInfo)
 		{
-			beanData = variables.beanInfo[arguments.beanName];
-
-			for (key in variables.beanInfo)
+			// Same cfc dotted path, must be an alias.
+			if (
+					structKeyExists(variables.beanInfo[key], "cfc") &&
+					variables.beanInfo[key].cfc == arguments.dottedPath)
 			{
-				// Same cfc dotted path, must be an alias.
-				if (
-						key != arguments.beanName &&
-						structKeyExists(variables.beanInfo[key], "cfc") &&
-						structKeyExists(variables.beanInfo[arguments.beanName], "cfc") &&
-						variables.beanInfo[key].cfc == variables.beanInfo[arguments.beanName].cfc)
-				{
-					arrayAppend(aliases, key);
-				}
+				arrayAppend(aliases, key);
 			}
 		}
 
