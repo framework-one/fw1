@@ -1,0 +1,16 @@
+{
+    "name":"renderer",
+    "openBrowserURL":"http://localhost:56930/",
+    "trayEnable":false,
+    "web":{
+        "http":{
+            "port":"56930"
+        },
+        "rewrites":{
+            "enable":"true"
+        }
+    },
+    "app":{
+        "cfengine":"lucee@5.*"
+    }
+}
