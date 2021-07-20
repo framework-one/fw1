@@ -2147,8 +2147,7 @@ component {
             cache = {
                 lastReload = now(),
                 fileExists = { },
-                controllers = { },
-                routes = { regex = { }, resources = { } }
+                controllers = { }
             },
             subsystems = { },
             subsystemFactories = { }
