@@ -22,7 +22,10 @@ component extends="wirebox.system.ioc.Injector" {
         return super.containsInstance( beanName );
     }
 
-    public any function getBean( string beanName ) {
+    public any function getBean( string beanName, struct constructorArgs ) {
+        if ( structKeyExists( arguments, "constructorArgs" ) ) {
+            return super.getInstance( name=beanName, initArguments=constructorArgs );
+        }
         return super.getInstance( beanName );
     }
 
