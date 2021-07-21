@@ -60,19 +60,7 @@ component {
     }
 
     public void function addRoute( any routes, string target, any methods = [ ], string statusCode = '' ) {
-        if ( !isArray( routes ) ) routes = [ routes ];
-        if ( !isArray( methods ) ) methods = [ methods ];
-        param name="variables.framework.routes" default="#[ ]#";
-        if ( len( statusCode ) ) target = statusCode & ':' & target;
-        for ( var route in routes ) {
-            if ( arrayLen( methods ) ) {
-                for ( var method in methods ) {
-                    arrayAppend( variables.framework.routes, { '$#method##route#' = target } );
-                }
-            } else {
-                arrayAppend( variables.framework.routes, { '#route#' = target } );
-            }
-        }
+       getRouter().addRoute( arguments=argumentCollection );
     }
 
     /*
@@ -373,8 +361,7 @@ component {
     /*
      * return the framework configuration
      */
-    public struct function getConfig()
-    {
+    public struct function getConfig(){
         // return a copy to make it read only from outside the framework:
         return structCopy( framework );
     }
@@ -390,7 +377,6 @@ component {
      * returns the name of the default subsystem
      */
     public string function getDefaultSubsystem() {
-
         if ( !usingSubsystems() ) {
             return '';
         }
@@ -405,7 +391,6 @@ component {
         }
 
         return variables.framework.defaultSubsystem;
-
     }
 
     /*
@@ -490,6 +475,13 @@ component {
 		return getFw1App().renderer;
 	}
 
+	/*
+     * returns the loaded router utility component
+     */
+    public any function getRouter() {
+		return getFw1App().router;
+	}
+
     /*
      * return the current route (if any)
      * this is the raw, matched route that we mapped
@@ -510,7 +502,7 @@ component {
      * return the configured routes
      */
     public array function getRoutes() {
-        return variables.framework.routes;
+        return getRouter().getRoutes();
     }
 
     /*
@@ -580,11 +572,8 @@ component {
      * same effect as getBeanFactory when not using subsystems
      */
     public any function getSubsystemBeanFactory( string subsystem ) {
-
         setupSubsystemWrapper( subsystem );
-
         return getFw1App().subsystemFactories[ subsystem ];
-
     }
 
     /*
@@ -629,7 +618,6 @@ component {
      * previously set via setBeanFactory or setSubsystemBeanFactory
      */
     public boolean function hasBeanFactory() {
-
         if ( hasDefaultBeanFactory() ) {
             return true;
         }
@@ -643,7 +631,6 @@ component {
         }
 
         return false;
-
     }
 
     /*
@@ -657,12 +644,12 @@ component {
      * returns true if a subsystem specific bean factory has been set
      */
     public boolean function hasSubsystemBeanFactory( string subsystem ) {
-
-        if ( !len( subsystem ) ) return false;
+        if ( !len( subsystem ) ){
+        	return false;
+        }
         setupSubsystemWrapper( subsystem );
 
         return structKeyExists( getFw1App().subsystemFactories, subsystem );
-
     }
 
     /*
@@ -868,7 +855,6 @@ component {
      * not intended to be overridden, automatically deleted for CFC requests
      */
     public any function onRequest( string targetPath ) {
-
         var out = 0;
         var i = 0;
         var tuple = 0;
@@ -877,17 +863,15 @@ component {
         var n = 0;
 
         request._fw1.controllerExecutionStarted = true;
-        if ( variables.framework.preflightOptions &&
+        if ( getRouter().getPreflightOptions() &&
              request._fw1.cgiRequestMethod == "OPTIONS" &&
-             structCount( request._fw1.routeMethodsMatched ) ) {
+             structCount( request._fw1.routeMethodsMatched )
+        ){
             // OPTIONS support enabled and at least one possible match
             // bypass all normal controllers and render headers and data:
-            var resp = getPageContext().getResponse();
-            resp.setHeader( "Access-Control-Allow-Origin", variables.framework.optionsAccessControl.origin );
-            resp.setHeader( "Access-Control-Allow-Methods", "OPTIONS," & uCase( structKeyList( request._fw1.routeMethodsMatched ) ) );
-            resp.setHeader( "Access-Control-Allow-Headers", variables.framework.optionsAccessControl.headers );
-            resp.setHeader( "Access-Control-Allow-Credentials", variables.framework.optionsAccessControl.credentials ? "true" : "false" );
-            resp.setHeader( "Access-Control-Max-Age", "#variables.framework.optionsAccessControl.maxAge#" );
+
+            getRouter().setAccessControlHeaders( request._fw1.routeMethodsMatched );
+
             renderData( "text", "" );
         } else {
             try {
@@ -1017,7 +1001,14 @@ component {
     }
 
     // populate() may be invoked inside controllers
-    public any function populate( any cfc, string keys = '', boolean trustKeys = false, boolean trim = false, boolean deep = false, any properties = '' ) {
+    public any function populate(
+    	any cfc,
+    	string keys = '',
+    	boolean trustKeys = false,
+    	boolean trim = false,
+    	boolean deep = false,
+    	any properties = ''
+    ) {
         var props = isSimpleValue( properties ) ? request.context : properties;
         if ( keys == '' ) {
             if ( trustKeys ) {
@@ -1079,25 +1070,15 @@ component {
         return cfc;
     }
 
-    public struct function processRoutes( string path, array routes, string httpMethod = request._fw1.cgiRequestMethod ) {
-        for ( var routePack in routes ) {
-            for ( var route in routePack ) {
-                if ( route == 'hint' ) continue;
-                if ( route == '$RESOURCES' ) {
-                    var routeMatch = processRoutes( path, getResourceRoutes( routePack[ route ] ), httpMethod );
-                } else {
-                    var routeMatch = processRouteMatch( route, routePack[ route ], path, httpMethod );
-                }
-                if ( routeMatch.matched ) return routeMatch;
-            }
-        }
-        return { matched = false };
-    }
-
     // call from your controller to redirect to a clean URL based on an action, pushing data to flash scope if necessary:
     public void function redirect(
-        string action, string preserve = 'none', string append = 'none', string path = variables.magicBaseURL,
-        any queryString = '', string statusCode = '302', string header = ''
+        string action,
+        string preserve = 'none',
+        string append = 'none',
+        string path = variables.magicBaseURL,
+        any queryString = '',
+        string statusCode = '302',
+        string header = ''
     ) {
         if ( path == variables.magicBaseURL ) path = getBaseURL();
         var preserveKey = '';
@@ -1327,6 +1308,14 @@ component {
 		}
 	}
 
+	public void function setRouter( any router ) {
+		if ( isObject( router ) ) {
+			getFw1App().router = router;
+		} else {
+			structDelete( getFw1App(), "router" );
+		}
+	}
+
     /*
      * use this to override the default layout
      */
@@ -1342,10 +1331,8 @@ component {
      * - getBean(name) - returns the named bean
      */
     public void function setSubsystemBeanFactory( string subsystem, any factory ) {
-
         ensureNewFrameworkStructsExist();
         getFw1App().subsystemFactories[ subsystem ] = factory;
-
     }
 
     /*
@@ -1422,8 +1409,11 @@ component {
      * view() may be invoked inside views and layouts
      * returns the UI generated by the named view
      */
-    public any function view( string path, struct args = { },
-                              any missingView = { } ) {
+    public any function view(
+    	string path,
+    	struct args = { },
+    	any missingView = { }
+    ){
         var viewPath = parseViewOrLayoutPath( path, 'view' );
         if ( cachedFileExists( viewPath ) ) {
             internalFrameworkTrace( 'view( #path# ) called - rendering #viewPath#' );
@@ -1441,60 +1431,6 @@ component {
             return onMissingView( request.context );
         }
     }
-
-    // EXPERIMENTAL COLDBOX MODULE SUPPORT
-
-    /*
-     * in Application.cfc, call as follows:
-     *   this.mappings = moduleMappings( "qb, supermod" );
-     *   this.mappings = moduleMappings( [ "mod1", "mod2"], "modules" );
-     */
-    public struct function moduleMappings( any modules, string modulePath = "modules" ) {
-    		if ( isSimpleValue( modules ) ) modules = listToArray( modules );
-    		var cleanModules = [ ];
-    		var mappings = { };
-    		for ( var m in modules ) {
-    			m = trim( m );
-    			arrayAppend( cleanModules, m );
-    			mappings[ "/" & m ] = expandPath( "/" & modulePath & "/" & m );
-    		}
-    		variables._fw1_coldbox_modulePath = modulePath;
-    		variables._fw1_coldbox_modules = cleanModules;
-    		return mappings;
-  	}
-
-    /*
-     * call this in setupApplication() to load the modules for which
-     * you set up moduleMappings() using the function above -- the
-     * frameworkPath argument can override the default location for FW/1
-     */
-  	public void function installModules( string frameworkPath = "framework" ) {
-    		var bf = new "#frameworkPath#.WireBoxAdapter"();
-    		getBeanFactory().setParent( bf );
-    		var builder = bf.getBuilder();
-    		var nullObject = new "#frameworkPath#.nullObject"();
-    		var cbdsl = { };
-    		cbdsl.init = function() { return cbdsl; };
-    		cbdsl.process = function() { return nullObject; };
-    		builder.vars = __vars;
-    		builder.vars().instance.ColdBoxDSL = cbdsl;
-    		for ( var module in variables._fw1_coldbox_modules ) {
-      			var cfg = new "#variables._fw1_coldbox_modulePath#.#module#.ModuleConfig"();
-      			cfg.vars = __vars;
-      			cfg.vars().binder = bf.getBinder();
-            cfg.vars().controller = {
-                getWireBox : function() { return bf; }
-            };
-      			cfg.configure();
-      			if ( structKeyExists( variables.framework, "modules" ) &&
-      	  			 structKeyExists( variables.framework.modules, module ) ) {
-			         structAppend( cfg.vars().settings, variables.framework.modules[ module ] );
-      			}
-      			cfg.onLoad();
-    		}
-  	}
-    // helper to allow mixins:
-  	private struct function __vars() { return variables; }
 
     // THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE
 
@@ -1670,7 +1606,6 @@ component {
     }
 
     private void function ensureNewFrameworkStructsExist() {
-
         var framework = getFw1App();
 
         if ( !structKeyExists( framework, 'subsystemFactories' ) ) {
@@ -1680,7 +1615,6 @@ component {
         if ( !structKeyExists( framework, 'subsystems' ) ) {
             framework.subsystems = { };
         }
-
     }
 
     private void function failure( any exception, string event, boolean indirect = false, boolean early = false ) {
@@ -1701,7 +1635,6 @@ component {
 
         writeOutput( '<p>#encodeForHtml(exception.detail)# (#encodeForHtml(exception.type)#)</p>' );
         dumpException(exception);
-
     }
 
     private struct function findImplicitAndExplicitSetters( any cfc ) {
@@ -1834,7 +1767,6 @@ component {
     }
 
     private any function getCachedController( string subsystem, string section ) {
-
         setupSubsystemWrapper( subsystem );
         var cache = getFw1App().cache;
         var cfc = 0;
@@ -1939,7 +1871,6 @@ component {
     }
 
     private string function getSubsystemDirPrefix( string subsystem ) {
-
         if ( subsystem eq '' ) {
             return '';
         }
@@ -2018,11 +1949,8 @@ component {
     }
 
     private boolean function isSubsystemInitialized( string subsystem ) {
-
         ensureNewFrameworkStructsExist();
-
         return structKeyExists( getFw1App().subsystems, subsystem );
-
     }
 
     // like listFirst() and listLast() but they actually work with empty segments
@@ -2070,13 +1998,13 @@ component {
     private string function parseViewOrLayoutPath( string path, string type ) {
         var folder = type;
         switch ( folder ) {
-        case 'layout':
-            folder = variables.layoutFolder;
-            break;
-        case 'view':
-            folder = variables.viewFolder;
-            break;
-            // else leave it alone?
+	        case 'layout':
+	            folder = variables.layoutFolder;
+	        break;
+	        case 'view':
+	            folder = variables.viewFolder;
+	        break;
+	        // else leave it alone?
         }
         var pathInfo = { };
         var subsystem = getSubsystem( getSubsystemSectionAndItem( path ) );
@@ -2090,167 +2018,6 @@ component {
         }
         var defaultPath = pathInfo.base & folder & 's/' & pathInfo.path & '.cfm';
         return customizeViewOrLayoutPath( pathInfo, type, defaultPath );
-
-    }
-
-    private struct function processRouteMatch( string route, string target, string path, string httpMethod ) {
-        var regExCache = isFrameworkInitialized() ? getFw1App().cache.routes.regex : { };
-        var cacheKey = hash( route & target );
-        if ( !structKeyExists( regExCache, cacheKey ) ) {
-            var routeRegEx = { redirect = false, method = '', pattern = route, target = target };
-            // if target has numeric prefix, strip it and set redirect:
-            var prefix = listFirst( routeRegEx.target, ':' );
-            if ( isNumeric( prefix ) ) {
-                routeRegEx.redirect = true;
-                routeRegEx.statusCode = prefix;
-                routeRegEx.target = listRest( routeRegEx.target, ':' );
-            }
-            // special routes begin with $METHOD, * is also a wildcard
-            var routeLen = len( routeRegEx.pattern );
-            if ( routeLen ) {
-                if ( left( routeRegEx.pattern, 1 ) == '$' ) {
-                    // check HTTP method
-                    var methodLen = 0;
-                    if ( routeLen >= 2 && left( routeRegEx.pattern, 2 ) == '$*' ) {
-                        // accept all methods so don't set method but...
-                        methodLen = 2; // ...consume 2 characters
-                    } else {
-                        routeRegEx.method = listFirst( routeRegEx.pattern, '*/^' );
-                        methodLen = len( routeRegEx.method );
-                    }
-                    if ( routeLen == methodLen ) {
-                        routeRegEx.pattern = '*';
-                    } else {
-                        routeRegEx.pattern = right( routeRegEx.pattern, routeLen - methodLen );
-                    }
-                }
-                if ( routeRegEx.pattern == '*' ) {
-                    routeRegEx.pattern = '/';
-                } else if ( right( routeRegEx.pattern, 1 ) != '/' && right( routeRegEx.pattern, 1 ) != '$' ) {
-                    // only add the closing backslash if last position is not already a "/" or a "$" to respect regex end of string
-                    routeRegEx.pattern &= '/';
-                }
-            } else {
-                routeRegEx.pattern = '/';
-            }
-            if ( !len( routeRegEx.target ) || right( routeRegEx.target, 1) != '/' ) routeRegEx.target &= '/';
-            // walk for self defined (regex) and :var -  replace :var with ([^/]*) in route and back reference in target:
-            var n = 1;
-            var placeholders = rematch( '(\{[-_a-zA-Z0-9]+:[^\}]*\})|(:[-_a-zA-Z0-9]+)|(\([^\)]+)', routeRegEx.pattern );
-            for ( var placeholder in placeholders ) {
-                var placeholderFirstChar = left( placeholder, 1 );
-                if ( placeholderFirstChar == ':') {
-                    routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, '([^/]*)' );
-                    routeRegEx.target = replace( routeRegEx.target, placeholder, chr(92) & n );
-                }
-                else if ( placeholderFirstChar == '{') {
-                    var findPlaceholderSpecificRegex = refind("\{([^:]*):([^\}]*)\}", placeholder, 1, true);
-                    var placeholderSpecificRegexFound = arrayLen(findPlaceholderSpecificRegex.pos) gte 3;
-                    if( placeholderSpecificRegexFound ){
-                        var placeholderName = mid( placeholder, findPlaceholderSpecificRegex.pos[2], findPlaceholderSpecificRegex.len[2] );
-                        var placeholderSpecificRegex = mid( placeholder, findPlaceholderSpecificRegex.pos[3], findPlaceholderSpecificRegex.len[3] );
-                        routeRegEx.pattern = replace( routeRegEx.pattern, placeholder, "(#placeholderSpecificRegex#)" );
-                        routeRegEx.target = replace( routeRegEx.target, ":" & placeholderName, chr(92) & n );
-                    }
-                }
-                ++n;
-            }
-            // add trailing match/back reference: if last character is not "$" to respect regex end of string
-            if (right( routeRegEx.pattern, 1 ) != '$')
-                routeRegEx.pattern &= '(.*)';
-            routeRegEx.target &= chr(92) & n;
-            regExCache[ cacheKey ] = routeRegEx;
-        }
-        // end of preprocessing section
-        var routeMatch = { matched = false };
-        structAppend( routeMatch, regExCache[ cacheKey ] );
-        if ( !len( path ) || right( path, 1) != '/' ) path &= '/';
-        if ( routeRegexFind( routeMatch.pattern, path ) ) {
-            if ( len( routeMatch.method ) > 1 ) {
-                if ( '$' & httpMethod == routeMatch.method ) {
-                    routeMatch.matched = true;
-                } else if ( variables.framework.preflightOptions ) {
-                    // it matched apart from the method so record this
-                    request._fw1.routeMethodsMatched[ right( routeMatch.method, len( routeMatch.method ) - 1 ) ] = true;
-                }
-            } else if ( variables.framework.preflightOptions && httpMethod == "OPTIONS" ) {
-                // it would have matched but we should special case OPTIONS
-                request._fw1.routeMethodsMatched.get = true;
-                request._fw1.routeMethodsMatched.post = true;
-            } else {
-                routeMatch.matched = true;
-            }
-            if ( routeMatch.matched ) {
-                routeMatch.route = route;
-                routeMatch.path = path;
-            }
-        }
-        return routeMatch;
-    }
-
-    private numeric function routeRegexFind( string pattern, string path ) {
-        if ( variables.framework.routesCaseSensitive ) {
-            return reFind( pattern, path );
-        } else {
-            return REFindNoCase( pattern, path );
-        }
-    }
-
-    private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
-        var resourceCache = isFrameworkInitialized() ? getFw1App().cache.routes.resources : { };
-        var cacheKey = hash( serializeJSON( { rtr = resourcesToRoute, ss = subsystem, pr = pathRoot, ta = targetAppend } ) );
-        if ( !structKeyExists( resourceCache, cacheKey ) ) {
-            // get passed in resourcesToRoute (string,array,struct) to match following struct
-            var resources = { resources = [ ], subsystem = subsystem, pathRoot = pathRoot, methods = [ ], nested = [ ] };
-            if ( isStruct( resourcesToRoute ) ) {
-                structAppend( resources, resourcesToRoute );
-                if ( !isArray( resources.resources ) ) resources.resources = listToArray( resources.resources );
-                if ( !isArray( resources.methods ) ) resources.methods = listToArray( resources.methods );
-                // if this is a recursive (nested) function call, don't let pathRoot or subsystem be overwritten
-                if ( len( pathRoot ) ) {
-                    resources.pathRoot = pathRoot;
-                    resources.subsystem = subsystem;
-                }
-            } else {
-                resources.resources = isArray( resourcesToRoute ) ? resourcesToRoute : listToArray( resourcesToRoute );
-            }
-            // create the routes
-            var routes = [ ];
-            for ( var resource in resources.resources  ) {
-                // take possible subsystem into account by qualifying resource name with subsystem name (if necessary)
-                var subsystemResource = ( len( resources.subsystem ) && !len( pathRoot ) ? '#resources.subsystem#/' : '' ) & resource;
-                var subsystemResourceTarget = ( len( resources.subsystem ) ? '#resources.subsystem##variables.framework.subsystemDelimiter#' : '' ) & resource;
-                for ( var routeTemplate in getResourceRouteTemplates() ) {
-                    // if method names were passed in, only use templates with matching method names
-                    if ( arrayLen( resources.methods ) && !arrayFindNoCase( resources.methods, routeTemplate.method ) ) continue;
-                    var routePack = { };
-                    for ( var httpMethod in routeTemplate.httpMethods ) {
-                        // build the route
-                        var route = '#httpMethod##resources.pathRoot#/#subsystemResource#';
-                        if ( structKeyExists( routeTemplate, 'includeId' ) && routeTemplate.includeId ) route &= '/:id';
-                        if ( structKeyExists( routeTemplate, 'routeSuffix' ) ) route &= routeTemplate.routeSuffix;
-                        route &= '/$';
-                        // build the target
-                        var target = '/#subsystemResourceTarget#/#routeTemplate.method#';
-                        if ( structKeyExists( routeTemplate, 'includeId' ) && routeTemplate.includeId ) target &= '/id/:id';
-                        if ( structKeyExists( routeTemplate, 'targetSuffix' ) ) target &= routeTemplate.targetSuffix;
-                        target &= targetAppend;
-                        routePack[ route ] = target;
-                    }
-                    arrayAppend( routes, routePack );
-                }
-                // nested routes
-                var nestedPathRoot = '#resources.pathRoot#/#subsystemResource#/:#resource#_id';
-                var nestedTargetAppend = '#targetAppend#/#resource#_id/:#resource#_id';
-                var nestedRoutes = getResourceRoutes( resources.nested, resources.subsystem, nestedPathRoot, nestedTargetAppend );
-                // wish I could concatenate the arrays...not sure about using java -> routes.addAll( nestedRoutes )
-                for ( var nestedPack in nestedRoutes ) {
-                    arrayAppend( routes, nestedPack );
-                }
-            }
-            resourceCache[ cacheKey ] = routes;
-        }
-        return resourceCache[ cacheKey ];
     }
 
     private any function read_json( string json ) {
@@ -2372,14 +2139,15 @@ component {
     }
 
     private void function setupApplicationWrapper() {
-        if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
+        if ( structKeyExists( request._fw1, "appWrapped" ) ){
+        	 return;
+        }
         request._fw1.appWrapped = true;
         request._fw1.theApp = {
             cache = {
                 lastReload = now(),
                 fileExists = { },
-                controllers = { },
-                routes = { regex = { }, resources = { } }
+                controllers = { }
             },
             subsystems = { },
             subsystemFactories = { }
@@ -2387,6 +2155,14 @@ component {
 
         var renderer = new "#variables.framework.renderer#"();
         setRenderer( renderer );
+
+        var router = new "#variables.framework.router#"(
+        	routes = variables.framework.routes,
+        	preflightOptions = variables.framework.preflightOptions,
+        	optionsAccessControl = variables.framework.optionsAccessControl,
+        	routesCaseSensitive = variables.framework.routesCaseSensitive
+        );
+        setRouter( router );
 
         switch ( variables.framework.diEngine ) {
         case "aop1":
@@ -2660,6 +2436,9 @@ component {
         if ( !structKeyExists( variables.framework, 'renderer' ) ) {
             variables.framework.renderer = "renderer";
         }
+        if ( !structKeyExists( variables.framework, 'router' ) ) {
+            variables.framework.router = "router";
+        }
         setupEnvironment( env );
         if ( variables.framework.preflightOptions ) {
             var defaultAccessControl = {
@@ -2695,6 +2474,7 @@ component {
         // subsystems and diConfig should be merged
         var subsystems = structKeyExists( target, 'subsystems' ) ? structCopy( target.subsystems ) : { };
         var diConfig = structKeyExists( target, 'diConfig' ) ? structCopy( target.diConfig ) : { };
+
         // and diConfig has constants, singulars as sub-structs
         var constants = structKeyExists( diConfig, 'constants' ) ? structCopy( diConfig.constants ) : { };
         var singulars = structKeyExists( diConfig, 'singulars' ) ? structCopy( diConfig.singulars ) : { };
@@ -2704,9 +2484,11 @@ component {
             for ( var ei in diConfig.exclude )
                 arrayAppend( exclude, ei );
         var transients = [ ];
-        if ( structKeyExists( diConfig, 'transients' ) )
-            for ( var ti in diConfig.transients )
+        if ( structKeyExists( diConfig, 'transients' ) ){
+            for ( var ti in diConfig.transients ){
                 arrayAppend( transients, ti );
+            }
+        }
         // subsystems might have its own diConfig but that's too complex to address right now
 
         // merge top-level config destructively
@@ -2753,14 +2535,14 @@ component {
                 pathInfo = '';
             }
             request._fw1.currentRoute = '';
-            var routes = getRoutes();
+            var routes = getRouter().getRoutes();
             if ( arrayLen( routes ) ) {
                 internalFrameworkTrace( 'processRoutes() called' );
-                var routeMatch = processRoutes( pathInfo, routes );
+                var routeMatch = getRouter().processRoutes( pathInfo, routes );
                 if ( routeMatch.matched ) {
                     internalFrameworkTrace( 'route matched - #routeMatch.route# - #pathInfo#' );
                     var routeTail = '';
-                    if ( variables.framework.routesCaseSensitive ) {
+                    if ( getRouter().getRoutesCaseSensitive() ) {
                         pathInfo = rereplace( routeMatch.path, routeMatch.pattern, routeMatch.target );
                         routeTail = rereplace( routeMatch.path, routeMatch.pattern, '' );
                     } else {
@@ -2797,9 +2579,9 @@ component {
             var sesN = arrayLen( pathInfo );
             if ( !len( request._fw1.currentRoute ) ) {
                 switch ( sesN ) {
-                case 0 : request._fw1.currentRoute = '/'; break;
-                case 1 : request._fw1.currentRoute = '/' & pathInfo[1] & '/'; break;
-                default: request._fw1.currentRoute = '/' & pathInfo[1] & '/' & pathInfo[2] & '/'; break;
+	                case 0 : request._fw1.currentRoute = '/'; break;
+	                case 1 : request._fw1.currentRoute = '/' & pathInfo[1] & '/'; break;
+	                default: request._fw1.currentRoute = '/' & pathInfo[1] & '/' & pathInfo[2] & '/'; break;
                 }
             }
             if ( ( sesN > 0 || variables.framework.generateSES ) && getBaseURL() != 'useRequestURI' ) {
@@ -2884,7 +2666,6 @@ component {
     }
 
     private void function setupRequestWrapper( boolean runSetup ) {
-
         request.subsystem = getSubsystem( request.action );
         request.subsystembase = request.base & getSubsystemDirPrefix( request.subsystem );
         request.section = getSection( request.action );
