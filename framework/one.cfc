@@ -665,7 +665,6 @@ component {
      * returns true if this request has a valid reload URL parameter
      */
     public boolean function isFrameworkReloadRequest() {
-        setupRequestDefaults();
         return ( isDefined( 'URL' ) &&
                  structKeyExists( URL, variables.framework.reload ) &&
                  URL[ variables.framework.reload ] == variables.framework.password ) ||
@@ -725,7 +724,7 @@ component {
      * super.onApplicationStart() first
      */
     public any function onApplicationStart() {
-        setupRequestDefaults();
+        setupFrameworkDefaults();
         setupApplicationWrapper();
     }
 
@@ -848,8 +847,7 @@ component {
      * set true. You could use it to perform housekeeping of services, prior
      * to them all being recreated in a new bean factory, for example.
      */
-    public void function onReload() {
-    }
+    public void function onReload() {}
 
     /*
      * not intended to be overridden, automatically deleted for CFC requests
@@ -960,16 +958,13 @@ component {
      * super.onRequestStart() first
      */
     public any function onRequestStart( string targetPath ) {
-        setupRequestDefaults();
-
-        if ( !isFrameworkInitialized() ) {
-            setupApplicationWrapper();
-        } else if ( isFrameworkReloadRequest() ) {
+        if ( isFrameworkReloadRequest() ) {
             onReload();
             setupApplicationWrapper();
-        } else {
-            request._fw1.theApp = getFw1App();
         }
+        setupRequestDefaults();
+
+        request._fw1.theApp = getFw1App();
 
         restoreFlashContext();
         // ensure flash context cannot override request action:
@@ -1201,48 +1196,7 @@ component {
             jsonpCallback = jsonpCallback
         };
         // return a builder to support nicer rendering syntax
-        return renderBuilder();
-    }
-
-    public any function renderBuilder() {
-        var builder = { };
-        structAppend( builder, {
-            // allow type and data to be overridden just for completeness
-            type : function( v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                request._fw1.renderData.type = v;
-                return builder;
-            },
-            data : function( v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                request._fw1.renderData.data = v;
-                return builder;
-            },
-            header : function( h, v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                if ( !structKeyExists( request._fw1.renderData, 'headers' ) ) {
-                    request._fw1.renderData.headers = [ ];
-                }
-                arrayAppend( request._fw1.renderData.headers, { name = h, value = v } );
-                return builder;
-            },
-            statusCode : function( v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                request._fw1.renderData.statusCode = v;
-                return builder;
-            },
-            statusText : function( v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                request._fw1.renderData.statusText = v;
-                return builder;
-            },
-            jsonpCallback : function( v ) {
-                if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
-                request._fw1.renderData.jsonpCallback = v;
-                return builder;
-            }
-        } );
-        return builder;
+        return getRenderer().renderBuilder();
     }
 
     public void function sessionDefault( string keyname, any defaultValue ) {
@@ -1342,7 +1296,7 @@ component {
      * setupApplication() method
      * you do not need to call super.setupApplication()
      */
-    public void function setupApplication() { }
+    public void function setupApplication() {}
 
     /*
      * override this to provide environment-specific initialization
@@ -2156,6 +2110,7 @@ component {
         var renderer = new "#variables.framework.renderer#"();
         setRenderer( renderer );
 
+
         var router = new "#variables.framework.router#"(
         	routes = variables.framework.routes,
         	preflightOptions = variables.framework.preflightOptions,
@@ -2206,11 +2161,12 @@ component {
         internalFrameworkTrace( 'setupApplication() called' );
         setupApplication();
         application[variables.framework.applicationKey] = request._fw1.theApp;
-
     }
 
     private void function setupFrameworkDefaults() {
-        if ( structKeyExists( variables, "_fw1_defaults_initialized" ) ) return;
+        if ( structKeyExists( variables, "_fw1_defaults_initialized" ) ) {
+        	return;
+        }
         // default values for Application::variables.framework structure:
         if ( !structKeyExists(variables, 'framework') ) {
             variables.framework = { };
@@ -2517,7 +2473,6 @@ component {
     }
 
     private void function setupRequestDefaults() {
-        setupFrameworkDefaults();
         if ( !request._fw1.requestDefaultsInitialized ) {
             var pathInfo = request._fw1.cgiPathInfo;
             request.base = variables.framework.base;

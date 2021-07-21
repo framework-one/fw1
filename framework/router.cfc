@@ -1,11 +1,11 @@
 component accessors="true" {
 
-	property name="routes" default="#[ ]#";
-	property name="preflightOptions" default="false";
-	property name="optionsAccessControl" default="#{}#";
-	property name="routesCaseSensitive" default="true";
-	property name="resourceCache" default="#{}#"
-	property name="regExCache" default="#{}#"
+	property name="routes";
+	property name="preflightOptions";
+	property name="optionsAccessControl";
+	property name="routesCaseSensitive";
+	property name="resourceCache";
+	property name="regExCache";
 
 	public any function init(
 		array routes=[],
@@ -16,12 +16,19 @@ component accessors="true" {
 		setRoutes( routes );
 		setPreflightOptions( preflightOptions );
 		setOptionsAccessControl( optionsAccessControl );
-		routesCaseSensitive( routesCaseSensitive );
+		setRoutesCaseSensitive( routesCaseSensitive );
+		setResourceCache( {} );
+		setRegExCache( {} );
 
 		return this;
 	}
 
-	public void function addRoute( required any routes, string target, any methods = [ ], string statusCode = '' ) {
+	public void function addRoute(
+		required any routes,
+		string target,
+		any methods = [],
+		string statusCode = ''
+	){
 		var currentRoutes = getRoutes();
         var newRoutes = isArray( routes ) ? routes : [ routes ];
         var newMethods = isArray( methods ) ? methods : [ methods ];
