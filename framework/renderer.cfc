@@ -4,6 +4,47 @@ component {
 		return this;
 	}
 
+	public any function renderBuilder() {
+		var builder = { };
+		structAppend( builder, {
+			// allow type and data to be overridden just for completeness
+			type : function( v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				request._fw1.renderData.type = v;
+				return builder;
+			},
+			data : function( v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				request._fw1.renderData.data = v;
+				return builder;
+			},
+			header : function( h, v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				if ( !structKeyExists( request._fw1.renderData, 'headers' ) ) {
+					request._fw1.renderData.headers = [ ];
+				}
+				arrayAppend( request._fw1.renderData.headers, { name = h, value = v } );
+				return builder;
+			},
+			statusCode : function( v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				request._fw1.renderData.statusCode = v;
+				return builder;
+			},
+			statusText : function( v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				request._fw1.renderData.statusText = v;
+				return builder;
+			},
+			jsonpCallback : function( v ) {
+				if ( !structKeyExists( request._fw1, 'renderData' ) ) request._fw1.renderData = { };
+				request._fw1.renderData.jsonpCallback = v;
+				return builder;
+			}
+		} );
+		return builder;
+	}
+
 	public struct function renderDataWithContentType( struct renderData ) {
         var out = { };
         var renderType = renderData.type;
