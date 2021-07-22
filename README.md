@@ -1,4 +1,4 @@
-# FW/1 (Framework One) [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1) [![Join the chat at https://gitter.im/framework-one/fw1](https://badges.gitter.im/framework-one/fw1.svg)](https://gitter.im/framework-one/fw1?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# FW/1 (Framework One) [![Build Status](https://travis-ci.org/framework-one/fw1.png)](https://travis-ci.org/framework-one/fw1)
 
 This FW/1 directory is a complete web application and expects to live in its own
 webroot if you plan to run the applications within it. To use FW/1 in a separate
