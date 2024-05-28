@@ -180,6 +180,12 @@ component {
             path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath ),
             overrides = overrides
         };
+        if ( metadata.metadata.inlineType == "singleton" ) {
+            metadata.isSingleton = true;
+        }
+        else if ( metadata.metadata.inlineType == "transient" ) {
+            metadata.isSingleton = false;
+        }
         variables.beanInfo[ beanName ] = metadata;
         return this;
     }
@@ -383,7 +389,7 @@ component {
 
     private struct function cleanMetadata( string cfc ) {
         var baseMetadata = metadata( cfc );
-        var iocMeta = { setters = { }, pruned = false, type = baseMetadata.type };
+        var iocMeta = { setters = { }, pruned = false, type = baseMetadata.type, inlineType = "" }; // inlineType is populated if singleton / transient annotation declared
         var md = { extends = baseMetadata };
         do {
             md = md.extends;
@@ -395,6 +401,12 @@ component {
             }
             if ( structKeyExists( md, 'accessors' ) && isBoolean( md.accessors ) ) {
                 implicitSetters = implicitSetters || md.accessors;
+            }
+            if ( structKeyExists( md, 'singleton' ) ) {
+                iocMeta.inlineType = "singleton";
+            }
+            else if ( structKeyExists( md, 'transient' ) ) {
+                iocMeta.inlineType = "transient"; 
             }
             if ( structKeyExists( md, 'properties' ) ) {
                 // due to a bug in ACF9.0.1, we cannot use var property in md.properties,
@@ -559,6 +571,12 @@ component {
                     name = beanName, qualifier = singleDir, isSingleton = !beanIsTransient( singleDir, dir, beanName ),
                     path = cfcPath, cfc = dottedPath, metadata = cleanMetadata( dottedPath )
                 };
+                if ( metadata.metadata.inlineType == "singleton" ) {
+                    metadata.isSingleton = true;
+                }
+                else if ( metadata.metadata.inlineType == "transient" ) {
+                    metadata.isSingleton = false;
+                }
                 if ( structKeyExists( metadata.metadata, "type" ) && metadata.metadata.type == "interface" ) {
                     continue;
                 }
