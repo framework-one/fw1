@@ -2,9 +2,9 @@ name: fw1 Java 11
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "develop", "5.0.0" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop", "5.0.0" ]
 
 jobs:
   test:
