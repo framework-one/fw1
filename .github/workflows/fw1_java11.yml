@@ -21,13 +21,6 @@ jobs:
       with:
         java-version: '11'
         distribution: 'temurin'
-
-    - name: Transfer files to fw1-4.3.2.mycfspace.org for manual review
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_HOST_432 }}
-        username: ${{ secrets.FTP_USER_432 }}
-        password: ${{ secrets.FTP_PASSWORD_432 }}
         
     - name: Install the ortus security key
       run: curl -fsSl https://downloads.ortussolutions.com/debs/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/ortussolutions.gpg > /dev/null
