@@ -25,7 +25,7 @@ jobs:
     - name: Transfer files to fw1-4.3.2.mycfspace.org for manual review
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
-        host: ${{ secrets.FTP_HOST_432 }}
+        server: ${{ secrets.FTP_HOST_432 }}
         user: ${{ secrets.FTP_USER_432 }}
         password: ${{ secrets.FTP_PASSWORD_432 }}
         
