@@ -26,7 +26,7 @@ jobs:
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_HOST_432 }}
-        user: ${{ secrets.FTP_USER_432 }}
+        username: ${{ secrets.FTP_USER_432 }}
         password: ${{ secrets.FTP_PASSWORD_432 }}
         
     - name: Install the ortus security key
