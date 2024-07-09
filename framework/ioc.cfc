@@ -1,25 +1,37 @@
 component {
     variables._fw1_version = "4.3.2";
     variables._di1_version = variables._fw1_version;
-/*
-    Copyright (c) 2010-2018, Sean Corfield
+    
+    /*
+        Copyright (c) 2010-2018, Sean Corfield
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
 
-        http://www.apache.org/licenses/LICENSE-2.0
+            http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+    */
 
     // CONSTRUCTOR
 
-    public any function init( any folders, struct config = { } ) {
+    /**
+     * Initializes the Inversion of Control (IoC) container.
+     *
+     * @folders any                     A list of folders to scan for beans.
+     * @config struct                   The configuration settings for the IoC container. (optional)
+     * 
+     * @return any                      The current instance of the `ioc` component.
+     */
+    public any function init( 
+        any folders, 
+        struct config = { } 
+    ) {
         variables.folderList = folders;
         variables.folderArray = folders;
         if ( isSimpleValue( folders ) ) {
@@ -33,8 +45,8 @@ component {
             // strip trailing slash since it can cause weirdness in path
             // deduction on some engines on some platforms (guess which!)
             if ( len( folderName ) > 1 &&
-                 ( right( folderName, 1 ) == '/' ||
-                   right( folderName, 1 ) == chr(92) ) ) {
+                    ( right( folderName, 1 ) == '/' ||
+                    right( folderName, 1 ) == chr(92) ) ) {
                 folderName = left( folderName, len( folderName ) - 1 );
             }
             variables.folderArray[ i ] = folderName;
@@ -67,16 +79,36 @@ component {
 
     // PUBLIC METHODS
 
-    // programmatically register an alias
-    public any function addAlias( string aliasName, string beanName ) {
+    /**
+     * Adds an alias for a bean.
+     *
+     * @aliasName string                The name of the alias.
+     * @beanName string                 The name of the bean to create an alias for.
+     * 
+     * @return any                      The current instance of the `ioc` component.
+     */
+    public any function addAlias( 
+        string aliasName, 
+        string beanName 
+    ) {
         discoverBeans(); // still need this since we rely on beanName having been discovered :(
         variables.beanInfo[ aliasName ] = variables.beanInfo[ beanName ];
         return this;
     }
 
 
-    // programmatically register new beans with the factory (add a singleton name/value pair)
-    public any function addBean( string beanName, any beanValue ) {
+    /**
+     * Programmatically register a new bean with the factory.
+     *
+     * @beanName string                     The name of the bean to register.
+     * @beanValue any                       The value of the bean to register.
+     * 
+     * @return any                          The bean factory.
+     */
+    public any function addBean( 
+        string beanName, 
+        any beanValue 
+    ) {
         variables.beanInfo[ beanName ] = {
             name = beanName, value = beanValue, isSingleton = true
         };
@@ -84,16 +116,35 @@ component {
     }
 
 
-    // return true if the factory (or a parent factory) knows about the requested bean
-    public boolean function containsBean( string beanName ) {
+    /**
+     * Determines if the factory (or a parent factory) knows about the requested bean.
+     *
+     * @beanName string                     The name of the bean to check.
+     * 
+     * @return boolean                      Returns true if the factory (or a parent factory) knows about the requested bean, otherwise returns false.
+     */
+    public boolean function containsBean( 
+        string beanName 
+    ) {
         discoverBeans();
         return structKeyExists( variables.beanInfo, beanName ) ||
             ( hasParent() && variables.parent.containsBean( beanName ) );
     }
 
 
-    // builder syntax for declaring new beans
-    public any function declare( string beanName ) {
+    /**
+     * This function is used to declare a bean in the Inversion of Control (IoC) container.
+     * It returns a declaration object that allows for method chaining to configure the bean.
+     *
+     * @beanName string                     The name of the bean to be declared.
+     * 
+     * @return any                          The declaration object for the bean.
+     * 
+     * @throws                              An exception if the declaration builder is already completed.
+     */
+    public any function declare( 
+        string beanName 
+    ) {
         var declaration = { beanName : beanName, built : false };
         var beanFactory = this; // to make the builder functions less confusing
         structAppend( declaration, {
@@ -149,7 +200,7 @@ component {
                 if ( !declaration.built ) throw "No declaration builder to modify!";
                 var info = variables.beanInfo[ declaration.beanName ];
                 if ( !structKeyExists( info, 'factory' ) &&
-                     !structKeyExists( info, 'cfc' ) ) throw "withOverrides() requires fromFactory() or instanceOf()!";
+                    !structKeyExists( info, 'cfc' ) ) throw "withOverrides() requires fromFactory() or instanceOf()!";
                 info.overrides = overrides;
                 return declaration;
             },
@@ -161,9 +212,23 @@ component {
         return declaration;
     }
 
-
-    // programmatically register new beans with the factory (add an actual CFC)
-    public any function declareBean( string beanName, string dottedPath, boolean isSingleton = true, struct overrides = { } ) {
+    
+    /**
+     * Programmatically register a new bean with the factory.
+     *
+     * @beanName string                     The name of the bean to register.
+     * @dottedPath string                   The dotted path to the CFC to register.
+     * @isSingleton boolean                 Whether the bean is a singleton or not. (optional)
+     * @overrides struct                    The overrides to apply to the bean. (optional)
+     * 
+     * @return any                          The bean factory.
+     */
+    public any function declareBean( 
+        string beanName, 
+        string dottedPath, 
+        boolean isSingleton = true, 
+        struct overrides = { } 
+    ) {
         var singleDir = '';
         if ( listLen( dottedPath, '.' ) > 1 ) {
             var cfc = listLast( dottedPath, '.' );
@@ -184,7 +249,24 @@ component {
         return this;
     }
 
-    public any function factoryBean( string beanName, any factory, string methodName = "", array args = [ ], struct overrides = { } ) {
+    /**
+     * Programmatically register a factory bean with the factory.
+     *
+     * @beanName string             The name of the bean to register.
+     * @factory any                 The factory object to use to create the bean.
+     * @methodName string           The name of the method to call on the factory object to create the bean. (optional)
+     * @args array                  The arguments to pass to the factory method. (optional)
+     * @overrides struct            The overrides to apply to the bean. (optional)
+     * 
+     * @return any                  The bean factory.
+     */
+    public any function factoryBean( 
+        string beanName, 
+        any factory, 
+        string methodName = "", 
+        array args = [ ], 
+        struct overrides = { } 
+    ) {
         var metadata = {
             name = beanName, isSingleton = false, // really?
             factory = factory, method = methodName, args = args,
@@ -195,8 +277,18 @@ component {
     }
 
 
-    // return the requested bean, fully populated
-    public any function getBean( string beanName, struct constructorArgs = { } ) {
+    /**
+     * Retrieves a bean from the factory, fully populated.
+     *
+     * @beanName string             The name of the bean to retrieve.
+     * @constructorArgs struct      The arguments to pass to the bean's constructor. (optional)
+     * 
+     * @return any                  The bean.
+     */
+    public any function getBean( 
+        string beanName, 
+        struct constructorArgs = { } 
+    ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             if ( structKeyExists( variables.getBeanCache, beanName ) ) {
@@ -215,9 +307,31 @@ component {
         }
     }
 
-    // convenience API for metaprogramming perhaps?
-    public any function getBeanInfo( string beanName = '', boolean flatten = false,
-                                     string regex = '' ) {
+    /**
+     * Retrieves information about one or more beans.
+     * 
+     * @beanName string             The name of the bean to retrieve information for. (optional)
+     * @flatten boolean             Determines whether to flatten the bean information from the parent beans. (optional)
+     * @regex strging               A regular expression to filter the bean names. (optional)
+     * 
+     * @return struct               The bean information as a struct.
+     * 
+     * @throws                      An exception if the bean is not found.
+     * 
+     * @example
+     * var beanInfo = getBeanInfo("myBean"); // retrieve information for the bean named "myBean"
+     * 
+     * @example
+     * var allBeanInfo = getBeanInfo(); // retrieve information for all beans, including parent beans
+     * 
+     * @example
+     * var filteredBeanInfo = getBeanInfo("", false, ".*Controller"); // retrieve information for all beans matching a regular expression
+     */
+    public any function getBeanInfo( 
+        string beanName = '', 
+        boolean flatten = false,
+        string regex = '' 
+    ) {
         discoverBeans();
         if ( len( beanName ) ) {
             // ask about a specific bean:
@@ -269,13 +383,15 @@ component {
 
 
     // return true if this factory has a parent
-  	public boolean function hasParent() {
-  		return structKeyExists( variables, 'parent' );
-  	}
+    public boolean function hasParent() {
+        return structKeyExists( variables, 'parent' );
+    }
 
 
-    // return true iff bean is known to be a singleton
-    public boolean function isSingleton( string beanName ) {
+    // return true if bean is known to be a singleton
+    public boolean function isSingleton(
+        string beanName 
+    ) {
         discoverBeans();
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             return variables.beanInfo[ beanName ].isSingleton;
@@ -295,7 +411,11 @@ component {
     * @hint Given a bean (by name, by type or by value), call the named setters with the specified property values
     * @ignoreMissing When set verify that the setter to be called exists and skip if missing, otherwise throws an error
     */
-    public any function injectProperties( any bean, struct properties, boolean ignoreMissing=false ) {
+    public any function injectProperties( 
+        any bean, 
+        struct properties, 
+        boolean ignoreMissing=false 
+    ) {
         if ( isSimpleValue( bean ) ) {
             if ( containsBean( bean ) ) bean = getBean( bean );
             else bean = construct( bean );
@@ -336,7 +456,9 @@ component {
 
     // add a listener for processing after a (re)load of the factory
     // called with just the factory, should be a plain function
-    public any function onLoad( any listener ) {
+    public any function onLoad( 
+        any listener 
+    ) {
         var head = { next = variables.listeners, listener = listener };
         variables.listeners = head;
         return this;
@@ -344,24 +466,48 @@ component {
 
 
     // set the parent bean factory
-    public any function setParent( any parent ) {
+    public any function setParent( 
+        any parent 
+    ) {
         variables.parent = parent;
         return this;
     }
 
     // PRIVATE METHODS
 
-    private boolean function beanIsTransient( string singleDir, string dir, string beanName ) {
+    /**
+     * Determines if a bean is transient based on the provided parameters.
+     *
+     * @singleDir string                    The single directory.
+     * @dir string                          The directory.
+     * @beanName string                     The name of the bean.
+     *
+     * @return boolean                      Returns true if the bean is transient, otherwise returns false.
+     */
+    private boolean function beanIsTransient( 
+        string singleDir, 
+        string dir, 
+        string beanName 
+    ) {
         return singleDir == 'bean' ||
             structKeyExists( variables.transients, dir ) ||
             ( structKeyExists( variables.config, "singletonPattern" ) &&
-              refindNoCase( variables.config.singletonPattern, beanName ) == 0 ) ||
+                refindNoCase( variables.config.singletonPattern, beanName ) == 0 ) ||
             ( structKeyExists( variables.config, "transientPattern" ) &&
-              refindNoCase( variables.config.transientPattern, beanName ) > 0 );
+                refindNoCase( variables.config.transientPattern, beanName ) > 0 );
     }
 
 
-    private any function cachable( string beanName) {
+    /**
+     * This private function checks if a bean is cachable and returns the bean object.
+     * 
+     * @beanName string                     The name of the bean to check.
+     * 
+     * @return struct                       A struct containing the bean object and a flag indicating if a new object was created.
+     */
+    private any function cachable( 
+        string beanName 
+    ) {
         var newObject = false;
         var info = variables.beanInfo[ beanName ];
         if ( info.isSingleton ) {
@@ -381,7 +527,16 @@ component {
     }
 
 
-    private struct function cleanMetadata( string cfc ) {
+    /**
+     * Cleans the metadata of a CFC.
+     * 
+     * @cfc string                      The path of the CFC.
+     * 
+     * @return struct                   The cleaned metadata of the CFC.
+     */
+    private struct function cleanMetadata( 
+        string cfc 
+    ) {
         var baseMetadata = metadata( cfc );
         var iocMeta = { setters = { }, pruned = false, type = baseMetadata.type };
         var md = { extends = baseMetadata };
@@ -403,11 +558,11 @@ component {
                 for ( var i = 1; i <= n; ++i ) {
                     var property = md.properties[ i ];
                     if ( implicitSetters &&
-                         ( !structKeyExists( property, 'setter' ) ||
-                           isBoolean( property.setter ) && property.setter ) ) {
+                        ( !structKeyExists( property, 'setter' ) ||
+                        isBoolean( property.setter ) && property.setter ) ) {
                         if ( structKeyExists( property, 'type' ) &&
-                             property.type != 'any' &&
-                             variables.config.omitTypedProperties ) {
+                            property.type != 'any' &&
+                            variables.config.omitTypedProperties ) {
                             iocMeta.setters[ property.name ] = 'ignored';
                         } else if ( structKeyExists( property, 'default' ) &&
                                     variables.config.omitDefaultedProperties ) {
@@ -447,13 +602,17 @@ component {
 
 
     // in case an extension point wants to override actual construction:
-    private any function construct( string dottedPath ) {
+    private any function construct( 
+        string dottedPath 
+    ) {
         return createObject( 'component', dottedPath );
     }
 
 
     // in case an extension point wants to override actual metadata retrieval:
-    private any function metadata( string dottedPath ) {
+    private any function metadata( 
+        string dottedPath 
+    ) {
         try {
             return getComponentMetadata( dottedPath );
         } catch ( any e ) {
@@ -471,34 +630,78 @@ component {
     }
 
 
-    private string function deduceDottedPath( string baseMapping, string basePath ) {
+    /**
+     * This private function is used to deduce the dot-relative path for a given base mapping and base path.
+     * 
+     * @baseMapping string              The base mapping to deduce the dot-relative path for.
+     * @basePath string                 The base path to deduce the dot-relative path for.
+     * 
+     * @return                          The dot-relative path deduced from the base mapping and base path.
+     * 
+     * @throws                          An exception if the dot-relative path cannot be deduced.
+     */
+    private string function deduceDottedPath( 
+        string baseMapping, 
+        string basePath 
+    ) {
+        // Remove trailing slash from basePath if it exists
         if ( right( basePath, 1 ) == '/' && len( basePath ) > 1 ) {
             basePath = left( basePath, len( basePath ) - 1 );
         }
+        
+        // Get the CFC path from the baseMapping
         var cfcPath = left( baseMapping, 1 ) == '/' ?
             ( len( baseMapping ) > 1 ? right( baseMapping, len( baseMapping ) - 1 ) : '' ) :
             getFileFromPath( baseMapping );
+        
+        // Remove trailing slash from cfcPath if it exists
         if ( right( cfcPath, 1 ) == '/' && len( cfcPath ) > 1 ) {
             cfcPath = left( cfcPath, len( cfcPath ) - 1 );
         }
+        
         var expPath = basePath;
         var notFound = true;
         var dotted = '';
+        
+        // Loop until the dot-relative path is found or not found
         do {
             var mapped = cfcPath;
-            if ( len( mapped ) && left( mapped, 1 ) != '.' ) mapped = '/' & mapped;
+            
+            // Prepend '/' to mapped if it doesn't start with '.'
+            if ( len( mapped ) && left( mapped, 1 ) != '.' ) {
+                mapped = '/' & mapped;
+            }
+            
+            // Convert mapped path to a URL-style path
             var mappedPath = replace( expandpath( mapped ), chr(92), '/', 'all' );
+            
+            // Check if mappedPath matches basePath
             if ( mappedPath == basePath ) {
+                // Convert cfcPath to dot-relative path
                 dotted = replace( cfcPath, '/', '.', 'all' );
                 notFound = false;
                 break;
             }
+            
             var prevPath = expPath;
+            
+            // Get the parent directory of expPath
             expPath = replace( getDirectoryFromPath( expPath ), chr(92), '/', 'all' );
+            
+            // Remove trailing slash from expPath if it exists
             if ( right( expPath, 1 ) == '/' && len( expPath ) > 1 ) {
                 expPath = left( expPath, len( expPath ) - 1 );
             }
+            
+            // Check if progress is made in finding the dot-relative path
             var progress = prevPath != expPath;
+            
+            // Continue the loop until the dot-relative path is found or not found
+        } while ( progress && notFound );
+        
+        // Return the dot-relative path
+        return dotted;
+    }
             var piece = listLast( expPath, '/' );
             cfcPath = piece & '/' & cfcPath;
         } while ( progress );
@@ -509,6 +712,22 @@ component {
     }
 
 
+    /**
+     * This private function is responsible for discovering beans in the framework's IOC component.
+     * It checks if the discovery process has already been completed and if so, it returns immediately.
+     * Otherwise, it locks the execution to ensure exclusive access and proceeds with the discovery process.
+     * 
+     * The function starts by initializing the pathMapCache variable as an empty struct.
+     * It then iterates over each folder in the folderArray variable and calls the discoverBeansInFolder function
+     * to discover beans in that folder.
+     * 
+     * After the discovery process is complete, the discoveryComplete variable is set to true to indicate that
+     * the discovery process has been completed.
+     * 
+     * Finally, the onLoadEvent function is called.
+     * 
+     * @return void
+     */
     private void function discoverBeans() {
         if ( structKeyExists( variables, 'discoveryComplete' ) ) return;
         lock name="#application.applicationName#_ioc1_#variables.folderList#" type="exclusive" timeout="30" {
@@ -526,7 +745,75 @@ component {
     }
 
 
-    private void function discoverBeansInFolder( string mapping ) {
+    /**
+     * This private function is responsible for discovering beans in a specified folder.
+     * 
+     * @mapping string The folder path to search for CFC files.
+     * 
+     * @return void
+     * 
+     * @throws Exception Throws an exception if there is a problem with the metadata for a bean.
+     */
+    private void function discoverBeansInFolder( 
+        string mapping 
+    ) {
+        var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
+        var dotted = deduceDottedPath( mapping, folder );
+        var cfcs = [ ];
+        try {
+            cfcs = directoryList( folder, variables.config.recurse, 'path', '*.cfc' );
+        } catch ( any e ) {
+            throw( message="Error while discovering beans in folder: #folder#", detail="Exception: #e.message#", beanName="", cfcPath="" );
+        }
+        local.beansWithDuplicates = "";
+        for ( var cfcOSPath in cfcs ) {
+            try {
+                var cfcPath = replace( cfcOSPath, chr(92), '/', 'all' );
+                var beanName = getBeanNameFromPath( cfcPath );
+                var qualifier = getQualifierFromPath( cfcPath );
+                var isSingleton = isSingletonBean( cfcPath );
+                var isInterface = isInterfaceBean( cfcPath );
+                var path = replace( cfcPath, folder, '', 'all' );
+                var beanPath = dotted & '.' & beanName;
+                
+                if (isInterface) {
+                    continue;
+                }
+                
+                if (variables.config.omitDirectoryAliases) {
+                    if (isDuplicateBean(beanName)) {
+                        throw( message="Duplicate bean name found: #beanName#", detail="Bean path: #beanPath#", beanName=beanName, cfcPath=cfcPath );
+                    }
+                } else {
+                    handleDuplicateBean(beanName, beanPath);
+                }
+                
+                var metadata = {
+                    beanName = beanName,
+                    qualifier = qualifier,
+                    isSingleton = isSingleton,
+                    path = path,
+                    cfcPath = cfcPath
+                };
+                
+                variables.beanInfo[beanName] = metadata;
+            } catch ( any e ) {
+                throw( message="Error while processing bean: #beanName#", detail="Exception: #e.message#", beanName=beanName, cfcPath=cfcPath );
+            }
+        }
+    }
+
+    
+    /**
+     * This private function is responsible for discovering beans in a specified folder.
+     * 
+     * @mapping string                      The mapping of the folder where the beans are located.
+     * 
+     * @return void
+     */
+    private void function discoverBeansInFolder( 
+        string mapping 
+    ) {
         var folder = replace( expandPath( mapping ), chr(92), '/', 'all' );
         var dotted = deduceDottedPath( mapping, folder );
         var cfcs = [ ];
@@ -595,7 +882,18 @@ component {
     }
 
 
-    private struct function findSetters( any cfc, struct iocMeta ) {
+    /**
+     * Private function used to find the setters of a CFC and return them in a struct.
+     * 
+     * @cfc any                         The CFC for which to find the setters.
+     * @iocMeta struct                  The IOC (Inversion of Control) metadata struct.
+     * 
+     * @return struct                   The struct containing the found setters.
+     */
+    private struct function findSetters( 
+        any cfc, 
+        struct iocMeta 
+    ) {
         var liveMeta = { setters = iocMeta.setters };
         if ( !iocMeta.pruned ) {
             // need to prune known setters of transients:
@@ -629,7 +927,18 @@ component {
     }
 
 
-    private any function forceCache( any bean, string beanName) {
+    /**
+     * Private function that forces caching of a bean.
+     * 
+     * @bean any                    The bean object to be cached.
+     * @beanName string             The name of the bean.
+     * 
+     * @return void 
+     */
+    private void function forceCache( 
+        any bean, 
+        string beanName 
+    ) {
         var info = variables.beanInfo[ beanName ];
         if ( info.isSingleton ) {
             // cache on the qualified bean name:
@@ -642,13 +951,33 @@ component {
     }
 
 
-    private boolean function isConstant ( string beanName ) {
+    /**
+     * Checks if a bean is a constant.
+     * 
+     * @beanName string             The name of the bean to check.
+     * 
+     * @return boolean              Returns a boolean value indicating whether the bean is a constant.
+     */
+    private boolean function isConstant ( 
+        string beanName 
+    ) {
         return structKeyExists( variables.beanInfo, beanName ) &&
             structKeyExists( variables.beanInfo[ beanName ], 'value' );
     }
 
 
-    private void function logMissingBean( string beanName, string resolvingBeanName = '' ) {
+    /**
+     * Logs a message about a missing bean.
+     *
+     * @beanName string                 The name of the missing bean.
+     * @resolvingBeanName string        The name of the bean that is currently being resolved (optional).
+     * 
+     * @return void
+     */
+    private void function logMissingBean( 
+        string beanName, 
+        string resolvingBeanName = '' 
+    ) {
         var sys = createObject( 'java', 'java.lang.System' );
         if ( len( resolvingBeanName ) ) {
             sys.out.println( 'bean not found: #beanName#; while resolving #resolvingBeanName#' );
@@ -657,12 +986,24 @@ component {
         }
     }
 
-
-    /*
-     * override this if you want to add a convention-based bean factory hook, that returns
-     * beans instead of throwing an exception
+    
+    /**
+     * Handles missing beans in the Inversion of Control (IoC) container.
+     * Override this method to provide custom handling of missing beans.
+     * 
+     * @beanName string                     The name of the missing bean.
+     * @resolvingBeanName string            The name of the bean that is currently being resolved (optional).
+     * @dependency boolean                  A flag indicating whether the missing bean is a dependency (optional).
+     * 
+     * @return void
+     * 
+     * @throws                              Throws an exception if the missing bean is not found and the container is in strict mode or if the missing bean is a dependency.
      */
-    private any function missingBean( string beanName, string resolvingBeanName = '', boolean dependency = true ) {
+    private any function missingBean( 
+        string beanName, 
+        string resolvingBeanName = '', 
+        boolean dependency = true 
+    ) {
         if ( variables.config.strict || !dependency ) {
             if ( len( resolvingBeanName ) ) {
                 throw 'bean not found: #beanName#; while resolving #resolvingBeanName#';
@@ -675,6 +1016,11 @@ component {
     }
 
 
+    /**
+     * Executes the onLoad event by invoking all registered listeners.
+     * 
+     * @return void
+     */
     private void function onLoadEvent() {
         var head = variables.listeners;
         while ( isStruct( head ) ) {
@@ -693,7 +1039,17 @@ component {
     }
 
 
-    private any function parentBeanInfo( string beanName ) {
+    /**
+     * Retrieves the bean information for the parent bean with the specified name.
+     * This method is intended to be adaptable to different parent bean frameworks.
+     * 
+     * @beanName string                 The name of the parent bean.
+     * 
+     * @return any                      The bean information for the parent bean, or an empty struct if the parent is unknown.
+     */
+    private any function parentBeanInfo( 
+        string beanName 
+    ) {
         // intended to be adaptable to whatever the parent is:
         if ( structKeyExists( variables.parent, 'getBeanInfo' ) ) {
             // smells like DI/1 or compatible:
@@ -708,7 +1064,16 @@ component {
     }
 
 
-    private any function parentBeanInfoList( boolean flatten ) {
+    /**
+     * Retrieve the parent bean information list.
+     *
+     * @flatten boolean             Determines whether to flatten the bean information from the parent beans.
+     * 
+     * @return any                  The parent bean information list.
+     */
+    private any function parentBeanInfoList( 
+        boolean flatten 
+    ) {
         // intended to be adaptable to whatever the parent is:
         if ( structKeyExists( variables.parent, 'getBeanInfo' ) ) {
             // smells like DI/1 or compatible:
@@ -723,7 +1088,18 @@ component {
     }
 
 
-    private any function resolveBean( string beanName, struct constructorArgs = { } ) {
+    /**
+     * Resolve a bean, creating and initializing it as necessary.
+     *
+     * @beanName string             The name of the bean to resolve.
+     * @constructorArgs struct      The arguments to pass to the bean's constructor. (optional)
+     * 
+     * @return any                  The resolved bean.
+     */
+    private any function resolveBean( 
+        string beanName, 
+        struct constructorArgs = { } 
+    ) {
         // do enough resolution to create and initialization this bean
         // returns a struct of the bean and a struct of beans and setters still to run
         // construction phase:
@@ -738,7 +1114,7 @@ component {
         accumulator.dependencies = variables.accumulatorCache[ beanName ].dependencies;
         var partialBean = resolveBeanCreate( beanName, accumulator, constructorArgs );
         if ( structKeyExists( variables.resolutionCache, beanName ) &&
-             variables.resolutionCache[ beanName ] ) {
+            variables.resolutionCache[ beanName ] ) {
             // fully resolved, no action needed this time
         } else {
             var checkForPostInjection = structKeyExists( variables.config, 'initMethod' );
@@ -795,8 +1171,23 @@ component {
         return partialBean.bean;
     }
 
-
-    private void function callInitMethod( string name, struct injectables, struct info, string method ) {
+    
+    /**
+     * Calls the initialization method for a bean.
+     * 
+     * @name string                     The name of the bean.
+     * @injectables struct              A struct containing the injectable beans.
+     * @info struct                     A struct containing information about the beans.
+     * @method string                   The name of the initialization method to call.
+     * 
+     * @return void
+     */
+    private void function callInitMethod( 
+        string name, 
+        struct injectables, 
+        struct info, 
+        string method 
+    ) {
 
         if ( injectables[ name ] ) {
             injectables[ name ] = false; // this ensures we don't try to init the same
@@ -804,13 +1195,13 @@ component {
             if ( structKeyExists( info.dependencies, name ) ) {
                 for ( var depName in info.dependencies[ name ] ) {
                     if ( structKeyExists( injectables, depName ) &&
-                         injectables[ depName ] ) {
+                        injectables[ depName ] ) {
                         callInitMethod( depName, injectables, info, method );
                     }
                 }
             }
             if ( structKeyExists( variables.initMethodCache, name ) &&
-                 variables.initMethodCache[ name ] ) {
+                variables.initMethodCache[ name ] ) {
             } else {
                 variables.initMethodCache[ name ] = isSingleton( name );
                 var bean = info.injection[ name ].bean;
@@ -820,7 +1211,20 @@ component {
     }
 
 
-    private struct function resolveBeanCreate( string beanName, struct accumulator, struct constructorArgs = { } ) {
+    /**
+     * Resolve a bean, creating and initializing it as necessary.
+     *
+     * @beanName string                     The name of the bean to resolve.
+     * @accumulator struct                  The accumulator for the resolution process.
+     * @constructorArgs struct              The arguments to pass to the bean's constructor. (optional)
+     * 
+     * @return struct                       The resolved bean.
+     */
+    private struct function resolveBeanCreate( 
+        string beanName, 
+        struct accumulator, 
+        struct constructorArgs = { } 
+    ) {
         var bean = 0;
         if ( structKeyExists( variables.beanInfo, beanName ) ) {
             var info = variables.beanInfo[ beanName ];
@@ -950,6 +1354,14 @@ component {
     }
 
 
+
+    /** 
+     * Sets up the default configuration for the framework.
+     * This function initializes various configuration settings and constants used by the framework.
+     * It also sets up the bean factory and handles exclusion and transient folders.
+     * 
+     * @return void
+     */ 
     private void function setupFrameworkDefaults() {
         param name = "variables.config.recurse"     default = true;
         param name = "variables.config.strict"      default = false;
@@ -977,7 +1389,7 @@ component {
         }
 
         if ( structKeyExists( variables.config, 'singletonPattern' ) &&
-             structKeyExists( variables.config, 'transientPattern' ) ) {
+            structKeyExists( variables.config, 'transientPattern' ) ) {
             throw 'singletonPattern and transientPattern are mutually exclusive';
         }
 
@@ -1001,12 +1413,25 @@ component {
     }
 
 
-    // hook for extension points to process beans after they have been
-    // constructed and injected, but before init-method is called on anything
-    private void function setupInitMethod( string name, any bean ) {
-    }
+    /**
+     * This private function is responsible for processing beans after they have been constructed and injected,
+     * but before the init-method is called on anything.
+     * 
+     * @return void
+     */
+    private void function setupInitMethod( 
+        string name, 
+        any bean 
+    ) { }
 
 
+    /**
+     * Given a plural word, return the singular form.
+     *
+     * @plural string               The plural word to convert.
+     * 
+     * @return string               The singular form of the word.
+     */
     private string function singular( string plural ) {
         if ( structKeyExists( variables.config.singulars, plural ) ) {
             return variables.config.singulars[ plural ];

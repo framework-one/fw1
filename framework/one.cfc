@@ -1,5 +1,6 @@
 component {
     variables._fw1_version = "4.3.2";
+    
     /*
     Copyright (c) 2009-2018, Sean Corfield, Marcin Szczepanski, Ryan Cogswell
 
@@ -39,8 +40,14 @@ component {
     variables.magicApplicationAction = '__';
     variables.magicBaseURL = '-[]-';
 
-    // constructor if not extended via Application.cfc
 
+    /**
+     * Constructor if not extended via Application.cfc
+     *
+     * @config struct               The configuration for the framework
+     * 
+     * @return any                  The framework instance
+     */
     public any function init( struct config = { } ) {
         if ( !structKeyExists( variables, 'framework' ) ) {
             variables.framework = { };
@@ -49,17 +56,51 @@ component {
         return this;
     }
 
+    
+    /**
+     * Aborts the controller execution and throws an exception.
+     * 
+     * This method sets the `abortController` flag in the request object to `true`,
+     * logs a trace message indicating that `abortController()` was called,
+     * and throws an `FW1.AbortControllerException` with a custom message.
+     * 
+     * @throws FW1.AbortControllerException             If `abortController()` is called.
+     */
     public void function abortController() {
         request._fw1.abortController = true;
         internalFrameworkTrace( 'abortController() called' );
         throw( type='FW1.AbortControllerException', message='abortController() called' );
     }
 
-    public boolean function actionSpecifiesSubsystem( string action ) {
+    /**
+     * Determines if the specified action specifies a subsystem in the framework.
+     *
+     * @action string                   The action to check.
+     * 
+     * @return boolean                  Returns true if the action specifies a subsystem, otherwise returns false.
+     */
+    public boolean function actionSpecifiesSubsystem( 
+        string action 
+    ) {
         return find( variables.framework.subsystemDelimiter, action );
     }
 
-    public void function addRoute( any routes, string target, any methods = [ ], string statusCode = '' ) {
+    /**
+     * Adds a route to the framework.
+     *
+     * @routes any                      The route or routes to add.
+     * @target string                   The target for the route.
+     * @methods any                     The methods for the route.
+     * @statusCode string               The status code for the route.
+     * 
+     * @return void
+     */
+    public void function addRoute( 
+        any routes, 
+        string target, 
+        any methods = [ ], 
+        string statusCode = '' 
+    ) {
         if ( !isArray( routes ) ) routes = [ routes ];
         if ( !isArray( methods ) ) methods = [ methods ];
         param name="variables.framework.routes" default="#[ ]#";
@@ -75,9 +116,13 @@ component {
         }
     }
 
-    /*
-     * buildCustomURL() can be used to construct routes by appending the given URI
-     * to a resolvedBaseURL() value
+    
+    /**
+     * Builds a custom URL by replacing special characters and performing variable substitution.
+     * 
+     * @uri string                      The URI to build the custom URL from.
+     * 
+     * @return string                   The custom URL.
      */
     public string function buildCustomURL( string uri ) {
         uri = replace( uri, chr(92), '/', 'all' );
@@ -100,9 +145,17 @@ component {
         return baseData.path & uri;
     }
 
-    /*
-     *  buildURL() should be used from views to construct urls when using subsystems or
-     *  in order to provide a simpler transition to using subsystems in the future
+    
+    /**
+     * Builds a URL based on the provided parameters.
+     * Should be used from views to construct URLs when using subsystems or
+     * in order to provide a simpler transition to using subsystems in the future.
+     * 
+     * @action string                       The action to be performed. Defaults to '.'. (optional)
+     * @path string                         The base URL path. Defaults to the value of the `magicBaseURL` variable. (optional)
+     * @queryString any                     The query string to be appended to the URL. Defaults to an empty string. (optional)
+     * 
+     * @return string                       The built URL as a string.
      */
     public string function buildURL( string action = '.', string path = variables.magicBaseURL, any queryString = '' ) {
         if ( action == '.' ) {
@@ -242,11 +295,18 @@ component {
         return basePath;
     }
 
-    /*
-     * call this from your Application.cfc methods to queue up additional controller
-     * method calls at the start of the request
+
+    /**
+     * Queues up additional controller method calls at the start of the request.
+     * Call this method from your Application.cfc methods.
+     *
+     * @action string                  The action to be performed.      
+     * 
+     * @return void
      */
-    public void function controller( string action ) {
+    public void function controller( 
+        string action 
+    ) {
         var subsystem = getSubsystem( action );
         var section = getSection( action );
         var item = getItem( action );
@@ -269,9 +329,17 @@ component {
         }
     }
 
-    /*
-     * can be overridden to customize how views and layouts are actually
-     * rendered; should return null if the default rendering should apply
+
+    /**
+     * Customizes how views and layouts are rendered.
+     * Can be overridden to customize how views and layouts are actually
+     * rendered; should return null if the default rendering should apply.
+     * 
+     * @type string                     The type of the template engine.
+     * @path string                     The path to the template engine.
+     * @scope struct                    The scope of the template engine.
+     * 
+     * @return any                      The custom template engine.
      */
     public any function customTemplateEngine( string type, string path, struct scope ) {
         return;
@@ -286,34 +354,55 @@ component {
         return fullPath;
     }
 
-    /*
-     * call this to disable tracing, e.g., from setupTraceRender()
+    
+    /**
+     * Disables the framework trace.
+     * Call this to disable tracing, e.g., from setupTraceRender().
+     * 
+     * @return void
      */
     public void function disableFrameworkTrace() {
         request._fw1.doTrace = false;
     }
 
-    /*
-     * call this to disable rendering of the layout
+
+    /**
+     * Disables rendering of the layout.
+     * 
+     * @return void
      */
     public void function disableLayout() {
         request.layout = false;
     }
 
-    /*
-     * call this to (re-)enable tracing
+    
+    /**
+     * (Re-)enables the framework trace.
+     * 
+     * @return void
      */
     public void function enableFrameworkTrace() {
         request._fw1.doTrace = true;
     }
 
-    /*
-     * call this to (re-)enable rendering of the layout
+    
+    /**
+     * (Re-)enables rendering of the layout.
+     * 
+     * @return void
      */
     public void function enableLayout() {
         request.layout = true;
     }
 
+    
+    /**
+     * This method is used to log trace messages in the FW/1 framework.
+     * 
+     * @message string                  The message to be logged.
+     * 
+     * @return void
+     */
     public void function frameworkTrace( string message ) {
         if ( request._fw1.doTrace ) {
             try {
@@ -333,28 +422,41 @@ component {
         }
     }
 
-    /*
-     * return the action URL variable name - allows applications to build URLs
+
+    /**
+     * Returns the action URL variable name.
+     * 
+     * @return string                   The action URL variable name.
      */
     public string function getAction() {
         return variables.framework.action;
     }
 
-    /*
-     * returns the base URL for redirects and links etc
-     * can be overridden if you need to modify this per-request
+    
+    /**
+     * Returns the base URL for redirects and links.
+     * Can be overridden if you need to modify this per-request.
+     * 
+     * @return string                   The base URL.
      */
     public string function getBaseURL() {
         return variables.framework.baseURL;
     }
 
-    /*
-     *  returns whatever the framework has been told is a bean factory
-     *  this will return a subsystem-specific bean factory if one
-     *  exists for the current request's subsystem (or for the specified subsystem
-     *  if passed in)
+
+    /**
+     * Retrieves the bean factory for a given subsystem.
+     * If no subsystem is specified, it checks if the request has a subsystem defined and uses that.
+     * If no subsystem is defined in the request, it uses the default subsystem defined in the framework.
+     * If no default subsystem is defined, it returns the default bean factory.
+     * 
+     * @subsystem string                    The name of the subsystem to retrieve the bean factory for. Defaults to an empty string.
+     * 
+     * @return any                          The bean factory for the specified subsystem, or the default bean factory if no subsystem is specified.
      */
-    public any function getBeanFactory( string subsystem = '' ) {
+    public any function getBeanFactory( 
+        string subsystem = '' 
+    ) {
         if ( len( subsystem ) > 0 ) {
             if ( hasSubsystemBeanFactory( subsystem ) ) {
                 return getSubsystemBeanFactory( subsystem );
@@ -370,8 +472,11 @@ component {
         return getDefaultBeanFactory();
     }
 
-    /*
-     * return the framework configuration
+    
+    /**
+     * Returns the configuration for the framework.
+     * 
+     * @return struct                   The configuration for the framework.
      */
     public struct function getConfig()
     {
@@ -379,15 +484,21 @@ component {
         return structCopy( framework );
     }
 
-    /*
-     * returns the bean factory set via setBeanFactory
+    
+    /**
+     * Retrieves the default bean factory.
+     * 
+     * @return any                          The default bean factory.
      */
     public any function getDefaultBeanFactory() {
         return getFw1App().factory;
     }
 
-    /*
-     * returns the name of the default subsystem
+    
+    /**
+     * Returns the name of the default subsystem.
+     * 
+     * @return string                   The name of the default subsystem.
      */
     public string function getDefaultSubsystem() {
 
@@ -408,36 +519,46 @@ component {
 
     }
 
-    /*
-     * override this to provide your environment selector
+    
+    /**
+     * Returns the environment. Override this method to provide your environment selector.
+     * 
+     * @return string                   The environment.
      */
     public string function getEnvironment() {
         return '';
     }
 
-    /*
-     * convenience function to look up environment variables
-     * expected to be used without your own getEnvironment()
-     * function along with / instead of getHostname()
+    /**
+     * Convenience function to look up environment variables.
+     * 
+     * @name string                     The name of the environment variable.
+     * 
+     * @return string                   The value of the environment variable.
      */
     public string function getEnvVar( string name ) {
         return createObject( "java", "java.lang.System" ).getenv( name );
     }
 
-    /*
-     * return the contents of the framework trace array (if you wish to process the
-     * trace data yourself either prior to display or instead of display - in which
-     * case call disableFrameworkTrace() to prevent display).
+    /**
+     * Returns the contents of the framework trace array.
+     * Use this method if you want to process the trace data yourself before displaying it or instead of displaying it.
+     * Call disableFrameworkTrace() to prevent the trace from being displayed.
+     * 
+     * @return array                    The framework trace array.
      */
     public array function getFrameworkTrace() {
         return request._fw1.trace;
     }
 
-    /*
-     * return an action with all applicable parts (subsystem, section, and item) specified
-     * using defaults from the configuration or request where appropriate
-     * if the subsystem is empty, do _not_ include the delimiter - compare this behavior
-     * with getSubsystemSectionAndItem() below
+    /**
+     * Returns an action with all applicable parts (subsystem, section, and item) specified.
+     * Uses defaults from the configuration or request where appropriate.
+     * If the subsystem is empty, the delimiter is not included.
+     * 
+     * @action string                   The action to be performed.
+     * 
+     * @return string                   The fully qualified action.
      */
     public string function getFullyQualifiedAction( string action = request.action ) {
         var requested = getSubsystem( action );
@@ -462,66 +583,89 @@ component {
         }
     }
 
-    /*
-     * return the local hostname of the server
+    /**
+     * Returns the local hostname of the server.
+     * 
+     * @return string                   The local hostname.
      */
     public string function getHostname() {
         return createObject( 'java', 'java.net.InetAddress' ).getLocalHost().getHostName();
     }
 
-    /*
-     * return the item part of the action
+    /**
+     * Returns the item part of the action.
+     * 
+     * @action string   `               The action to retrieve the item from. Defaults to the current request action.
+     * 
+     * @return string                   The item part of the action.
      */
     public string function getItem( string action = request.action ) {
         return listLast( getSectionAndItem( action ), '.' );
     }
 
-    /*
-     * return this request's CGI method
+    /**
+     * Returns this request's CGI method.
+     * 
+     * @return string                   The CGI method of the request.
      */
     public string function getCGIRequestMethod() {
         return request._fw1.cgiRequestMethod;
     }
 
-    /*
-     * return the current route (if any)
-     * this is the raw, matched route that we mapped
+    /**
+     * Returns the current route (if any).
+     * This is the raw, matched route that we mapped.
+     * 
+     * @return string                   The current route.
      */
     public string function getRoute() {
-        return structKeyExists( request._fw1, 'route' ) ? request._fw1.route : '';
+        return structKeyExists(request._fw1, 'route') ? request._fw1.route : '';
     }
 
-    /*
-     * return the part of the pathinfo that was used as the route
-     * prefixed by the HTTP method
+    /**
+     * Returns the part of the pathinfo that was used as the route, prefixed by the HTTP method.
+     * 
+     * @return string                   The route path.
      */
     public string function getRoutePath() {
         return '$' & request._fw1.cgiRequestMethod & request._fw1.currentRoute;
     }
 
-    /*
-     * return the configured routes
+    /**
+     * Returns the configured routes.
+     * 
+     * @return array                   The array of configured routes.
      */
     public array function getRoutes() {
         return variables.framework.routes;
     }
 
-    /*
-     * return the resource route templates
+    /**
+     * Returns the resource route templates.
+     * 
+     * @return array                   The array of resource route templates.
      */
     public array function getResourceRouteTemplates() {
         return variables.framework.resourceRouteTemplates;
     }
 
-    /*
-     * return the section part of the action
+    /**
+     * Returns the section part of the action.
+     * 
+     * @action string                   The action to retrieve the section from. Defaults to the current request action.
+     * 
+     * @return string                   The section part of the action.
      */
     public string function getSection( string action = request.action ) {
         return listFirst( getSectionAndItem( action ), '.' );
     }
 
-    /*
-     * return the action without the subsystem
+    /**
+     * Returns the action without the subsystem.
+     * 
+     * @action string                   The action to retrieve the section and item from. Defaults to the current request action.
+     * 
+     * @return string                   The section and item part of the action.
      */
     public string function getSectionAndItem( string action = request.action ) {
         var sectionAndItem = '';
@@ -551,8 +695,14 @@ component {
     }
 
 
-    /*
-     * return the subsystem part of the action
+    /**
+     * Returns the subsystem part of the action.
+     * If the action specifies a subsystem, it returns the first segment before the subsystem delimiter.
+     * Otherwise, it returns the default subsystem.
+     * 
+     * @action string                   The action to retrieve the subsystem from. Defaults to the current request action.
+     * 
+     * @return string                   The subsystem part of the action.
      */
     public string function getSubsystem( string action = request.action ) {
         if ( actionSpecifiesSubsystem( action ) ) {
@@ -561,16 +711,22 @@ component {
         return getDefaultSubsystem();
     }
 
-    /*
-     * return the base directory for the current request's subsystem
+    /**
+     * Returns the base directory for the current request's subsystem.
+     * 
+     * @return string                   The base directory.
      */
     public string function getSubsystemBase() {
         return request.subsystemBase;
     }
 
-    /*
-     * returns the bean factory set via setSubsystemBeanFactory
-     * same effect as getBeanFactory when not using subsystems
+    /**
+     * Returns the bean factory set via setSubsystemBeanFactory.
+     * Same effect as getBeanFactory when not using subsystems.
+     * 
+     * @subsystem string               The subsystem for which to retrieve the bean factory.
+     * 
+     * @return any                     The bean factory for the specified subsystem.
      */
     public any function getSubsystemBeanFactory( string subsystem ) {
 
@@ -580,29 +736,41 @@ component {
 
     }
 
-    /*
-     * return the (optional) configuration for a subsystem
+    /**
+     * Returns the (optional) configuration for a subsystem.
+     * 
+     * @subsystem string               The subsystem for which to retrieve the configuration.
+     * 
+     * @return struct                  The configuration for the specified subsystem.
      */
     public struct function getSubsystemConfig( string subsystem ) {
         if ( structKeyExists( variables.framework.subsystems, subsystem ) ) {
-            // return a copy to make it read only from outside the framework:
+            // Return a copy to make it read-only from outside the framework:
             return structCopy( variables.framework.subsystems[ subsystem ] );
         }
         return { };
     }
 
-    /*
-     * return the subsytem and section part of the action
+    /**
+     * Returns the subsystem and section part of the action.
+     * 
+     * @action string                   The action to retrieve the subsystem and section from. Defaults to the current request action.
+     * 
+     * @return string                   The subsystem and section part of the action.
      */
     public string function getSubsystemSection( string action = request.action ) {
         return listFirst( getSubsystemSectionAndItem( action ), '.' );
     }
 
-    /*
-     * return an action with all applicable parts (subsystem, section, and item) specified
-     * using defaults from the configuration or request where appropriate
-     * differs from getFullyQualifiedAction() in that it will _always_ contain the
-     * subsystem delimiter, even when the subsystem is blank
+    /**
+     * Returns an action with all applicable parts (subsystem, section, and item) specified
+     * using defaults from the configuration or request where appropriate.
+     * Differs from getFullyQualifiedAction() in that it will always contain the
+     * subsystem delimiter, even when the subsystem is blank.
+     * 
+     * @action string                   The action to retrieve the subsystem, section, and item from. Defaults to the current request action.
+     * 
+     * @return string                   The subsystem, section, and item part of the action.
      */
     public string function getSubsystemSectionAndItem( string action = request.action ) {
         if ( actionSpecifiesSubsystem( action ) ) {
@@ -617,9 +785,11 @@ component {
         }
     }
 
-    /*
-     * returns true iff a call to getBeanFactory() will successfully return a bean factory
-     * previously set via setBeanFactory or setSubsystemBeanFactory
+    /**
+     * Returns true if a call to getBeanFactory() will successfully return a bean factory
+     * previously set via setBeanFactory or setSubsystemBeanFactory.
+     * 
+     * @return boolean                  True if a bean factory is available, false otherwise.
      */
     public boolean function hasBeanFactory() {
 
@@ -639,15 +809,21 @@ component {
 
     }
 
-    /*
-     * returns true iff the framework has been told about a bean factory via setBeanFactory
+    /**
+     * Returns true if the framework has been told about a bean factory via setBeanFactory.
+     * 
+     * @return boolean                  True if a default bean factory is available, false otherwise.
      */
     public boolean function hasDefaultBeanFactory() {
         return structKeyExists( getFw1App(), 'factory' );
     }
 
-    /*
-     * returns true if a subsystem specific bean factory has been set
+    /**
+     * Returns true if a subsystem specific bean factory has been set.
+     * 
+     * @subsystem string               The subsystem to check for a bean factory.
+     * 
+     * @return boolean                 True if a bean factory is available for the specified subsystem, false otherwise.
      */
     public boolean function hasSubsystemBeanFactory( string subsystem ) {
 
@@ -658,9 +834,12 @@ component {
 
     }
 
-    /*
-     * returns true if the specified action matches the currently
-     * executing action (after both have been expanded)
+    /**
+     * Returns true if the specified action matches the currently executing action (after both have been expanded).
+     * 
+     * @action string                   The action to compare with the currently executing action.
+     * 
+     * @return boolean                  True if the actions match, false otherwise.
      */
     public boolean function isCurrentAction( string action ) {
         return getSubsystemSectionAndItem( action ) ==
