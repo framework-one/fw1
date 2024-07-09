@@ -928,120 +928,109 @@ component {
     }
 
     /**
-     * This method can be overridden to handle errors that occur during the execution of the framework.
-     * Calling `super.onError(exception, event)` is optional, depending on the desired error handling behavior.
-     * Note: On OpenBD, you need to rename or disable the `onError()` method since it does not correctly pass the exception or event when an error occurs.
-     * 
-     * @action any                  The exception that occurred.
-     * @event string                The event where the error occurred.
-     * 
-     * @return void
-     */
-    public void function onError(any action, string event) {
+    * This method is called when an error occurs during the execution of an event.
+    * It can be overridden to provide custom error handling behavior.
+    * Note that calling super.onError(exception, event) is optional, depending on the desired error handling behavior.
+    * Please note that if you are using OpenBD, you may need to rename or disable the onError() method, as it does not seem to correctly pass the exception or event parameters when an error occurs in the code.
+    * 
+    * @exception any                  The exception that occurred.
+    * @event string                   The event where the error occurred.
+    */
+    public void function onError( any exception, string event ) {
+
         try {
-            if (!structKeyExists(variables, 'framework') || !structKeyExists(variables.framework, 'version')) {
-                // Error occurred before the framework was initialized
-                failure(action, event, false, true);
+            if ( !structKeyExists( variables, 'framework' ) ||
+                !structKeyExists( variables.framework, 'version' ) ) {
+                // error occurred before framework was initialized
+                failure( exception, event, false, true );
                 return;
             }
 
-            // Record details of the exception
-            if (structKeyExists(request, 'action')) {
+            // record details of the exception:
+            if ( structKeyExists( request, 'action' ) ) {
                 request.failedAction = request.action;
             }
-            request.exception = action;
+            request.exception = exception;
             request.event = event;
-
-            // Reset lifecycle flags
-            structDelete(request, 'layout');
-            structDelete(request._fw1, 'controllerExecutionStarted');
-            structDelete(request._fw1, 'overrideLayoutAction');
-            structDelete(request._fw1, 'overrideViewAction');
-
-            if (structKeyExists(request._fw1, 'renderData')) {
-                // Need to reset the content type as well
+            // reset lifecycle flags:
+            structDelete( request, 'layout' );
+            structDelete( request._fw1, 'controllerExecutionStarted' );
+            structDelete( request._fw1, 'overrideLayoutAction' );
+            structDelete( request._fw1, 'overrideViewAction' );
+            if ( structKeyExists( request._fw1, 'renderData' ) ) {
+                // need to reset the content type as well!
                 try {
-                    getPageContext().getResponse().setContentType('text/html; charset=utf-8');
-                } catch (any e) {
-                    // Ignore any exceptions
+                    getPageContext().getResponse().setContentType( 'text/html; charset=utf-8' );
+                } catch ( any e ) {
+                    // but ignore any exceptions
                 }
-                structDelete(request._fw1, 'renderData');
+                structDelete( request._fw1, 'renderData' );
             }
-
-            // Setup the new controller action based on the error action
-            request._fw1.controllers = [];
+            // setup the new controller action, based on the error action:
+            request._fw1.controllers = [ ];
             var key = 'error';
             var defaultAction = 'main.error';
-
             try {
-                if (action.type == 'fw1.viewnotfound' && structKeyExists(variables.framework, 'missingview')) {
+                if ( exception.type == 'fw1.viewnotfound' && structKeyExists( variables.framework, 'missingview' ) ) {
                     key = 'missingview';
-                    // Shouldn't be needed -- key will be present in framework config
+                    // shouldn't be needed -- key will be present in framework config
                     defaultAction = 'main.missingview';
                 }
-            } catch (any e) {
-                // Leave it as exception
+            } catch ( any e ) {
+                // leave it as exception
             }
-
-            if (structKeyExists(variables, 'framework') && structKeyExists(variables.framework, key)) {
-                request.action = variables.framework[key];
+            if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, key ) ) {
+                request.action = variables.framework[ key ];
             } else {
-                // This is an edge case, so we don't bother with subsystems, etc.
-                // If part of the framework defaults are not present, we'd have to do a lot of conditional logic here!
+                // this is an edge case so we don't bother with subsystems etc
+                // (because if part of the framework defaults are not present,
+                // we'd have to do a lot of conditional logic here!)
                 request.action = defaultAction;
             }
-
-            // Ensure request.context is available
-            if (!structKeyExists(request, 'context')) {
-                request.context = {};
+            // ensure request.context is available
+            if ( !structKeyExists( request, 'context' ) ) {
+                request.context = { };
             }
-
-            // Ensure request.privatecontext is available
-            if (!structKeyExists(request, 'privatecontext')) {
-                request.privatecontext = {};
-            }
-
-            if (!structKeyExists(request, 'base')) {
-                if (structKeyExists(variables, 'framework') && structKeyExists(variables.framework, 'base')) {
+            if ( !structKeyExists( request, 'base' ) ) {
+                if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'base' ) ) {
                     request.base = variables.framework.base;
                 } else {
                     request.base = '';
                 }
             }
-
-            if (!structKeyExists(request, 'cfcbase')) {
-                if (structKeyExists(variables, 'framework') && structKeyExists(variables.framework, 'cfcbase')) {
+            if ( !structKeyExists( request, 'cfcbase' ) ) {
+                if ( structKeyExists( variables, 'framework' ) && structKeyExists( variables.framework, 'cfcbase' ) ) {
                     request.cfcbase = variables.framework.cfcbase;
                 } else {
                     request.cfcbase = '';
                 }
             }
-
-            internalFrameworkTrace('onError(#action.message#, #event#) called');
-            setupRequestWrapper(false);
-            onRequest('');
+            internalFrameworkTrace( 'onError( #exception.message#, #event# ) called' );
+            setupRequestWrapper( false );
+            onRequest( '' );
             frameworkTraceRender();
-        } catch (any e) {
-            failure(e, 'onError');
-            failure(action, event, true);
+        } catch ( any e ) {
+            failure( e, 'onError' );
+            failure( exception, event, true );
             frameworkTraceRender();
         }
+
     }
 
     /**
      * This method can be overridden if you want to change the behavior when
      * FW/1 cannot find a matching view.
      * 
-     * @action struct               The request context structure.
-     * @event struct                The private request context structure.
+     * @rc struct                   The request context structure.
      * 
-     * @return any                  The string or struct to be rendered.
+     * @return any
      */
-    public any function onMissingView( struct action, struct event ) {
-        // Unable to find a matching view - fail with a nice exception
+    public any function onMissingView( struct rc ) {
+        // unable to find a matching view - fail with a nice exception
         viewNotFound();
-        // If we got here, we would return the string or struct to be rendered
-        // For example, return view( 'main/missing' );
+        // if we got here, we would return the string or struct to be rendered
+        // but viewNotFound() throws an exception...
+        // for example, return view( 'main/missing' );
     }
 
     /**
