@@ -1890,6 +1890,14 @@ component {
 
     // THE FOLLOWING METHODS SHOULD ALL BE CONSIDERED PRIVATE / UNCALLABLE
 
+    /**
+     * Autowires the properties of a CFC using a bean factory.
+     *
+     * @cfc any                           The CFC to autowire.
+     * @beanFactory any                   The bean factory to use for autowiring.
+     * 
+     * @return void
+     */
     private void function autowire( any cfc, any beanFactory ) {
         var setters = findImplicitAndExplicitSetters( cfc );
         for ( var property in setters ) {
@@ -1901,6 +1909,14 @@ component {
         }
     }
 
+    /**
+     * Builds the layout queue.
+     *
+     * This private method is responsible for building the layout queue.
+     * It is called internally within the framework.
+     * 
+     * @return void
+     */
     private void function buildLayoutQueue() {
         var siteWideLayoutBase = request.base & getSubsystemDirPrefix( variables.framework.siteWideLayoutSubsystem );
         var testLayout = 0;
@@ -1971,6 +1987,14 @@ component {
     }
 
 
+    /**
+     * Builds the view queue.
+     * 
+     * This method is responsible for building the view queue.
+     * It is a private method and cannot be accessed from outside the component.
+     * 
+     * @return void
+     */
     private void function buildViewQueue() {
         // default behavior:
         var subsystem = request.subsystem;
@@ -2001,6 +2025,13 @@ component {
     }
 
 
+    /**
+     * Checks if a cached file exists.
+     * 
+     * @filePath string                     The path of the file to check.
+     * 
+     * @return boolean                      Returns true if the cached file exists, false otherwise.
+     */
     private boolean function cachedFileExists( string filePath ) {
         var cache = getFw1App().cache;
         if ( !variables.framework.cacheFileExists ) {
@@ -2013,7 +2044,13 @@ component {
         return cache.fileExists[ filePath ];
     }
 
-
+    /**
+     * Returns the file path of a CFC based on its dotted path.
+     *
+     * @dottedPath string                   The dotted path of the CFC.
+     *
+     * @return string                       The file path of the CFC.
+     */
     private string function cfcFilePath( string dottedPath ) {
         if ( dottedPath == '' ) {
             return '/';
@@ -2326,10 +2363,25 @@ component {
         return '__fw1' & preserveKey;
     }
 
+    /**
+     * Returns the value of the specified property from the given CFC.
+     *
+     * @cfc struct                         The CFC to retrieve the property from.
+     * @property string                    The name of the property.
+     *
+     * @return any                         The value of the property.
+     */
     private any function getProperty( struct cfc, string property ) {
         if ( structKeyExists( cfc, 'get#property#' ) ) return invoke( cfc, "get#property#" );
     }
 
+    /**
+     * Returns the directory prefix for the specified subsystem.
+     *
+     * @subsystem string                    The name of the subsystem.
+     *
+     * @return string                       The directory prefix for the subsystem.
+     */
     private string function getSubsystemDirPrefix( string subsystem ) {
 
         if ( subsystem eq '' ) {
@@ -2342,6 +2394,11 @@ component {
         }
     }
 
+    /**
+     * Injects the framework into a CFC.
+     *
+     * @cfc any                           The CFC to inject the framework into.
+     */
     private void function injectFramework( any cfc ) {
         var args = { };
         if ( structKeyExists( cfc, 'setFramework' ) || structKeyExists( cfc, 'onMissingMethod' ) ) {
@@ -2353,7 +2410,22 @@ component {
         }
     }
 
-    private void function internalFrameworkTrace( string message, string subsystem = '', string section = '', string item = '', string traceType = 'INFO' ) {
+    /**
+     * Logs a message to the framework trace.
+     *
+     * @message string                      The message to be logged.
+     * @subsystem string                    (Optional) The name of the subsystem.
+     * @section string                      (Optional) The name of the section.
+     * @item string                         (Optional) The name of the item.
+     * @traceType string                    (Optional) The type of trace (e.g., INFO, DEBUG, ERROR).
+     */
+    private void function internalFrameworkTrace( 
+        string message, 
+        string subsystem = '', 
+        string section = '', 
+        string item = '', 
+        string traceType = 'INFO' 
+    ) {
         if ( request._fw1.doTrace ) {
             try {
                 if ( sessionHas( '_fw1_trace' ) ) {
@@ -2367,7 +2439,18 @@ component {
         }
     }
 
-    private string function internalLayout( string layoutPath, string body ) {
+    /**
+     * Renders an internal layout.
+     *
+     * @layoutPath string                 The path to the layout template.
+     * @body string                       The body content to be inserted into the layout.
+     *
+     * @return string                     The rendered layout.
+     */    
+    private string function internalLayout( 
+        string layoutPath, 
+        string body 
+    ) {
         var rc = request.context;
         var prc = request.privatecontext;
         var $ = { };
@@ -2386,7 +2469,18 @@ component {
         return response;
     }
 
-    private string function internalView( string viewPath, struct args = { } ) {
+    /**
+     * Renders an internal view.
+     *
+     * @viewPath string                   The path to the view template.
+     * @args struct                       The arguments to pass to the view template.
+     *
+     * @return string                     The rendered view.
+     */
+    private string function internalView( 
+        string viewPath, 
+        struct args = { } 
+    ) {
         var rc = request.context;
         var prc = request.privatecontext;
         var $ = { };
@@ -2404,13 +2498,25 @@ component {
         }
         return response;
     }
-
+    
+    /**
+     * Checks if the framework is initialized.
+     *
+     * @return boolean                     Returns true if the framework is initialized, false otherwise.
+     */
     private boolean function isFrameworkInitialized() {
         return structKeyExists( variables, 'framework' ) &&
             ( structKeyExists( request._fw1, 'theApp' ) ||
                 structKeyExists( application, variables.framework.applicationKey ) );
     }
 
+    /**
+     * Checks if a subsystem is initialized.
+     *
+     * @subsystem string                   The name of the subsystem to check.
+     *
+     * @return boolean                     Returns true if the subsystem is initialized, false otherwise.
+     */
     private boolean function isSubsystemInitialized( string subsystem ) {
 
         ensureNewFrameworkStructsExist();
@@ -2432,6 +2538,13 @@ component {
         return '';
     }
 
+    /**
+     * Normalizes the query string.
+     *
+     * @queryString any                     The query string to be normalized.
+     *
+     * @return string                       The normalized query string.
+     */
     private string function normalizeQueryString( any queryString ) {
         // if queryString is a struct, massage it into a string
         if ( isStruct( queryString ) && structCount( queryString ) ) {
@@ -2449,7 +2562,18 @@ component {
         return queryString;
     }
 
-    private string function segmentLast( string segments, string delimiter ) {
+    /**
+     * Returns the last segment of a string based on the given delimiter.
+     *
+     * @segments string                     The string to extract the last segment from.
+     * @delimiter string                    The delimiter used to separate segments.
+     *
+     * @return string                       The last segment of the string.
+     */
+    private string function segmentLast( 
+        string segments, 
+        string delimiter 
+    ) {
         var where = find( delimiter, segments );
         if ( where ) {
             if ( where == len( segments ) ) {
@@ -2461,7 +2585,18 @@ component {
         return segments;
     }
 
-    private string function parseViewOrLayoutPath( string path, string type ) {
+    /**
+     * Parses the view or layout path based on the given path and type.
+     *
+     * @path string                         The path to be parsed.
+     * @type string                         The type of the path (either 'view' or 'layout').
+     *
+     * @return string                       The parsed view or layout path.
+     */
+    private string function parseViewOrLayoutPath( 
+        string path, 
+        string type 
+    ) {
         var folder = type;
         switch ( folder ) {
         case 'layout':
@@ -2487,7 +2622,22 @@ component {
 
     }
 
-    private struct function processRouteMatch( string route, string target, string path, string httpMethod ) {
+    /**
+     * Processes a route match and returns a struct with the processed information.
+     *
+     * @route string                        The route pattern.
+     * @target string                       The target controller and action.
+     * @path string                         The path to match against the route pattern.
+     * @httpMethod string                   The HTTP method used for the request.
+     *
+     * @return struct                       A struct containing the processed route information.
+     */
+    private struct function processRouteMatch( 
+        string route, 
+        string target, 
+        string path, 
+        string httpMethod 
+    ) {
         var regExCache = isFrameworkInitialized() ? getFw1App().cache.routes.regex : { };
         var cacheKey = hash( route & target );
         if ( !structKeyExists( regExCache, cacheKey ) ) {
@@ -2582,7 +2732,18 @@ component {
         return routeMatch;
     }
 
-    private numeric function routeRegexFind( string pattern, string path ) {
+    /**
+     * Finds a match for the specified regular expression pattern in the given path.
+     *
+     * @pattern string                      The regular expression pattern to match.
+     * @path string                         The path to search for a match.
+     *
+     * @return numeric                      The position of the match in the path, or 0 if no match is found.
+     */
+    private numeric function routeRegexFind( 
+        string pattern, 
+        string path 
+    ) {
         if ( variables.framework.routesCaseSensitive ) {
             return reFind( pattern, path );
         } else {
@@ -2590,7 +2751,22 @@ component {
         }
     }
 
-    private array function getResourceRoutes( any resourcesToRoute, string subsystem = '', string pathRoot = '', string targetAppend = '' ) {
+    /**
+     * Retrieves the resource routes based on the specified parameters.
+     *
+     * @resourcesToRoute any                The resources to be routed.
+     * @subsystem string                    The subsystem to which the resources belong (optional).
+     * @pathRoot string                     The root path for the resources (optional).
+     * @targetAppend string                 The target append for the resources (optional).
+     *
+     * @return array                        An array of resource routes.
+     */
+    private array function getResourceRoutes( 
+        any resourcesToRoute, 
+        string subsystem = '', 
+        string pathRoot = '', 
+        string targetAppend = '' 
+    ) {
         var resourceCache = isFrameworkInitialized() ? getFw1App().cache.routes.resources : { };
         var cacheKey = hash( serializeJSON( { rtr = resourcesToRoute, ss = subsystem, pr = pathRoot, ta = targetAppend } ) );
         if ( !structKeyExists( resourceCache, cacheKey ) ) {
@@ -2647,10 +2823,24 @@ component {
         return resourceCache[ cacheKey ];
     }
 
+    /**
+     * Reads a JSON string and returns the deserialized data.
+     *
+     * @json string                        The JSON string to be deserialized.
+     *
+     * @return any                         The deserialized data.
+     */
     private any function read_json( string json ) {
         return deserializeJSON( json );
     }
 
+    /**
+     * Renders the response data as JSON.
+     *
+     * @renderData struct                   The data to be rendered.
+     * 
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_json( struct renderData ) {
         return {
             contentType = 'application/json; charset=utf-8',
@@ -2658,6 +2848,13 @@ component {
         };
     }
 
+    /**
+     * Renders the response data as JSONP.
+     *
+     * @renderData struct                   The data to be rendered.
+     * 
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_jsonp( struct renderData ) {
         if ( !structKeyExists( renderData, 'jsonpCallback' ) || !len( renderData.jsonpCallback ) ){
             throw( type = 'FW1.jsonpCallbackRequired',
@@ -2670,6 +2867,15 @@ component {
         };
     }
 
+    /**
+     * Renders the response data as JSON.
+     * This method assumes the data to be rendered is already JSON and does 
+     * not need to be serialized.
+     *
+     * @renderData struct                   The data to be rendered.
+     *
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_rawjson( struct renderData ) {
         return {
             contentType = 'application/json; charset=utf-8',
@@ -2677,6 +2883,13 @@ component {
         };
     }
 
+    /**
+     * Renders the response data as HTML.
+     *
+     * @renderData struct                   The data to be rendered.
+     *
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_html( struct renderData ) {
         structDelete( request._fw1, 'renderData' );
         return {
@@ -2685,6 +2898,13 @@ component {
         };
     }
 
+    /**
+     * Renders the response data as XML.
+     *
+     * @renderData struct                   The data to be rendered.
+     *
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_xml( struct renderData ) {
         var output = '';
         if ( isXML( renderData.data ) ) {
@@ -2706,6 +2926,13 @@ component {
         };
     }
 
+    /**
+     * Renders the response data as text.
+     *
+     * @renderData struct                   The data to be rendered.
+     *
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function render_text( struct renderData ) {
         return {
             contentType = 'text/plain; charset=utf-8',
@@ -2713,6 +2940,11 @@ component {
         };
     }
 
+    /**
+     * Renders the response data with the specified content type.
+     *
+     * @return struct                       A struct containing the rendered response data.
+     */
     private struct function renderDataWithContentType() {
         var out = { };
         var renderType = request._fw1.renderData.type;
@@ -2750,6 +2982,14 @@ component {
         return out;
     }
 
+    /**
+     * Resolves the base URL for a given action and path.
+     *
+     * @action string                       The action to resolve the base URL for. Defaults to '.'.
+     * @path string                         The path to resolve the base URL for. Defaults to variables.magicBaseURL.
+     *
+     * @return struct                       A struct containing the resolved base URL.
+     */
     private struct function resolveBaseURL( string action = '.', string path = variables.magicBaseURL ) {
         if ( path == variables.magicBaseURL ) path = getBaseURL();
         if ( path == 'useSubsystemConfig' ) {
@@ -2778,6 +3018,11 @@ component {
         return { path = replace( path, chr(92), '/', 'all' ), omitIndex = omitIndex };
     }
 
+    /**
+     * Restores the flash context.
+     *
+     * @return void
+     */
     private void function restoreFlashContext() {
         if ( variables.framework.maxNumContextsPreserved > 1 ) {
             if ( !structKeyExists( URL, variables.framework.preserveKeyURLKey ) ) {
@@ -2806,6 +3051,13 @@ component {
         }
     }
 
+    /**
+     * Saves the flash context to the session.
+     * 
+     * @keys string                    The keys to save. Use 'all' to save all keys.
+     * 
+     * @return string                  The preserve key for the saved flash context.
+     */
     private string function saveFlashContext( string keys ) {
         var curPreserveKey = getNextPreserveKeyAndPurgeOld();
         var preserveKeySessionKey = getPreserveKeySessionKey( curPreserveKey );
@@ -2837,6 +3089,14 @@ component {
         return curPreserveKey;
     }
 
+    /**
+     * Sets the failure information for a CFC method.
+     * 
+     * @cfc any                        The CFC object.
+     * @method string                  The name of the method.
+     * 
+     * @return void
+     */
     private void function setCfcMethodFailureInfo( any cfc, string method ) {
         var meta = getMetadata( cfc );
         if ( structKeyExists( meta, 'fullname' ) ) {
@@ -2847,6 +3107,15 @@ component {
         request.failedMethod = method;
     }
 
+    /**
+     * Sets a property on a CFC.
+     * 
+     * @cfc struct                      The CFC to set the property on.
+     * @property string                 The name of the property to set.
+     * @args struct                     The arguments to set the property with.
+     * 
+     * @return void
+     */
     private void function setProperty( struct cfc, string property, struct args ) {
         if ( listLen( property, '.' ) > 1 ) {
             var firstObjName = listFirst( property, '.' );
@@ -2864,6 +3133,11 @@ component {
         }
     }
 
+    /**
+     * Setup the application wrapper.
+     * 
+     * @return void
+     */
     private void function setupApplicationWrapper() {
         if ( structKeyExists( request._fw1, "appWrapped" ) ) return;
         request._fw1.appWrapped = true;
@@ -2923,6 +3197,11 @@ component {
 
     }
 
+    /**
+     * Setup the framework's default values. 
+     * 
+     * @return void
+     */
     private void function setupFrameworkDefaults() {
         if ( structKeyExists( variables, "_fw1_defaults_initialized" ) ) return;
         // default values for Application::variables.framework structure:
@@ -3076,7 +3355,7 @@ component {
         }
         if ( right( variables.framework.controllersFolder, 1 ) != 's' ) {
             throw( type = "FW1.IllegalConfiguration",
-                   message = "ControllersFolder must be a plural word (ends in 's')." );
+                    message = "ControllersFolder must be a plural word (ends in 's')." );
         }
         variables.controllerFolder = left( variables.framework.controllersFolder, len( variables.framework.controllersFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'layoutsFolder' ) ) {
@@ -3084,7 +3363,7 @@ component {
         }
         if ( right( variables.framework.layoutsFolder, 1 ) != 's' ) {
             throw( type = "FW1.IllegalConfiguration",
-                   message = "LayoutsFolder must be a plural word (ends in 's')." );
+                    message = "LayoutsFolder must be a plural word (ends in 's')." );
         }
         variables.layoutFolder = left( variables.framework.layoutsFolder, len( variables.framework.layoutsFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'subsystemsFolder' ) ) {
@@ -3092,7 +3371,7 @@ component {
         }
         if ( right( variables.framework.subsystemsFolder, 1 ) != 's' ) {
             throw( type = "FW1.IllegalConfiguration",
-                   message = "SubsystemsFolder must be a plural word (ends in 's')." );
+                    message = "SubsystemsFolder must be a plural word (ends in 's')." );
         }
         variables.subsystemFolder = left( variables.framework.subsystemsFolder, len( variables.framework.subsystemsFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'viewsFolder' ) ) {
@@ -3100,7 +3379,7 @@ component {
         }
         if ( right( variables.framework.viewsFolder, 1 ) != 's' ) {
             throw( type = "FW1.IllegalConfiguration",
-                   message = "ViewsFolder must be a plural word (ends in 's')." );
+                    message = "ViewsFolder must be a plural word (ends in 's')." );
         }
         variables.viewFolder = left( variables.framework.viewsFolder, len( variables.framework.viewsFolder ) - 1 );
         if ( !structKeyExists( variables.framework, 'diOverrideAllowed' ) ) {
@@ -3163,6 +3442,11 @@ component {
         variables._fw1_defaults_initialized = true;
     }
 
+    /**
+     * Sets up the framework environments.
+     *
+     * @return string                       The environment name.
+     */
     private string function setupFrameworkEnvironments() {
         var env = getEnvironment();
         if ( structKeyExists( variables.framework, 'environments' ) ) {
@@ -3178,6 +3462,14 @@ component {
         return env;
     }
 
+    /**
+     * Merges the configuration values from the source struct into the target struct.
+     *
+     * @target struct                   The target struct to merge the configuration into.
+     * @source struct                   The source struct containing the configuration values to merge.
+     *
+     * @return void
+     */
     private void function mergeConfig( struct target, struct source ) {
         // subsystems and diConfig should be merged
         var subsystems = structKeyExists( target, 'subsystems' ) ? structCopy( target.subsystems ) : { };
@@ -3269,6 +3561,11 @@ component {
         }
     }
 
+    /**
+     * Sets up the default values for the request.
+     *
+     * @return void
+     */
     private void function setupRequestDefaults() {
         setupFrameworkDefaults();
         if ( !request._fw1.requestDefaultsInitialized ) {
@@ -3421,6 +3718,13 @@ component {
         }
     }
 
+    /**
+     * Sets up the wrapper for the request.
+     *
+     * @runSetup boolean                    Whether to run the setupRequest() method.
+     * 
+     * @return void
+     */     
     private void function setupRequestWrapper( boolean runSetup ) {
 
         request.subsystem = getSubsystem( request.action );
@@ -3440,16 +3744,33 @@ component {
         controller( request.action );
     }
 
+    /**
+     * Sets up the wrapper for the response.
+     * 
+     * @return void
+     */
     private void function setupResponseWrapper() {
         internalFrameworkTrace( 'setupResponse() called' );
         setupResponse( rc = request.context, prc = request.privatecontext );
     }
 
+    /**
+     * Sets up the wrapper for the session.
+     * 
+     * @return void
+     */
     private void function setupSessionWrapper() {
         internalFrameworkTrace( 'setupSession() called' );
         setupSession();
     }
 
+    /**
+     * Sets up the wrapper for the specified subsystem.
+     *
+     * @subsystem string                        The name of the subsystem to set up.
+     *
+     * @return void
+     */
     private void function setupSubsystemWrapper( string subsystem ) {
         if ( !len( subsystem ) ) return;
         if ( !isSubsystemInitialized( subsystem ) ) {
@@ -3503,6 +3824,15 @@ component {
         }
     }
 
+    /**
+     * Validates the action to ensure it does not contain forward or backward slashes.
+     *
+     * @action string                       The action to be validated.
+     *
+     * @return string                       The validated action.
+     *
+     * @throws FW1.actionContainsSlash      If a slash is found in the action.
+     */
     private string function validateAction( string action ) {
         // check for forward and backward slash in the action - using chr() to avoid confusing TextMate (Hi Nathan!)
         if ( findOneOf( chr(47) & chr(92), action ) > 0 ) {
@@ -3512,6 +3842,11 @@ component {
         return action;
     }
 
+    /**
+     * Throws an exception when a view is not found for the current action.
+     * 
+     * @throws FW1.viewNotFound                 If a view cannot be found for the current action.
+     */
     private void function viewNotFound() {
         // request.missingView should always be set after issue #280
         // but this will prevent an exception while attempting to throw
