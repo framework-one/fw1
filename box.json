@@ -51,14 +51,12 @@
             "url":"https://github.com/framework-one/fw1/graphs/contributors"
         }
     ],
-    "ignore":[
-
-    ],
+    "ignore":[],
     "devDependencies":{
         "testbox":"2.5.0+107"
     },
     "installPaths":{
-        "testbox":"testbox"
+        "testbox":"testbox/"
     },
     "testbox":{
         "runner":"http://localhost:8500/tests/runner.cfm"

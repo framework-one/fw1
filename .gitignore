@@ -10,3 +10,7 @@ settings.xml
 *.ipr
 *.idea
 run-tests.sh
+.github
+.junie
+.claude
+.vscode
