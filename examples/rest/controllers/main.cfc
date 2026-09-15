@@ -5,6 +5,15 @@ component {
         return this;
     }
 
+    function get( struct rc, struct headers ) {
+        var response = {
+            "method": "GET",
+            "multi": rc.multi,
+            "single": rc.single
+        };
+        variables.fw.renderData().type( 'json' ).data( response );
+    }
+
     function patch( struct rc, struct headers ) {
         var response = {
             "method": "PATCH",

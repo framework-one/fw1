@@ -1,5 +1,12 @@
 component extends="mxunit.framework.TestCase" {
 
+    function testURLEncodedRequestDecodesMultiField() {
+        var actual = doURLEncodedHTTPRequest( "GET" );
+        assertEquals( "GET", actual.method );
+        assertEquals( "a,b,c", actual.single );
+        assertEquals( "1,2,3,40,50", actual.multi );
+    }
+
     function testPostFormEncodedRequestDecodesMultiField() {
         var actual = doFormEncodedHTTPRequest( "POST" );
         assertEquals( "POST", actual.method );
@@ -47,19 +54,33 @@ component extends="mxunit.framework.TestCase" {
     private function doFormEncodedHTTPRequest( verb ) {
         return doHTTPRequest( verb, "application/x-www-form-urlencoded", "multi=1%2C2%2C3&multi=40&multi=50&single=a%2Cb%2Cc" );
     }
+    
+    private function doURLEncodedHTTPRequest( verb ) {
+        return doHTTPRequest( verb, "application/x-www-form-urlencoded", "&multi=1%2C2%2C3&multi=40&multi=50&single=a%2Cb%2Cc" );
+    }
 
     private function doJSONEncodedHTTPRequest( verb ) {
         return doHTTPRequest( verb, "application/json", '{"multi": "1,2,3,40,50","single": "a,b,c"}' );
     }
 
     private function doHTTPRequest( verb, contentType, body ) {
-        var httpService = new http();
-        httpService.setmethod( verb );
-        httpService.setCharset( "utf-8" );
-        httpService.setUrl( "http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/examples/rest/?action=main.#verb#" ); 
-        httpService.addParam( type = "header", name = "content-type", value = contentType );
-        httpService.addParam( type = "body", value = body );
-        var response = httpService.send().getPrefix().filecontent;
+
+        if (verb eq "GET") {
+            http method="#verb#" charset="utf-8" url="http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/examples/rest/" result="httpResult" {                
+                httpparam type="url" name="action" value="main.#verb#";
+                httpparam type="url" name="multi" value="1,2,3";
+                httpparam type="url" name="multi" value="40";
+                httpparam type="url" name="multi" value="50";
+                httpparam type="url" name="single" value="a,b,c";
+            }
+        } else {
+            http method="#verb#" charset="utf-8" url="http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/examples/rest/?action=main.#verb#" result="httpResult" {
+                httpparam type="header" name="content-type" value="#contentType#";
+                httpparam type="body" value="#body#";
+            }
+        }
+
+        var response = httpResult.filecontent;
         if ( isJson( response ) ) {
             return deserializeJSON( response );
         }
