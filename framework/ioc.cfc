@@ -42,6 +42,7 @@ component {
         variables.config = config;
         variables.beanInfo = { };
         variables.beanCache = { };
+        variables.resolutionLock = createObject( 'java', 'java.util.concurrent.locks.ReentrantLock' ).init();
         variables.resolutionCache = { };
         variables.getBeanCache = { };
         variables.accumulatorCache = { };
@@ -202,9 +203,19 @@ component {
             if ( structKeyExists( variables.getBeanCache, beanName ) ) {
                 return variables.getBeanCache[ beanName ];
             }
-            var bean = resolveBean( beanName, constructorArgs );
-            if ( isSingleton( beanName ) ) variables.getBeanCache[ beanName ] = bean;
-            return bean;
+            // Different names and transient roots can resolve the same singleton.
+            // Hold the lock through injection, including nested getBean() calls.
+            variables.resolutionLock.lock();
+            try {
+                if ( structKeyExists( variables.getBeanCache, beanName ) ) {
+                    return variables.getBeanCache[ beanName ];
+                }
+                var bean = resolveBean( beanName, constructorArgs );
+                if ( isSingleton( beanName ) ) variables.getBeanCache[ beanName ] = bean;
+                return bean;
+            } finally {
+                variables.resolutionLock.unlock();
+            }
         } else if ( hasParent() ) {
             // ideally throw an exception for non-DI/1 parent when args passed
             // WireBox adapter can do that since we control it but we can't do
