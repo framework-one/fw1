@@ -45,6 +45,12 @@ component extends="mxunit.framework.TestCase" {
     private string function captureError( struct exception, string event ) {
         var response = getPageContext().getResponse();
         var status = response.getStatus();
+        // Adobe's outer response wrapper reports 0 instead of the HTTP status.
+        if (status == 0) {
+            response = response.getResponse();
+            status = response.getStatus();
+        }
+        assertTrue(status >= 100 && status <= 599, "Invalid response status: #status#");
         var output = "";
         try {
             savecontent variable="output" {

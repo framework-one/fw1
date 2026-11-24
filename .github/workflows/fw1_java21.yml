@@ -1,4 +1,4 @@
-name: fw1 Java 21
+name: fw1 Java 11 and 21
 
 on:
   push:
@@ -10,16 +10,24 @@ jobs:
   test:
     strategy:
       matrix:
-        engine: [ lucee@7, adobe@2025, adobe@2023, adobe@2021 ]
+        include:
+          - engine: lucee@7
+            java: '21'
+          - engine: adobe@2025
+            java: '21'
+          - engine: adobe@2023
+            java: '21'
+          - engine: adobe@2021
+            java: '11'
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Set up JDK 21
+    - name: Set up JDK ${{ matrix.java }}
       uses: actions/setup-java@v5
       with:
-        java-version: '21'
+        java-version: ${{ matrix.java }}
         distribution: 'temurin'
         
     - name: Install the ortus security key
