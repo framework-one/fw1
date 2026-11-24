@@ -87,7 +87,15 @@ component {
             var rc = request.context;
             for ( var key in rc ) {
                 if ( !isNull( rc[key] ) && isSimpleValue( rc[key] ) ) {
-                    uri = REReplaceNoCase( uri, '(#triggers#):#key#', '\1\U\E#rc[key]#', 'all' );
+                    var replacement = '#rc[key]#';
+                    var start = 1;
+                    while ( start <= len( uri ) ) {
+                        var match = reFindNoCase( '(#triggers#):#key#', uri, start, true );
+                        if ( !match.pos[1] ) break;
+                        uri = left( uri, match.pos[1] ) & replacement &
+                            mid( uri, match.pos[1] + match.len[1], len( uri ) );
+                        start = match.pos[1] + 1 + len( replacement );
+                    }
                 }
             }
         }
@@ -2147,9 +2155,10 @@ component {
                 ++n;
             }
             // add trailing match/back reference: if last character is not "$" to respect regex end of string
-            if (right( routeRegEx.pattern, 1 ) != '$')
+            if (right( routeRegEx.pattern, 1 ) != '$') {
                 routeRegEx.pattern &= '(.*)';
-            routeRegEx.target &= chr(92) & n;
+                routeRegEx.target &= chr(92) & n;
+            }
             regExCache[ cacheKey ] = routeRegEx;
         }
         // end of preprocessing section

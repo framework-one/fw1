@@ -55,6 +55,10 @@ component extends="tests.InjectableTest" {
         assertTrue(match.matched);
         assertEquals("default.main/id/5/", rereplace(match.path, match.pattern, match.target));
 
+        match = variables.fw.processRouteMatch("/end/:id/$", "default.main?id=:id", "/end/42", "GET");
+        assertTrue(match.matched);
+        assertEquals("default.main?id=42/", rereplace(match.path, match.pattern, match.target));
+
         match = variables.fw.processRouteMatch("/test2/(\d+)/$", "default.main/id/\1/", "/test2/zz/", "GET");
         assertFalse(match.matched);
 
@@ -155,6 +159,11 @@ component extends="tests.InjectableTest" {
         var uri = variables.fw.buildCustomURL( "/product/:ignore" );
         uri = REReplace( uri, "^.*\.cf[cm]", "" );
         assertEquals( "/product/:ignore", uri );
+
+        request.context = { id = "23$5" & chr(92) & "part" };
+        uri = variables.fw.buildCustomURL( "/product/:id/:id" );
+        uri = REReplace( uri, "^.*\.cf[cm]", "" );
+        assertEquals( "/product/23$5" & chr(92) & "part/23$5" & chr(92) & "part", uri );
     }
 
 }
