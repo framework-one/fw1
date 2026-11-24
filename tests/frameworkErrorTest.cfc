@@ -20,9 +20,7 @@ component extends="mxunit.framework.TestCase" {
         };
         var event = "Test Event";
         variables.fw.onApplicationStart();
-        savecontent variable="output" {
-            variables.fw.onError(exception, event);
-        };
+        var output = captureError(exception, event);
         assertEquals(request.action, ":main.error");
         assertFalse(output contains "Unable to find a view for ':main.error' action.");
         assertTrue(output contains encodeForHTML("Unable to find a view for ':main.error' action."), "Unexpected error output: #output#");
@@ -39,11 +37,24 @@ component extends="mxunit.framework.TestCase" {
             detail = "Detail"
         };
         var event = "";
-        savecontent variable="output" {
-	        variables.fw.onError(exception, event);
-        }
+        var output = captureError(exception, event);
         assertFalse(output CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Didn't expect failure in early exception");
         assertTrue(output CONTAINS "Exception occured before FW/1 was initialized", "Expected message about early exception");
+    }
+
+    private string function captureError( struct exception, string event ) {
+        var response = getPageContext().getResponse();
+        var status = response.getStatus();
+        var output = "";
+        try {
+            savecontent variable="output" {
+                variables.fw.onError(arguments.exception, arguments.event);
+            }
+            assertEquals(500, response.getStatus());
+        } finally {
+            response.setStatus(status);
+        }
+        return output;
     }
 
     private void function exceptionCapture( any exception)
