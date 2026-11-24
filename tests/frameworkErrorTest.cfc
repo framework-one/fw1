@@ -20,12 +20,10 @@ component extends="mxunit.framework.TestCase" {
         };
         var event = "Test Event";
         variables.fw.onApplicationStart();
-        savecontent variable="output" {
-            variables.fw.onError(exception, event);
-        };
+        var output = captureError(exception, event);
         assertEquals(request.action, ":main.error");
         assertFalse(output contains "Unable to find a view for ':main.error' action.");
-        assertTrue(output contains "Unable to find a view for &##x27;&##x3a;main.error&##x27;");
+        assertTrue(output contains encodeForHTML("Unable to find a view for ':main.error' action."), "Unexpected error output: #output#");
     }
 
     /**
@@ -39,11 +37,30 @@ component extends="mxunit.framework.TestCase" {
             detail = "Detail"
         };
         var event = "";
-        savecontent variable="output" {
-	        variables.fw.onError(exception, event);
-        }
+        var output = captureError(exception, event);
         assertFalse(output CONTAINS "Element FRAMEWORK.USINGSUBSYSTEMS is undefined in VARIABLES", "Didn't expect failure in early exception");
         assertTrue(output CONTAINS "Exception occured before FW/1 was initialized", "Expected message about early exception");
+    }
+
+    private string function captureError( struct exception, string event ) {
+        var response = getPageContext().getResponse();
+        var status = response.getStatus();
+        // Adobe's outer response wrapper reports 0 instead of the HTTP status.
+        if (status == 0) {
+            response = response.getResponse();
+            status = response.getStatus();
+        }
+        assertTrue(status >= 100 && status <= 599, "Invalid response status: #status#");
+        var output = "";
+        try {
+            savecontent variable="output" {
+                variables.fw.onError(arguments.exception, arguments.event);
+            }
+            assertEquals(500, response.getStatus());
+        } finally {
+            response.setStatus(status);
+        }
+        return output;
     }
 
     private void function exceptionCapture( any exception)
