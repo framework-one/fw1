@@ -53,13 +53,11 @@ component extends="mxunit.framework.TestCase" {
     }
 
     private function doHTTPRequest( verb, contentType, body ) {
-        var httpService = new http();
-        httpService.setmethod( verb );
-        httpService.setCharset( "utf-8" );
-        httpService.setUrl( "http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/tests/rest/fixture/?action=main.#verb#" );
-        httpService.addParam( type = "header", name = "content-type", value = contentType );
-        httpService.addParam( type = "body", value = body );
-        var result = httpService.send().getPrefix();
+        var result = {};
+        cfhttp( method=verb, charset="utf-8", url="http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/tests/rest/fixture/?action=main.#verb#", result="local.result" ) {
+            cfhttpparam( type="header", name="content-type", value=contentType );
+            cfhttpparam( type="body", value=body );
+        }
         var response = result.filecontent;
         if ( isJson( response ) ) {
             return deserializeJSON( response );
