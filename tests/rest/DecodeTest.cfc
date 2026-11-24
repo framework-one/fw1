@@ -56,14 +56,15 @@ component extends="mxunit.framework.TestCase" {
         var httpService = new http();
         httpService.setmethod( verb );
         httpService.setCharset( "utf-8" );
-        httpService.setUrl( "http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/examples/rest/?action=main.#verb#" ); 
+        httpService.setUrl( "http://#CGI.SERVER_NAME#:#CGI.SERVER_PORT#/tests/rest/fixture/?action=main.#verb#" );
         httpService.addParam( type = "header", name = "content-type", value = contentType );
         httpService.addParam( type = "body", value = body );
-        var response = httpService.send().getPrefix().filecontent;
+        var result = httpService.send().getPrefix();
+        var response = result.filecontent;
         if ( isJson( response ) ) {
             return deserializeJSON( response );
         }
-        fail( "expected a JSON response for #verb# #contentType#" );
+        fail( "expected a JSON response for #verb# #contentType#; HTTP #result.statusCode#; response: #left( response, 2000 )#" );
     }
 
     function engineNotSupported() {
